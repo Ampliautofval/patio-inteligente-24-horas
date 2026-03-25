@@ -8,12 +8,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // No celular, a raiz do site deve abrir o app sem depender de JS (evita 404 em /app sem .html)
+  // / → /app.html é tratado em pages/index.tsx (getServerSideProps). Só atalhos sem .html:
   async redirects() {
-    return [
-      { source: "/", destination: "/app.html", permanent: false },
-      { source: "/app", destination: "/app.html", permanent: false },
-    ];
+    return [{ source: "/app", destination: "/app.html", permanent: false }];
   },
 };
 

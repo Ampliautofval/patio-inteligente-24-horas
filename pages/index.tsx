@@ -1,11 +1,18 @@
-import { useEffect } from "react";
+import type { GetServerSideProps } from "next";
 
 /**
- * Raiz do site: o app principal está em /app.html (estático em public/).
+ * Redirecionamento no servidor: no celular não depende de JS (useEffect falhava / tela branca).
+ * O app estático fica em /app.html (public/).
  */
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: "/app.html",
+      permanent: false,
+    },
+  };
+};
+
 export default function Home() {
-  useEffect(() => {
-    window.location.replace("/app.html");
-  }, []);
   return null;
 }
