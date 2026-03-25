@@ -2,6 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Amplipatio</title>
     <link rel="icon" type="image/png" href="./assets/icon-192.png" />
@@ -862,13 +863,26 @@
                 <span class="card-title">Buscar por placa</span>
               </div>
               <p class="subtitle" style="margin: 0 0 12px">
-                Consulta em VNP, VLS, VRP e NFSe pendente. Ao digitar, o pátio abre com os resultados.
+                Consulta em VNP, VLS, VRP e NFSe pendente. Digite a placa completa (7 letras/números; hífen e espaço são
+                ignorados) e clique em <strong>OK</strong> — a busca não roda enquanto você digita.
               </p>
-              <div class="filter-bar" style="margin: 0">
+              <form id="plateSearchForm" class="filter-bar" style="margin: 0" action="#" novalidate>
                 <label for="plateFilter">Placa</label>
-                <input id="plateFilter" type="text" placeholder="Ex.: ABC1D23" autocomplete="off" />
+                <input
+                  id="plateFilter"
+                  name="plate"
+                  type="text"
+                  inputmode="text"
+                  placeholder="Ex.: ABC1D23"
+                  maxlength="10"
+                  autocomplete="off"
+                  autocorrect="off"
+                  autocapitalize="characters"
+                  spellcheck="false"
+                />
+                <button type="submit" id="plateSearchOk">OK</button>
                 <button type="button" class="secondary" id="clearPlateFilter">Limpar</button>
-              </div>
+              </form>
               <p class="notice plate-search-hint hidden" style="margin: 10px 0 0"></p>
             </div>
             <div class="card" id="cardVeiculosLink">
@@ -1626,6 +1640,7 @@
       const partnerSubnav = document.getElementById("partnerSubnav");
       const cardNfseLink = document.getElementById("cardNfseLink");
       const plateFilter = document.getElementById("plateFilter");
+      const plateSearchForm = document.getElementById("plateSearchForm");
       const clearPlateFilter = document.getElementById("clearPlateFilter");
 
       const patioSubviews = document.querySelectorAll(".patio-subview");
@@ -2031,9 +2046,43 @@
         document.getElementById("cardNfsePendentes").textContent = nfsePendentes.length.toString();
       }
 
+      /** Para busca: só letras/números, ignora hífen/espaço (padrão Mercosul/antigo = 7 caracteres). */
+      function normalizePlateSearch(str) {
+        return (str || "")
+          .toString()
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+      }
+
+      const PLATE_SEARCH_LEN = 7;
+
+      function applyPlateSearchFromDashboard() {
+        const raw = plateFilter.value.trim().toLowerCase();
+        const norm = normalizePlateSearch(raw);
+        if (norm.length === 0) {
+          plateQuery = "";
+          setPlateSearchHints("", false);
+          renderVehicles();
+          return;
+        }
+        if (norm.length !== PLATE_SEARCH_LEN) {
+          plateQuery = "";
+          setPlateSearchHints(
+            `Digite a placa completa (${PLATE_SEARCH_LEN} letras e números) e clique em OK.`,
+            true
+          );
+          renderVehicles();
+          return;
+        }
+        plateQuery = raw;
+        goToPatioForPlateSearch();
+        renderVehicles();
+      }
+
       function renderVehicles() {
-        const filteredVehicles = plateQuery
-          ? state.vehicles.filter((v) => (v.placa || "").toLowerCase().includes(plateQuery))
+        const qNorm = normalizePlateSearch(plateQuery);
+        const filteredVehicles = qNorm
+          ? state.vehicles.filter((v) => normalizePlateSearch(v.placa) === qNorm)
           : state.vehicles;
         const byStatus = {
           NO_PATIO: [],
@@ -2058,7 +2107,7 @@
         renderVehicleTable(tableNfsePendentes, nfsePendentes, "nfse_pendente");
         updateDashboard();
 
-        if (plateQuery) {
+        if (qNorm) {
           applyGlobalPlateSearchLayout(byStatus, nfsePendentes);
         } else {
           setPlateSearchHints("", false);
@@ -3132,7 +3181,7 @@
       patioSubnav.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-subview]");
         if (!button) return;
-        if (plateQuery) {
+        if (normalizePlateSearch(plateQuery)) {
           plateFilter.value = "";
           plateQuery = "";
           setPlateSearchHints("", false);
@@ -3291,12 +3340,10 @@
       cardCaixaLink.addEventListener("click", () => openFinanceSubview("caixa"));
       cardReceberAtrasoLink.addEventListener("click", () => openFinanceSubview("receber_alerta"));
 
-      plateFilter.addEventListener("input", (event) => {
-        plateQuery = event.target.value.trim().toLowerCase();
-        if (plateQuery) {
-          goToPatioForPlateSearch();
-        }
-        renderVehicles();
+      /** Busca só no envio do formulário (OK ou Enter) — digitar não dispara nada. */
+      plateSearchForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        applyPlateSearchFromDashboard();
       });
 
       clearPlateFilter.addEventListener("click", () => {
