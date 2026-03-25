@@ -795,6 +795,11 @@
     </style>
   </head>
   <body>
+    <noscript>
+      <p style="padding: 16px; font-family: system-ui, sans-serif">
+        Ative o JavaScript para usar o Amplipatio.
+      </p>
+    </noscript>
     <header>
       <div class="brand">
         <div class="brand-stack">
@@ -1529,8 +1534,8 @@
       </div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- Supabase no mesmo domínio: evita falha no celular quando CDN externa é bloqueada -->
+    <script src="./vendor/supabase.umd.js"></script>
     <script>
       const supabaseUrl = "https://mgnfuwlbvwarmjtiwsdh.supabase.co";
       const supabaseKey =
@@ -1554,6 +1559,27 @@
         } catch (e) {
           console.error(e);
         }
+      }
+
+      /** html2canvas só quando o usuário baixa a ficha — acelera abertura no celular */
+      let html2canvasLoadPromise = null;
+      function loadHtml2Canvas() {
+        if (window.html2canvas) return Promise.resolve();
+        if (html2canvasLoadPromise) return html2canvasLoadPromise;
+        html2canvasLoadPromise = new Promise(function (resolve, reject) {
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+          s.onload = function () {
+            resolve();
+          };
+          s.onerror = function () {
+            html2canvasLoadPromise = null;
+            reject(new Error("html2canvas"));
+          };
+          document.head.appendChild(s);
+        });
+        return html2canvasLoadPromise;
       }
 
       const authPanel = document.getElementById("authPanel");
@@ -1793,19 +1819,33 @@
 
       function applyTheme(theme) {
         document.documentElement.setAttribute("data-theme", theme);
-        themeLabel.textContent = theme === "dark" ? "Tema escuro" : "Tema claro";
+        if (themeLabel) {
+          themeLabel.textContent = theme === "dark" ? "Tema escuro" : "Tema claro";
+        }
       }
 
-      const savedTheme = localStorage.getItem("amplipatio-theme") || "light";
+      var savedTheme = "light";
+      try {
+        savedTheme = localStorage.getItem("amplipatio-theme") || "light";
+      } catch (e) {
+        console.warn("localStorage tema indisponível", e);
+      }
       applyTheme(savedTheme);
 
-      themeToggle.addEventListener("click", () => {
-        const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-        localStorage.setItem("amplipatio-theme", nextTheme);
-        applyTheme(nextTheme);
-      });
+      if (themeToggle) {
+        themeToggle.addEventListener("click", () => {
+          const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          try {
+            localStorage.setItem("amplipatio-theme", nextTheme);
+          } catch (e) {
+            console.warn("localStorage", e);
+          }
+          applyTheme(nextTheme);
+        });
+      }
 
       function setStatus(message, type) {
+        if (!authStatus) return;
         authStatus.textContent = message;
         authStatus.className = "status " + (type || "");
       }
@@ -1844,7 +1884,11 @@
             }
           }
           ctx.putImageData(imageData, 0, 0);
-          logoEl.src = canvas.toDataURL("image/png");
+          try {
+            logoEl.src = canvas.toDataURL("image/png");
+          } catch (err) {
+            console.warn("Logo: canvas/CORS no Safari", err);
+          }
         };
       }
 
@@ -3166,12 +3210,24 @@
       closeNfseModal2.addEventListener("click", () => nfseModal.classList.add("hidden"));
       printFicha.addEventListener("click", () => window.print());
       downloadFicha.addEventListener("click", async () => {
-        if (!window.html2canvas || !fichaCapture) return;
-        const canvas = await window.html2canvas(fichaCapture, { backgroundColor: "#ffffff", scale: 2 });
-        const link = document.createElement("a");
-        link.href = canvas.toDataURL("image/png");
-        link.download = "ficha-veiculo.png";
-        link.click();
+        if (!fichaCapture) return;
+        try {
+          await loadHtml2Canvas();
+        } catch (e) {
+          alert("Não foi possível carregar a ferramenta de imagem. Verifique a internet.");
+          return;
+        }
+        if (!window.html2canvas) return;
+        try {
+          const canvas = await window.html2canvas(fichaCapture, { backgroundColor: "#ffffff", scale: 2 });
+          const link = document.createElement("a");
+          link.href = canvas.toDataURL("image/png");
+          link.download = "ficha-veiculo.png";
+          link.click();
+        } catch (e) {
+          console.error(e);
+          alert("Não foi possível gerar a imagem neste aparelho.");
+        }
       });
       closeTextModal.addEventListener("click", () => textModal.classList.add("hidden"));
       closeTextModal2.addEventListener("click", () => textModal.classList.add("hidden"));

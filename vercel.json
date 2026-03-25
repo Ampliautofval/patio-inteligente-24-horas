@@ -1,4 +1,8 @@
 {
+  "rewrites": [
+    { "source": "/amplipatio", "destination": "/app.html" },
+    { "source": "/patio", "destination": "/app.html" }
+  ],
   "headers": [
     {
       "source": "/app.html",
