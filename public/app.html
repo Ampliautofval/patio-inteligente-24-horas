@@ -1,0 +1,4140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Amplipatio</title>
+    <link rel="icon" type="image/png" href="./assets/icon-192.png" />
+    <link rel="apple-touch-icon" href="./assets/icon-512.png" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#0b0d11" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0b0d11;
+        --card: #0f131a;
+        --text: #f8fafc;
+        --muted: #94a3b8;
+        --primary: #e11d2e;
+        --primary-strong: #b81422;
+        --primary-weak: rgba(225, 29, 46, 0.16);
+        --border: rgba(148, 163, 184, 0.12);
+        --shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
+        --shadow-soft: 0 8px 16px rgba(0, 0, 0, 0.18);
+        --success: #22c55e;
+        --error: #ef4444;
+        --radius: 16px;
+      }
+      [data-theme="light"] {
+        color-scheme: light;
+        --bg: #f6f7fb;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --primary: #e11d2e;
+        --primary-strong: #b81422;
+        --primary-weak: rgba(225, 29, 46, 0.12);
+        --border: #e5e7eb;
+        --shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+        --shadow-soft: 0 12px 30px rgba(15, 23, 42, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+        background: radial-gradient(circle at 18% 0%, rgba(225, 29, 46, 0.1), transparent 45%),
+          radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.02), transparent 40%),
+          var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+      [data-theme="light"] body {
+        background: radial-gradient(circle at top left, rgba(225, 29, 46, 0.12), transparent 45%),
+          radial-gradient(circle at 10% 20%, rgba(0, 0, 0, 0.03), transparent 35%),
+          var(--bg);
+      }
+      header {
+        padding: 6px 24px;
+        background: linear-gradient(180deg, rgba(12, 15, 20, 0.62), rgba(12, 15, 20, 0.28));
+        border-bottom: 1px solid rgba(31, 38, 49, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(18px);
+      }
+      [data-theme="light"] header {
+        background: rgba(255, 255, 255, 0.62);
+        border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .brand-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+      .brand-logo {
+        height: 120px;
+        width: auto;
+        display: block;
+      }
+      .brand-text {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        line-height: 1.1;
+      }
+      .brand-subtitle {
+        font-size: 12px;
+        color: #ffffff;
+        opacity: 0.9;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+        white-space: nowrap;
+        margin-top: -18px;
+      }
+      .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1d4ed8, #38bdf8);
+        box-shadow: var(--shadow-soft);
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      #themeToggle,
+      #userInfo {
+        display: none;
+      }
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .toggle .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--primary);
+        box-shadow: 0 0 0 4px var(--primary-weak);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 22px;
+      }
+      header .user {
+        font-size: 14px;
+        color: var(--muted);
+      }
+      main {
+        padding: 28px 32px 64px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .panel {
+        background: rgba(15, 19, 26, 0.58);
+        backdrop-filter: blur(16px);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 26px;
+        margin-bottom: 22px;
+        box-shadow: var(--shadow-soft);
+      }
+      [data-theme="light"] .panel {
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(16px);
+      }
+      .panel.auth {
+        max-width: 520px;
+        margin: 0 auto 24px;
+      }
+      .panel h2 {
+        margin-top: 0;
+      }
+      .subtitle {
+        color: var(--muted);
+        margin: 6px 0 18px;
+        font-size: 14px;
+      }
+      .auth-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+      .auth-tab {
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: transparent;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .auth-tab.active {
+        background: var(--primary-weak);
+        border-color: var(--primary);
+        color: var(--primary);
+        font-weight: 600;
+      }
+      form {
+        display: grid;
+        gap: 12px;
+        max-width: 420px;
+      }
+      label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        font-size: 14px;
+        background: rgba(255, 255, 255, 0.03);
+        transition: border 0.2s ease, box-shadow 0.2s ease;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.12);
+      }
+      [data-theme="light"] input {
+        background: rgba(255, 255, 255, 0.82);
+      }
+      button {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: none;
+        background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 8px 18px rgba(225, 29, 46, 0.25);
+      }
+      button:hover {
+        transform: translateY(-1px);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button.secondary {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+        box-shadow: none;
+      }
+      button:focus-visible,
+      .nav button:focus-visible,
+      .subnav button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible {
+        outline: 2px solid rgba(225, 29, 46, 0.65);
+        outline-offset: 2px;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 14px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .status.success {
+        color: var(--success);
+        border: 1px solid rgba(22, 163, 74, 0.2);
+      }
+      .status.error {
+        color: var(--error);
+        border: 1px solid rgba(220, 38, 38, 0.2);
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+      .grid.large {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+      .card {
+        padding: 18px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+          rgba(15, 19, 26, 0.52);
+        backdrop-filter: blur(16px);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        box-shadow: var(--shadow-soft);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+      .card.clickable {
+        cursor: pointer;
+      }
+      [data-theme="light"] .card {
+        background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.92),
+            rgba(248, 250, 252, 0.68)
+          ),
+          rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(16px);
+      }
+      .card:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+      }
+      .card-title {
+        font-size: 13px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .card-value {
+        font-size: 22px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .nav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .nav button {
+        background: transparent;
+        color: var(--text);
+        border: 1px solid var(--border);
+        box-shadow: none;
+        border-radius: 999px;
+        padding: 8px 14px;
+      }
+      .nav button.active {
+        border-color: var(--primary);
+        color: var(--primary);
+        font-weight: 600;
+        background: var(--primary-weak);
+      }
+      .hidden {
+        display: none;
+      }
+
+      .close-view {
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        padding: 6px 12px;
+      }
+
+      .air-open {
+        animation: airOpen 220ms ease-out both;
+      }
+
+      @keyframes airOpen {
+        from {
+          opacity: 0;
+          transform: translateY(10px) scale(0.99);
+          filter: blur(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0px);
+        }
+      }
+      .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+      }
+      .subnav {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 8px 0 18px;
+      }
+      .subnav button {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: transparent;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        box-shadow: none;
+      }
+      .subnav button.active {
+        color: var(--primary);
+        border-color: var(--primary);
+        background: var(--primary-weak);
+      }
+      .filter-bar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 8px 0 12px;
+      }
+      .filter-bar label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .filter-bar input {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .toolbar h2 {
+        margin: 0;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      .table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        border-radius: 12px;
+      }
+      .table thead th {
+        text-align: left;
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border);
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .table tbody td {
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      .table tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+      [data-theme="light"] .table tbody tr:hover {
+        background: #f8fafc;
+      }
+      .table tbody td.empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 24px 10px;
+      }
+      .tag {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        background: rgba(225, 29, 46, 0.15);
+        color: #fecaca;
+      }
+      .tag.success {
+        background: rgba(22, 163, 74, 0.2);
+        color: #86efac;
+      }
+      .tag.warning {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fcd34d;
+      }
+      .tag.danger {
+        background: rgba(220, 38, 38, 0.25);
+        color: #fecaca;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .actions button {
+        padding: 6px 10px;
+        font-size: 12px;
+        border-radius: 999px;
+        box-shadow: none;
+      }
+      .actions button.secondary {
+        border-color: var(--border);
+        color: var(--text);
+      }
+      .section-card {
+        padding: 20px;
+        border-radius: var(--radius);
+        background: rgba(15, 19, 26, 0.54);
+        backdrop-filter: blur(14px);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+      }
+      [data-theme="light"] .section-card {
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(14px);
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 14px;
+      }
+      .form-grid .full {
+        grid-column: 1 / -1;
+      }
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 6px;
+      }
+      .notice {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .alert {
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        background: rgba(245, 158, 11, 0.12);
+        color: #92400e;
+        font-size: 13px;
+        margin: 12px 0 18px;
+      }
+      [data-theme="dark"] .alert {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fcd34d;
+      }
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(12px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 20px;
+      }
+      .modal {
+        width: min(680px, 92vw);
+        background: rgba(15, 19, 26, 0.62);
+        backdrop-filter: blur(18px);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        padding: 24px;
+        max-height: calc(100vh - 40px);
+        overflow: auto;
+      }
+      [data-theme="light"] .modal {
+        background: rgba(255, 255, 255, 0.78);
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .modal-header h3 {
+        margin: 0;
+      }
+      .modal-header .subtitle {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .modal-close {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        box-shadow: none;
+        padding: 6px 10px;
+      }
+      .modal.hidden,
+      .modal-backdrop.hidden {
+        display: none;
+      }
+      @media print {
+        body {
+          background: #fff;
+        }
+        header,
+        #authPanel,
+        #appPanel,
+        .modal-close,
+        #printFicha {
+          display: none !important;
+        }
+        .modal-backdrop {
+          position: static;
+          background: transparent;
+          padding: 0;
+        }
+        .modal {
+          width: 100%;
+          border: none;
+          box-shadow: none;
+          padding: 0;
+        }
+        .section-card {
+          border: none;
+          box-shadow: none;
+          padding: 0;
+        }
+      }
+      @media (max-width: 900px) {
+        main {
+          padding: 24px 20px 48px;
+        }
+        header {
+          padding: 8px 14px;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+        }
+        .header-actions {
+          width: 100%;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 6px;
+        }
+        #themeToggle {
+          display: none;
+        }
+        .brand-logo {
+          height: 220px;
+        }
+        .brand-stack {
+          gap: 2px;
+        }
+        .brand-subtitle {
+          font-size: 12px;
+          letter-spacing: 0.08em;
+        }
+        #userInfo {
+          display: none;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .grid.large {
+          grid-template-columns: 1fr;
+        }
+        .toolbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .nav {
+          gap: 6px;
+        }
+        .nav button {
+          width: 100%;
+          justify-content: center;
+        }
+        .subnav {
+          gap: 6px;
+        }
+        .subnav button {
+          flex: 1 1 auto;
+        }
+        .modal {
+          padding: 16px;
+        }
+      }
+      @media (max-width: 600px) {
+        main {
+          padding: 18px 14px 40px;
+        }
+        .brand-logo {
+          height: 140px;
+        }
+        .brand-subtitle {
+          font-size: 12px;
+          letter-spacing: 0.06em;
+          margin-top: -18px;
+        }
+        .card-value {
+          font-size: 18px;
+        }
+        .filter-bar {
+          gap: 6px;
+        }
+        .filter-bar input {
+          width: 100%;
+        }
+        .table.stacked thead {
+          display: none;
+        }
+        .table.stacked tbody tr {
+          display: block;
+          padding: 12px;
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          margin-bottom: 10px;
+          background: rgba(255, 255, 255, 0.02);
+        }
+        .table.stacked tbody td {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          padding: 6px 0;
+          border-bottom: none;
+        }
+        .table.stacked tbody td::before {
+          content: attr(data-label);
+          color: var(--muted);
+          font-size: 12px;
+        }
+      }
+      .timeline {
+        display: grid;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .timeline-item {
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: rgba(15, 19, 26, 0.50);
+        backdrop-filter: blur(14px);
+      }
+      [data-theme="light"] .timeline-item {
+        background: rgba(255, 255, 255, 0.72);
+      }
+      .timeline-title {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .timeline-meta {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .textarea {
+        width: 100%;
+        min-height: 160px;
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      [data-theme="light"] .textarea {
+        background: rgba(17, 24, 39, 0.03);
+      }
+      .icon {
+        width: 18px;
+        height: 18px;
+        display: inline-block;
+        color: var(--primary);
+      }
+      .icon svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .card-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <div class="brand-stack">
+          <img id="brandLogo" src="./assets/logo.png" alt="Ampliauto" class="brand-logo" />
+          <div class="brand-text">
+            <span class="brand-subtitle">Pátio inteligente 24hrs</span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggle" class="toggle" type="button">
+          <span class="dot" aria-hidden="true"></span>
+          <span id="themeLabel">Tema claro</span>
+        </button>
+        <div class="user" id="userInfo">Não autenticado</div>
+      </div>
+    </header>
+
+    <main>
+      <section id="authPanel" class="panel auth">
+        <h2>Bem-vindo</h2>
+        <p class="subtitle">Acesse sua conta para gerenciar o pátio com segurança.</p>
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin">Entrar</button>
+          <button class="auth-tab" id="tabRegister">Criar conta</button>
+        </div>
+
+        <form id="loginForm">
+          <div>
+            <label for="loginEmail">E-mail</label>
+            <input id="loginEmail" type="email" placeholder="seu@email.com" required />
+          </div>
+          <div>
+            <label for="loginPassword">Senha</label>
+            <input id="loginPassword" type="password" placeholder="Sua senha" required />
+          </div>
+          <button type="submit">Entrar</button>
+        </form>
+
+        <form id="registerForm" class="hidden">
+          <div>
+            <label for="registerEmail">E-mail</label>
+            <input id="registerEmail" type="email" placeholder="seu@email.com" required />
+          </div>
+          <div>
+            <label for="registerPassword">Senha</label>
+            <input id="registerPassword" type="password" placeholder="Crie uma senha" required />
+          </div>
+          <button type="submit">Criar conta</button>
+        </form>
+
+        <div id="authStatus" class="status"></div>
+      </section>
+
+      <section id="appPanel" class="hidden">
+        <div class="panel">
+          <div class="nav">
+            <button class="active" data-view="dashboard">Painel</button>
+            <button data-view="patio">Gestão de Pátio</button>
+            <button data-view="parceiros">Parceiros</button>
+            <button data-view="financeiro">Financeiro</button>
+            <button data-view="configuracoes">Configurações</button>
+            <button id="logoutBtn" class="secondary">Sair</button>
+          </div>
+        </div>
+
+        <div id="viewDashboard" class="panel">
+          <div class="toolbar">
+            <div>
+              <h2>Painel</h2>
+              <p class="subtitle">Visão geral do pátio e financeiro.</p>
+            </div>
+            <span class="pill">Atualizado em tempo real</span>
+          </div>
+          <div class="grid">
+            <div class="card" style="grid-column: 1 / -1">
+              <div class="card-head">
+                <span class="card-title">Buscar por placa</span>
+              </div>
+              <p class="subtitle" style="margin: 0 0 12px">
+                Consulta em VNP, VLS, VRP e NFSe pendente. Ao digitar, o pátio abre com os resultados.
+              </p>
+              <div class="filter-bar" style="margin: 0">
+                <label for="plateFilter">Placa</label>
+                <input id="plateFilter" type="text" placeholder="Ex.: ABC1D23" autocomplete="off" />
+                <button type="button" class="secondary" id="clearPlateFilter">Limpar</button>
+              </div>
+              <p class="notice plate-search-hint hidden" style="margin: 10px 0 0"></p>
+            </div>
+            <div class="card" id="cardVeiculosLink">
+              <div class="card-head">
+                <span class="card-title">VNP</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M3 13l2-5a3 3 0 012.8-2h8.4a3 3 0 012.8 2l2 5M5 13h14M7 17a2 2 0 104 0m6 0a2 2 0 104 0"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardVeiculos">0</div>
+            </div>
+            <div class="card" id="cardSolicitadasLink">
+              <div class="card-head">
+                <span class="card-title">VLS</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 3v6l4 2M6 8h3M6 12h3M6 16h3M14 15l2 2 4-4"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardSolicitadas">0</div>
+            </div>
+            <div class="card" id="cardConfirmadasLink">
+              <div class="card-head">
+                <span class="card-title">VRP</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M5 12l4 4L19 6"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardConfirmadas">0</div>
+            </div>
+            <div class="card" id="cardVencidasLink">
+              <div class="card-head">
+                <span class="card-title">Contas vencidas</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M7 3h10a2 2 0 012 2v14l-7-3-7 3V5a2 2 0 012-2z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardVencidas">0</div>
+            </div>
+            <div class="card" id="cardHojeLink">
+              <div class="card-head">
+                <span class="card-title">Dia de pagar</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M8 2v4M16 2v4M4 8h16M6 12h6M6 16h6"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardHoje">0</div>
+            </div>
+            <div class="card" id="cardCaixaLink">
+              <div class="card-head">
+                <span class="card-title">Caixa</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 7h16v10H4zM7 7l2-3h6l2 3"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardCaixa">R$ 0,00</div>
+            </div>
+            <div class="card clickable" id="cardReceberAtrasoLink">
+              <div class="card-head">
+                <span class="card-title">Recebimentos atrasados</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 8v4m0 4h.01M4.5 19h15a1.5 1.5 0 001.3-2.2l-7.5-13a1.5 1.5 0 00-2.6 0l-7.5 13A1.5 1.5 0 004.5 19z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardReceberAtraso">Em dia</div>
+            </div>
+            <div class="card">
+              <div class="card-head">
+                <span class="card-title">Total de diárias</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 6h16M7 3v6m10-6v6M5 10h14v9H5z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardTotalDiarias">0</div>
+            </div>
+            <div class="card clickable" id="cardNfseLink">
+              <div class="card-head">
+                <span class="card-title">NFSe pendente</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M7 3h7l5 5v13a1 1 0 01-1 1H7a1 1 0 01-1-1V4a1 1 0 011-1z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                    <path d="M14 3v5h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardNfsePendentes">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewPatio" class="panel hidden">
+          <div class="toolbar">
+            <div>
+              <h2>Gestão de Pátio</h2>
+              <p class="subtitle">Controle completo do fluxo de veículos.</p>
+            </div>
+            <div class="actions">
+              <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
+              <button id="openVehicleForm">Registrar veículo</button>
+              <button class="secondary" id="reloadPatio">Atualizar</button>
+            </div>
+          </div>
+          <div class="subnav" id="patioSubnav">
+            <button data-subview="no_patio">VNP</button>
+            <button data-subview="liberacao_solicitada">VLS</button>
+            <button data-subview="removidos">VRP</button>
+            <button data-subview="nfse_pendente">NFSe pendente</button>
+          </div>
+          <p class="notice plate-search-hint hidden" style="margin: 6px 0 10px"></p>
+          <div class="grid large" style="margin-top: 18px;">
+            <div class="section-card patio-subview hidden" data-subview="no_patio">
+              <div class="pill">VNP</div>
+              <div class="table-wrap">
+                <table class="table stacked">
+                <thead>
+                  <tr>
+                    <th>Placa</th>
+                    <th>Veículo</th>
+                    <th>Localizador</th>
+                    <th>Assessoria</th>
+                    <th>Entrada</th>
+                    <th>Valor gerado</th>
+                    <th>Pagamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tableNoPatio"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="section-card patio-subview hidden" data-subview="liberacao_solicitada">
+              <div class="pill">VLS</div>
+              <div class="table-wrap">
+                <table class="table stacked">
+                <thead>
+                  <tr>
+                    <th>Placa</th>
+                    <th>Veículo</th>
+                    <th>Localizador</th>
+                    <th>Assessoria</th>
+                    <th>Entrada</th>
+                    <th>Valor gerado</th>
+                    <th>Pagamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tableSolicitada"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="section-card patio-subview hidden" data-subview="removidos">
+              <div class="pill">VRP</div>
+              <div class="table-wrap">
+                <table class="table stacked">
+                <thead>
+                  <tr>
+                    <th>Placa</th>
+                    <th>Veículo</th>
+                    <th>Localizador</th>
+                    <th>Assessoria</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
+                    <th>Valor total</th>
+                    <th>Pagamento / Status</th>
+                  </tr>
+                </thead>
+                <tbody id="tableRemovidos"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="section-card patio-subview hidden" data-subview="nfse_pendente">
+              <div class="pill">NFSe pendente</div>
+              <div class="table-wrap">
+                <table class="table stacked">
+                <thead>
+                  <tr>
+                    <th>Placa</th>
+                    <th>Veículo</th>
+                    <th>Localizador</th>
+                    <th>Assessoria</th>
+                    <th>Entrada</th>
+                    <th>Valor gerado</th>
+                    <th>Pagamento</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tableNfsePendentes"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewParceiros" class="panel hidden">
+          <div class="toolbar">
+            <div>
+              <h2>Parceiros</h2>
+              <p class="subtitle">Cadastro de localizadores e assessorias.</p>
+            </div>
+            <div class="actions">
+              <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
+              <button id="openPartnerForm">Novo parceiro</button>
+            </div>
+          </div>
+          <div class="subnav" id="partnerSubnav">
+            <button data-subview="parceiros">Parceiros</button>
+            <button data-subview="assessorias">Assessoria</button>
+          </div>
+          <div class="grid" style="margin-bottom: 18px;">
+            <div class="card">
+              <div class="card-title">Top localizadores por veículos</div>
+              <div id="rankByVehicles" class="notice">Sem dados</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Top retorno financeiro</div>
+              <div id="rankByRevenue" class="notice">Sem dados</div>
+            </div>
+          </div>
+          <div class="section-card partner-subview hidden" data-subview="parceiros">
+            <div class="table-wrap">
+              <table class="table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Contato</th>
+                  <th>E-mail</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tablePartners"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="section-card partner-subview hidden" data-subview="assessorias">
+            <div class="table-wrap">
+              <table class="table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Contato</th>
+                  <th>E-mail</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tableAssessorias"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewFinanceiro" class="panel hidden">
+          <div class="toolbar">
+            <div>
+              <h2>Financeiro</h2>
+              <p class="subtitle">Receitas, despesas e fluxo de caixa.</p>
+            </div>
+            <div class="actions">
+              <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
+              <button id="openPayableForm">Nova despesa</button>
+              <button class="secondary" id="reloadFinanceiro">Atualizar</button>
+            </div>
+          </div>
+          <div id="receivableAlert" class="alert hidden"></div>
+          <div class="subnav" id="financeSubnav">
+            <button data-subview="receber">Contas a receber</button>
+            <button data-subview="receber_alerta">Recebimentos em alerta</button>
+            <button data-subview="pagar">Contas a pagar</button>
+            <button data-subview="caixa">Caixa</button>
+            <button data-subview="relatorios">Relatórios</button>
+            <button data-subview="historico_pagar">Histórico a pagar</button>
+            <button data-subview="historico_receber">Histórico a receber</button>
+          </div>
+          <div id="financeFilters" class="filter-bar hidden">
+            <label>De</label>
+            <input id="filterFrom" type="date" />
+            <label>Até</label>
+            <input id="filterTo" type="date" />
+            <button class="secondary" id="applyFilter">Aplicar</button>
+            <button class="secondary" id="clearFilter">Limpar</button>
+            <button class="secondary" id="quick7">Últimos 7 dias</button>
+            <button class="secondary" id="quick30">Últimos 30 dias</button>
+            <button class="secondary" id="quick90">Últimos 90 dias</button>
+            <button class="secondary" id="exportHistory">Exportar CSV</button>
+          </div>
+          <div id="financeContent" class="hidden">
+            <div class="grid">
+              <div class="card">
+                <div class="card-title">Contas a receber</div>
+                <div class="card-value" id="financeReceber">R$ 0,00</div>
+                <span class="tag warning" id="financeReceberCount">0 em aberto</span>
+              </div>
+              <div class="card">
+                <div class="card-title">Contas a pagar</div>
+                <div class="card-value" id="financePagar">R$ 0,00</div>
+                <span class="tag" id="financePagarCount">0 previstas</span>
+              </div>
+              <div class="card">
+                <div class="card-title">Saldo em caixa</div>
+                <div class="card-value" id="financeCaixa">R$ 0,00</div>
+                <span class="tag success" id="financeCaixaStatus">Positivo</span>
+              </div>
+            </div>
+            <div class="section-card" style="margin-top: 18px;">
+              <div class="table-wrap">
+                <table class="table">
+                <thead id="financeHead"></thead>
+                <tbody id="tableFinance"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewConfiguracoes" class="panel hidden">
+          <div class="toolbar">
+            <div>
+              <h2>Configurações</h2>
+              <p class="subtitle">Dados do pátio e textos padrão.</p>
+            </div>
+            <div class="actions">
+              <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
+              <button id="saveSettings">Salvar alterações</button>
+            </div>
+          </div>
+          <div class="section-card">
+            <div class="form-grid">
+              <div>
+                <label>CNPJ</label>
+                <input id="settingsCnpj" type="text" placeholder="00.000.000/0000-00" />
+              </div>
+              <div>
+                <label>Nome do pátio</label>
+                <input id="settingsName" type="text" placeholder="Amplipatio" />
+              </div>
+              <div>
+                <label>Conta bancária</label>
+                <input id="settingsBank" type="text" placeholder="Banco / Agência / Conta" />
+              </div>
+              <div class="full">
+                <label>Texto padrão de cobrança</label>
+                <input id="settingsCharge" type="text" placeholder="Mensagem para cobrança" />
+              </div>
+              <div class="full">
+                <label>Texto padrão para nota fiscal</label>
+                <input id="settingsInvoice" type="text" placeholder="Mensagem para nota fiscal" />
+              </div>
+            </div>
+            <p class="notice">Essas informações serão usadas automaticamente nas cobranças e notas.</p>
+          </div>
+        </div>
+      </section>
+
+      <div id="vehicleModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <div>
+              <h3 id="vehicleModalTitle">Registrar veículo</h3>
+              <p class="subtitle" id="vehicleModalSubtitle">Cadastro de entrada no pátio</p>
+            </div>
+            <button class="modal-close" id="closeVehicleModal">Fechar</button>
+          </div>
+          <form id="vehicleForm">
+            <div class="form-grid">
+              <div>
+                <label>Placa</label>
+                <input id="vehiclePlate" type="text" placeholder="ABC1D23" required />
+              </div>
+              <div>
+                <label>Marca</label>
+                <input id="vehicleBrand" type="text" placeholder="Fiat" />
+              </div>
+              <div>
+                <label>Modelo</label>
+                <input id="vehicleModel" type="text" placeholder="Argo" />
+              </div>
+              <div>
+                <label>Valor da diária</label>
+                <input id="vehicleDaily" type="number" step="0.01" placeholder="150.00" required />
+              </div>
+              <div>
+                <label>Data e hora de entrada</label>
+                <input id="vehicleEntry" type="datetime-local" required />
+              </div>
+              <div>
+                <label>Data e hora de saída (opcional)</label>
+                <input id="vehicleExit" type="datetime-local" />
+              </div>
+              <div>
+                <label>Localizador</label>
+                <select id="vehicleLocator"></select>
+              </div>
+              <div>
+                <label>Assessoria</label>
+                <select id="vehicleAssessor"></select>
+              </div>
+              <div class="full">
+                <label>Observações</label>
+                <input id="vehicleNotes" type="text" placeholder="Observações importantes" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit">Salvar</button>
+              <button type="button" class="secondary" id="cancelVehicleForm">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="partnerModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="partnerModalTitle">Novo parceiro</h3>
+            <button class="modal-close" id="closePartnerModal">Fechar</button>
+          </div>
+          <form id="partnerForm">
+            <div class="form-grid">
+              <div>
+                <label>Nome</label>
+                <input id="partnerName" type="text" required />
+              </div>
+              <div>
+                <label>CPF</label>
+                <input id="partnerCpf" type="text" placeholder="000.000.000-00" />
+              </div>
+              <div>
+                <label>E-mail</label>
+                <input id="partnerEmail" type="email" />
+              </div>
+              <div>
+                <label>Contato</label>
+                <input id="partnerContact" type="text" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit">Salvar</button>
+              <button type="button" class="secondary" id="cancelPartnerForm">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="dateModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="dateModalTitle">Selecionar data</h3>
+            <button class="modal-close" id="closeDateModal">Fechar</button>
+          </div>
+          <div class="form-grid">
+            <div class="full">
+              <label id="dateModalLabel">Data</label>
+              <input id="dateModalInput" type="date" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="confirmDateModal">Confirmar</button>
+            <button type="button" class="secondary" id="cancelDateModal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="payableModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Nova despesa</h3>
+            <button class="modal-close" id="closePayableModal">Fechar</button>
+          </div>
+          <form id="payableForm">
+            <div class="form-grid">
+              <div>
+                <label>Tipo</label>
+                <select id="payableType">
+                  <option value="UNICA">Única</option>
+                  <option value="RECORRENTE">Recorrente</option>
+                  <option value="PARCELADA">Parcelada</option>
+                </select>
+              </div>
+              <div>
+                <label>Categoria</label>
+                <select id="payableCategory">
+                  <option value="ALUGUEL">Aluguel</option>
+                  <option value="ENERGIA">Energia</option>
+                  <option value="FUNCIONARIO">Funcionário</option>
+                  <option value="GUINCHO">Guincho</option>
+                  <option value="MANUTENCAO">Manutenção</option>
+                  <option value="OUTROS" selected>Outros</option>
+                </select>
+              </div>
+              <div>
+                <label>Descrição</label>
+                <input id="payableDesc" type="text" required />
+              </div>
+              <div>
+                <label>Valor</label>
+                <input id="payableValue" type="number" step="0.01" required />
+              </div>
+              <div>
+                <label>Vencimento</label>
+                <input id="payableDue" type="date" required />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit">Salvar</button>
+              <button type="button" class="secondary" id="cancelPayableForm">Cancelar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="fichaModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Ficha do veículo</h3>
+            <div class="actions">
+              <button class="secondary" id="downloadFicha">Baixar imagem</button>
+              <button class="secondary" id="printFicha">Imprimir</button>
+              <button class="modal-close" id="closeFichaModal">Fechar</button>
+            </div>
+          </div>
+          <div id="fichaCapture">
+            <div id="fichaResumo" class="section-card" style="margin-bottom: 12px;"></div>
+            <div id="fichaTimeline" class="timeline"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="nfseModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <div>
+              <h3>NFSe solicitada</h3>
+              <p class="subtitle">Confirme a emissão para remover do painel</p>
+            </div>
+            <button class="modal-close" id="closeNfseModal">Fechar</button>
+          </div>
+          <div class="section-card" style="margin-bottom: 12px;">
+            <div id="nfseResumo" class="notice"></div>
+          </div>
+          <textarea id="nfseTexto" class="textarea" readonly></textarea>
+          <div class="form-actions">
+            <button id="confirmNfse">Confirmar emissão</button>
+            <button class="secondary" id="closeNfseModal2">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="textModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <div>
+              <h3 id="textModalTitle">Texto</h3>
+              <p class="subtitle">Copie e envie quando precisar</p>
+            </div>
+            <button class="modal-close" id="closeTextModal">Fechar</button>
+          </div>
+          <textarea id="textModalBody" class="textarea" readonly></textarea>
+          <div class="form-actions">
+            <button id="copyTextModal">Copiar</button>
+            <button class="secondary" id="closeTextModal2">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+      const supabaseUrl = "https://mgnfuwlbvwarmjtiwsdh.supabase.co";
+      const supabaseKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nbmZ1d2xidndhcm1qdGl3c2RoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxNjA2OTAsImV4cCI6MjA4NTczNjY5MH0.uA4i_aGJCu1fSVMdANkmOPfuyDuInaaqeTzyXrEgPD4";
+      if (!window.supabase) {
+        alert("Falha ao carregar o Supabase. Verifique sua conexão e tente recarregar.");
+      }
+      var supabase = window.supabaseClient || window.supabase.createClient(supabaseUrl, supabaseKey);
+      window.supabaseClient = supabase;
+
+      const authPanel = document.getElementById("authPanel");
+      const appPanel = document.getElementById("appPanel");
+      const authStatus = document.getElementById("authStatus");
+      const userInfo = document.getElementById("userInfo");
+
+      const tabLogin = document.getElementById("tabLogin");
+      const tabRegister = document.getElementById("tabRegister");
+      const loginForm = document.getElementById("loginForm");
+      const registerForm = document.getElementById("registerForm");
+
+      const logoutBtn = document.getElementById("logoutBtn");
+      const themeToggle = document.getElementById("themeToggle");
+      const themeLabel = document.getElementById("themeLabel");
+
+      const openVehicleForm = document.getElementById("openVehicleForm");
+      const vehicleModal = document.getElementById("vehicleModal");
+      const closeVehicleModal = document.getElementById("closeVehicleModal");
+      const vehicleForm = document.getElementById("vehicleForm");
+      const cancelVehicleForm = document.getElementById("cancelVehicleForm");
+      const vehicleLocator = document.getElementById("vehicleLocator");
+      const vehicleAssessor = document.getElementById("vehicleAssessor");
+      const vehicleExit = document.getElementById("vehicleExit");
+      const vehicleModalTitle = document.getElementById("vehicleModalTitle");
+      const vehicleModalSubtitle = document.getElementById("vehicleModalSubtitle");
+
+      const openPartnerForm = document.getElementById("openPartnerForm");
+      const partnerModal = document.getElementById("partnerModal");
+      const closePartnerModal = document.getElementById("closePartnerModal");
+      const partnerModalTitle = document.getElementById("partnerModalTitle");
+      const partnerForm = document.getElementById("partnerForm");
+      const cancelPartnerForm = document.getElementById("cancelPartnerForm");
+
+      const dateModal = document.getElementById("dateModal");
+      const closeDateModal = document.getElementById("closeDateModal");
+      const cancelDateModal = document.getElementById("cancelDateModal");
+      const confirmDateModal = document.getElementById("confirmDateModal");
+      const dateModalTitle = document.getElementById("dateModalTitle");
+      const dateModalLabel = document.getElementById("dateModalLabel");
+      const dateModalInput = document.getElementById("dateModalInput");
+
+      const openPayableForm = document.getElementById("openPayableForm");
+      const payableModal = document.getElementById("payableModal");
+      const closePayableModal = document.getElementById("closePayableModal");
+      const payableForm = document.getElementById("payableForm");
+      const cancelPayableForm = document.getElementById("cancelPayableForm");
+      const payableCategory = document.getElementById("payableCategory");
+      const fichaModal = document.getElementById("fichaModal");
+      const closeFichaModal = document.getElementById("closeFichaModal");
+      const printFicha = document.getElementById("printFicha");
+      const downloadFicha = document.getElementById("downloadFicha");
+      const fichaCapture = document.getElementById("fichaCapture");
+      const fichaResumo = document.getElementById("fichaResumo");
+      const fichaTimeline = document.getElementById("fichaTimeline");
+      const nfseModal = document.getElementById("nfseModal");
+      const closeNfseModal = document.getElementById("closeNfseModal");
+      const closeNfseModal2 = document.getElementById("closeNfseModal2");
+      const nfseResumo = document.getElementById("nfseResumo");
+      const nfseTexto = document.getElementById("nfseTexto");
+      const confirmNfse = document.getElementById("confirmNfse");
+      const textModal = document.getElementById("textModal");
+      const textModalTitle = document.getElementById("textModalTitle");
+      const textModalBody = document.getElementById("textModalBody");
+      const closeTextModal = document.getElementById("closeTextModal");
+      const closeTextModal2 = document.getElementById("closeTextModal2");
+      const copyTextModal = document.getElementById("copyTextModal");
+
+      const tableNoPatio = document.getElementById("tableNoPatio");
+      const tableSolicitada = document.getElementById("tableSolicitada");
+      const tableConfirmada = document.getElementById("tableConfirmada");
+      const tableRemocaoConfirmada = document.getElementById("tableRemocaoConfirmada");
+      const tableRemovidos = document.getElementById("tableRemovidos");
+      const tableNfsePendentes = document.getElementById("tableNfsePendentes");
+      const tablePartners = document.getElementById("tablePartners");
+      const tableAssessorias = document.getElementById("tableAssessorias");
+      const tableFinance = document.getElementById("tableFinance");
+      const financeHead = document.getElementById("financeHead");
+      const rankByVehicles = document.getElementById("rankByVehicles");
+      const rankByRevenue = document.getElementById("rankByRevenue");
+
+      const financeReceber = document.getElementById("financeReceber");
+      const financeReceberCount = document.getElementById("financeReceberCount");
+      const financePagar = document.getElementById("financePagar");
+      const financePagarCount = document.getElementById("financePagarCount");
+      const financeCaixa = document.getElementById("financeCaixa");
+      const financeCaixaStatus = document.getElementById("financeCaixaStatus");
+      const receivableAlert = document.getElementById("receivableAlert");
+      const financeFilters = document.getElementById("financeFilters");
+      const financeContent = document.getElementById("financeContent");
+      const filterFrom = document.getElementById("filterFrom");
+      const filterTo = document.getElementById("filterTo");
+      const applyFilter = document.getElementById("applyFilter");
+      const clearFilter = document.getElementById("clearFilter");
+      const quick7 = document.getElementById("quick7");
+      const quick30 = document.getElementById("quick30");
+      const quick90 = document.getElementById("quick90");
+      const exportHistory = document.getElementById("exportHistory");
+
+      const settingsCnpj = document.getElementById("settingsCnpj");
+      const settingsName = document.getElementById("settingsName");
+      const settingsBank = document.getElementById("settingsBank");
+      const settingsCharge = document.getElementById("settingsCharge");
+      const settingsInvoice = document.getElementById("settingsInvoice");
+      const saveSettings = document.getElementById("saveSettings");
+
+      const reloadPatio = document.getElementById("reloadPatio");
+      const reloadFinanceiro = document.getElementById("reloadFinanceiro");
+      const patioSubnav = document.getElementById("patioSubnav");
+      const financeSubnav = document.getElementById("financeSubnav");
+      const partnerSubnav = document.getElementById("partnerSubnav");
+      const cardNfseLink = document.getElementById("cardNfseLink");
+      const plateFilter = document.getElementById("plateFilter");
+      const clearPlateFilter = document.getElementById("clearPlateFilter");
+
+      const patioSubviews = document.querySelectorAll(".patio-subview");
+      const partnerSubviews = document.querySelectorAll(".partner-subview");
+      const financeSubviews = financeSubnav ? financeSubnav.querySelectorAll("button[data-subview]") : [];
+
+      let currentPatioView = null;
+      let currentFinanceView = null;
+      let currentPartnerView = null;
+      const navStack = ["dashboard"];
+      let historyFilter = { from: null, to: null };
+      let plateQuery = "";
+      let editingVehicleId = null;
+      let editingVehicleData = null;
+      let nfseVehicleId = null;
+
+      const state = {
+        user: null,
+        partners: [],
+        vehicles: [],
+        receivables: [],
+        payables: [],
+        cash: [],
+        settings: null,
+      };
+
+      const currency = new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+
+      function formatCurrency(value) {
+        return currency.format(value || 0);
+      }
+
+      function setPlateSearchHints(text, visible) {
+        document.querySelectorAll(".plate-search-hint").forEach((el) => {
+          el.textContent = text || "";
+          el.classList.toggle("hidden", !visible);
+        });
+      }
+
+      function formatDateTime(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yy = String(date.getFullYear()).slice(-2);
+        const hh = String(date.getHours()).padStart(2, "0");
+        const min = String(date.getMinutes()).padStart(2, "0");
+        return `${dd}-${mm}-${yy} ${hh}:${min}`;
+      }
+
+      function formatDate(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yy = String(date.getFullYear()).slice(-2);
+        return `${dd}-${mm}-${yy}`;
+      }
+
+      function toLocalInput(dateValue) {
+        if (!dateValue) return "";
+        const date = new Date(dateValue);
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 16);
+      }
+
+      function calcTotal(vehicle) {
+        if (!vehicle?.data_entrada || !vehicle?.valor_diaria) return 0;
+        const start = new Date(vehicle.data_entrada);
+        const end = vehicle.data_saida ? new Date(vehicle.data_saida) : new Date();
+        const diffMs = end - start;
+        const days = Math.max(1, Math.ceil(diffMs / 86400000));
+        return days * Number(vehicle.valor_diaria);
+      }
+
+      function calcPeriodTotal(vehicle, periodStart, periodEnd) {
+        if (!vehicle?.valor_diaria || !periodStart) return 0;
+        const start = new Date(periodStart);
+        const end = periodEnd ? new Date(periodEnd) : vehicle?.data_saida ? new Date(vehicle.data_saida) : new Date();
+        const diffMs = end - start;
+        const days = Math.max(1, Math.ceil(diffMs / 86400000));
+        return days * Number(vehicle.valor_diaria);
+      }
+
+      function startOfLocalDayIso(dateStr) {
+        // dateStr: "YYYY-MM-DD"
+        const [y, m, d] = (dateStr || "").split("-").map((v) => Number(v));
+        if (!y || !m || !d) return null;
+        const local = new Date(y, m - 1, d, 0, 0, 0, 0);
+        return local.toISOString();
+      }
+
+      function endOfPreviousLocalDayIso(dateStr) {
+        const start = startOfLocalDayIso(dateStr);
+        if (!start) return null;
+        const startMs = new Date(start).getTime();
+        return new Date(startMs - 1).toISOString();
+      }
+
+      function calcDays(vehicle) {
+        if (!vehicle?.data_entrada) return 0;
+        const start = new Date(vehicle.data_entrada);
+        const end = vehicle.data_saida ? new Date(vehicle.data_saida) : new Date();
+        const diffMs = end - start;
+        return Math.max(1, Math.ceil(diffMs / 86400000));
+      }
+
+      function calcHours(vehicle) {
+        if (!vehicle?.data_entrada) return 0;
+        const start = new Date(vehicle.data_entrada);
+        const end = vehicle.data_saida ? new Date(vehicle.data_saida) : new Date();
+        const diffMs = end - start;
+        return Math.max(0, Math.floor(diffMs / 3600000));
+      }
+
+      function setEmptyRow(tbody, message, columns) {
+        const colspan = columns || 6;
+        tbody.innerHTML = `<tr><td class="empty" colspan="${colspan}">${message}</td></tr>`;
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        themeLabel.textContent = theme === "dark" ? "Tema escuro" : "Tema claro";
+      }
+
+      const savedTheme = localStorage.getItem("amplipatio-theme") || "light";
+      applyTheme(savedTheme);
+
+      themeToggle.addEventListener("click", () => {
+        const nextTheme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        localStorage.setItem("amplipatio-theme", nextTheme);
+        applyTheme(nextTheme);
+      });
+
+      function setStatus(message, type) {
+        authStatus.textContent = message;
+        authStatus.className = "status " + (type || "");
+      }
+
+      function stylizeLogo() {
+        const logoEl = document.getElementById("brandLogo");
+        if (!logoEl) return;
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = logoEl.src;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return;
+          ctx.drawImage(img, 0, 0);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const a = data[i + 3];
+            if (a === 0) continue;
+            const isDark = r < 20 && g < 20 && b < 20;
+            const isRedDetail = r > g + 40 && r > b + 40;
+            if (isDark) {
+              data[i + 3] = 0;
+            } else if (isRedDetail) {
+              // mantém o detalhe vermelho
+            } else {
+              data[i] = 255;
+              data[i + 1] = 255;
+              data[i + 2] = 255;
+            }
+          }
+          ctx.putImageData(imageData, 0, 0);
+          logoEl.src = canvas.toDataURL("image/png");
+        };
+      }
+
+      function toggleAuthTab(isLogin) {
+        tabLogin.classList.toggle("active", isLogin);
+        tabRegister.classList.toggle("active", !isLogin);
+        loginForm.classList.toggle("hidden", !isLogin);
+        registerForm.classList.toggle("hidden", isLogin);
+        setStatus("", "");
+      }
+
+      tabLogin.addEventListener("click", () => toggleAuthTab(true));
+      tabRegister.addEventListener("click", () => toggleAuthTab(false));
+
+      stylizeLogo();
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setStatus("Entrando...", "");
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          setStatus(error.message, "error");
+          return;
+        }
+        setStatus("Login realizado com sucesso.", "success");
+      });
+
+      registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setStatus("Criando conta...", "");
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          setStatus(error.message, "error");
+          return;
+        }
+        setStatus("Conta criada. Verifique seu e-mail, se o Supabase exigir confirmação.", "success");
+      });
+
+      logoutBtn.addEventListener("click", async () => {
+        await supabase.auth.signOut();
+      });
+
+      function showApp(user) {
+        authPanel.classList.add("hidden");
+        appPanel.classList.remove("hidden");
+        userInfo.textContent = user ? `Logado como ${user.email}` : "Logado";
+        state.user = user;
+        loadAll();
+      }
+
+      function showAuth() {
+        authPanel.classList.remove("hidden");
+        appPanel.classList.add("hidden");
+        userInfo.textContent = "Não autenticado";
+        state.user = null;
+      }
+
+      async function bootstrap() {
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          showApp(data.session.user);
+        } else {
+          showAuth();
+        }
+      }
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_OUT" || event === "TOKEN_REFRESH_FAILED") {
+          showAuth();
+          alert("Sessão expirada. Faça login novamente.");
+          return;
+        }
+        if (session?.user) {
+          showApp(session.user);
+        } else {
+          showAuth();
+        }
+      });
+
+      async function loadPartners() {
+        const { data, error } = await supabase
+          .from("partners")
+          .select("*")
+          .eq("user_id", state.user.id)
+          .order("created_at", { ascending: false });
+        if (error) {
+          console.error(error);
+          return;
+        }
+        state.partners = data || [];
+        renderPartners();
+        renderPartnerOptions();
+      }
+
+      async function loadVehicles() {
+        const { data, error } = await supabase
+          .from("vehicles")
+          .select("*")
+          .eq("user_id", state.user.id)
+          .order("data_entrada", { ascending: false });
+        if (error) {
+          console.error(error);
+          return;
+        }
+        state.vehicles = data || [];
+        renderVehicles();
+      }
+
+      async function loadReceivables() {
+        const { data, error } = await supabase
+          .from("receivables")
+          .select("*")
+          .eq("user_id", state.user.id)
+          .order("created_at", { ascending: false });
+        if (error) {
+          console.error(error);
+          return;
+        }
+        state.receivables = data || [];
+      }
+
+      async function loadPayables() {
+        const { data, error } = await supabase
+          .from("payables")
+          .select("*")
+          .eq("user_id", state.user.id)
+          .order("created_at", { ascending: false });
+        if (error) {
+          console.error(error);
+          return;
+        }
+        state.payables = data || [];
+      }
+
+      async function loadCash() {
+        const { data, error } = await supabase
+          .from("cash_movements")
+          .select("*")
+          .eq("user_id", state.user.id)
+          .order("created_at", { ascending: false });
+        if (error) {
+          console.error(error);
+          return;
+        }
+        state.cash = data || [];
+      }
+
+      async function loadSettings() {
+        const { data, error } = await supabase
+          .from("settings")
+          .select("*")
+          .eq("user_id", state.user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (error && error.code !== "PGRST116") {
+          console.error(error);
+          return;
+        }
+        state.settings = data || null;
+        if (state.settings) {
+          settingsCnpj.value = state.settings.cnpj || "";
+          settingsName.value = state.settings.nome_patio || "";
+          settingsBank.value = state.settings.conta_bancaria || "";
+          settingsCharge.value = state.settings.texto_cobranca || "";
+          settingsInvoice.value = state.settings.texto_nota_fiscal || "";
+        }
+      }
+
+      async function loadAll() {
+        await Promise.all([loadPartners(), loadVehicles(), loadReceivables(), loadPayables(), loadCash(), loadSettings()]);
+        renderFinance();
+        updateDashboard();
+      }
+
+      function updateDashboard() {
+        const noPatio = state.vehicles.filter((v) => v.status === "NO_PATIO");
+        const vls = state.vehicles.filter((v) =>
+          ["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMocao_CONFIRMADA"].includes(v.status)
+        );
+        const removidos = state.vehicles.filter((v) => v.status === "REMOVIDO");
+        const nfsePendentes = state.vehicles.filter((v) => v.nfse_status === "PENDENTE");
+
+        const totalNoPatio = noPatio.reduce((sum, v) => sum + calcTotal(v), 0);
+        const now = new Date();
+        const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+        const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        const totalDiariasHoje = state.vehicles
+          .filter((v) => v.status !== "REMOVIDO")
+          .filter((v) => {
+            const entrada = new Date(v.data_entrada);
+            const saida = v.data_saida ? new Date(v.data_saida) : null;
+            const entrouAntes = entrada <= endToday;
+            const saiuDepois = !saida || saida >= startToday;
+            return entrouAntes && saiuDepois;
+          })
+          .reduce((sum, v) => sum + Number(v.valor_diaria || 0), 0);
+
+        const today = new Date();
+        const todayStr = today.toISOString().slice(0, 10);
+        const vencidas = state.payables.filter(
+          (p) => p.status === "EM_ABERTO" && p.data_vencimento && p.data_vencimento < todayStr
+        );
+        const vencendoHoje = state.payables.filter(
+          (p) => p.status === "EM_ABERTO" && p.data_vencimento === todayStr
+        );
+
+        const caixa = state.cash.reduce((sum, mov) => {
+          if (mov.tipo_conta === "PAGAR") return sum - Number(mov.valor || 0);
+          return sum + Number(mov.valor || 0);
+        }, 0);
+
+        document.getElementById("cardVeiculos").textContent = noPatio.length.toString();
+        document.getElementById("cardSolicitadas").textContent = vls.length.toString();
+        document.getElementById("cardConfirmadas").textContent = removidos.length.toString();
+        document.getElementById("cardVencidas").textContent = vencidas.length.toString();
+        document.getElementById("cardHoje").textContent = vencendoHoje.length.toString();
+        document.getElementById("cardCaixa").textContent = formatCurrency(caixa);
+        document.getElementById("cardTotalDiarias").textContent = formatCurrency(totalDiariasHoje);
+        document.getElementById("cardNfsePendentes").textContent = nfsePendentes.length.toString();
+      }
+
+      function renderVehicles() {
+        const filteredVehicles = plateQuery
+          ? state.vehicles.filter((v) => (v.placa || "").toLowerCase().includes(plateQuery))
+          : state.vehicles;
+        const byStatus = {
+          NO_PATIO: [],
+          LIBERACAO_SOLICITADA: [],
+          LIBERACAO_CONFIRMADA: [],
+          REMocao_CONFIRMADA: [],
+          REMOVIDO: [],
+        };
+        filteredVehicles.forEach((v) => {
+          if (byStatus[v.status]) {
+            byStatus[v.status].push(v);
+          }
+        });
+        const nfsePendentes = filteredVehicles.filter((v) => v.nfse_status === "PENDENTE");
+
+        renderVehicleTable(tableNoPatio, byStatus.NO_PATIO, "solicitar");
+        renderVlsTable(
+          tableSolicitada,
+          [...byStatus.LIBERACAO_SOLICITADA, ...byStatus.LIBERACAO_CONFIRMADA, ...byStatus.REMocao_CONFIRMADA]
+        );
+        renderRemovedVehicles(tableRemovidos, byStatus.REMOVIDO);
+        renderVehicleTable(tableNfsePendentes, nfsePendentes, "nfse_pendente");
+        updateDashboard();
+
+        if (plateQuery) {
+          applyGlobalPlateSearchLayout(byStatus, nfsePendentes);
+        } else {
+          setPlateSearchHints("", false);
+          setPatioView(currentPatioView, { silent: true });
+        }
+      }
+
+      function applyGlobalPlateSearchLayout(byStatus, nfsePendentesList) {
+        const vlsItems = [
+          ...byStatus.LIBERACAO_SOLICITADA,
+          ...byStatus.LIBERACAO_CONFIRMADA,
+          ...byStatus.REMocao_CONFIRMADA,
+        ];
+        const counts = {
+          no_patio: byStatus.NO_PATIO.length,
+          liberacao_solicitada: vlsItems.length,
+          removidos: byStatus.REMOVIDO.length,
+          nfse_pendente: nfsePendentesList.length,
+        };
+        const total = counts.no_patio + counts.liberacao_solicitada + counts.removidos + counts.nfse_pendente;
+
+        setPlateSearchHints(
+          total === 0
+            ? "Nenhum veículo com essa placa em VNP, VLS, VRP ou NFSe pendente."
+            : "Busca global: abaixo aparecem só as áreas onde há veículo com essa placa.",
+          true
+        );
+
+        patioSubnav.querySelectorAll("button").forEach((btn) => {
+          const key = btn.getAttribute("data-subview");
+          const n = counts[key] || 0;
+          btn.classList.toggle("active", n > 0);
+        });
+
+        if (total === 0) {
+          patioSubviews.forEach((panel) => {
+            panel.classList.remove("hidden");
+          });
+          return;
+        }
+
+        patioSubviews.forEach((panel) => {
+          const key = panel.getAttribute("data-subview");
+          const show = (counts[key] || 0) > 0;
+          panel.classList.toggle("hidden", !show);
+          if (show) {
+            panel.classList.remove("air-open");
+            void panel.offsetWidth;
+            panel.classList.add("air-open");
+          }
+        });
+      }
+
+      function renderVlsTable(tbody, items) {
+        if (!items.length) {
+          setEmptyRow(tbody, "Nenhum veículo encontrado.", 8);
+          return;
+        }
+        tbody.innerHTML = items
+          .map((v) => {
+            const total = calcTotal(v);
+            const pago = v.payment_status === "PAGO";
+            const localizador = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
+            const assessoria = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
+
+            const nextActionByStatus = {
+              LIBERACAO_SOLICITADA: "confirmar",
+              LIBERACAO_CONFIRMADA: "remocao",
+              REMocao_CONFIRMADA: "remover",
+            };
+            const actionType = nextActionByStatus[v.status] || "confirmar";
+            const actionLabels = {
+              confirmar: "Confirmar liberação",
+              remocao: "Confirmar remoção",
+              remover: "Registrar remoção",
+            };
+
+            return `
+              <tr>
+                <td data-label="Placa">${v.placa || "-"}</td>
+                <td data-label="Veículo">${[v.marca, v.modelo].filter(Boolean).join(" ") || "-"}</td>
+                <td data-label="Localizador">${localizador}</td>
+                <td data-label="Assessoria">${assessoria}</td>
+                <td data-label="Entrada">${formatDateTime(v.data_entrada)}</td>
+                <td data-label="Valor">
+                  ${formatCurrency(total)}
+                  <span class="notice">(${calcDays(v)} diárias • ${calcHours(v)}h)</span>
+                </td>
+                <td data-label="Pagamento"><span class="tag ${pago ? "success" : "warning"}">${pago ? "Pago" : "Em aberto"}</span></td>
+                <td class="actions" data-label="Ações">
+                  <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
+                  <button class="secondary" data-action="nfse" data-id="${v.id}">NFSe solicitada</button>
+                  <button class="secondary" data-action="trocar-responsavel" data-id="${v.id}">Trocar responsável</button>
+                  <button class="secondary" data-action="${actionType}" data-id="${v.id}">${actionLabels[actionType]}</button>
+                  <button class="secondary" data-action="pagamento" data-id="${v.id}">${pago ? "Marcar em aberto" : "Marcar pago"}</button>
+                  <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
+                  <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function setPatioView(view, opts = {}) {
+        const silent = opts.silent === true;
+        currentPatioView = view;
+        const isNone = !view || view === "none";
+        patioSubnav.querySelectorAll("button").forEach((btn) => {
+          btn.classList.toggle("active", !isNone && btn.getAttribute("data-subview") === view);
+        });
+        let shownPanel = null;
+        patioSubviews.forEach((panel) => {
+          const match = !isNone && panel.getAttribute("data-subview") === view;
+          panel.classList.toggle("hidden", !match);
+          if (match) shownPanel = panel;
+        });
+        if (shownPanel && !silent) {
+          shownPanel.classList.remove("air-open");
+          void shownPanel.offsetWidth;
+          shownPanel.classList.add("air-open");
+        }
+      }
+
+      function setPartnerView(view) {
+        currentPartnerView = view;
+        const isNone = !view || view === "none";
+        partnerSubnav.querySelectorAll("button").forEach((btn) => {
+          btn.classList.toggle("active", !isNone && btn.getAttribute("data-subview") === view);
+        });
+        let shownPanel = null;
+        partnerSubviews.forEach((panel) => {
+          const match = !isNone && panel.getAttribute("data-subview") === view;
+          panel.classList.toggle("hidden", !match);
+          if (match) shownPanel = panel;
+        });
+        if (shownPanel) {
+          shownPanel.classList.remove("air-open");
+          void shownPanel.offsetWidth;
+          shownPanel.classList.add("air-open");
+        }
+        openPartnerForm.textContent = view === "assessorias" ? "Nova assessoria" : "Novo parceiro";
+      }
+
+      function renderVehicleTable(tbody, items, actionType) {
+        if (!items.length) {
+          setEmptyRow(tbody, "Nenhum veículo encontrado.", 8);
+          return;
+        }
+        tbody.innerHTML = items
+          .map((v) => {
+            const total = calcTotal(v);
+            const pago = v.payment_status === "PAGO";
+            const localizador =
+              state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
+            const assessoria =
+              state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
+            const actionLabels = {
+              solicitar: "Solicitar liberação",
+              confirmar: "Confirmar liberação",
+              remocao: "Confirmar remoção",
+              remover: "Registrar remoção",
+              nfse_pendente: "NFSe solicitada",
+            };
+            return `
+              <tr>
+                <td data-label="Placa">${v.placa || "-"}</td>
+                <td data-label="Veículo">${[v.marca, v.modelo].filter(Boolean).join(" ") || "-"}</td>
+                <td data-label="Localizador">${localizador}</td>
+                <td data-label="Assessoria">${assessoria}</td>
+                <td data-label="Entrada">${formatDateTime(v.data_entrada)}</td>
+                <td data-label="Valor">
+                  ${formatCurrency(total)}
+                  <span class="notice">(${calcDays(v)} diárias • ${calcHours(v)}h)</span>
+                </td>
+                <td data-label="Pagamento"><span class="tag ${pago ? "success" : "warning"}">${pago ? "Pago" : "Em aberto"}</span></td>
+                <td class="actions" data-label="Ações">
+                  <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
+                  ${
+                    actionType === "nfse_pendente"
+                      ? `<button class="secondary" data-action="nfse" data-id="${v.id}">${actionLabels[actionType]}</button>`
+                      : `<button class="secondary" data-action="nfse" data-id="${v.id}">NFSe solicitada</button>
+                         <button class="secondary" data-action="${actionType}" data-id="${v.id}">${actionLabels[actionType]}</button>`
+                  }
+                  <button class="secondary" data-action="pagamento" data-id="${v.id}">${pago ? "Marcar em aberto" : "Marcar pago"}</button>
+                  <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
+                  <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderRemovedVehicles(tbody, items) {
+        if (!items.length) {
+          setEmptyRow(tbody, "Nenhum veículo removido.", 8);
+          return;
+        }
+        tbody.innerHTML = items
+          .map((v) => {
+            const total = calcTotal(v);
+            const status = v.status === "REMOVIDO" ? "Removido" : "Outro";
+            const pago = v.payment_status === "PAGO";
+            const localizador =
+              state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
+            const assessoria =
+              state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
+            return `
+              <tr>
+                <td data-label="Placa">${v.placa || "-"}</td>
+                <td data-label="Veículo">${[v.marca, v.modelo].filter(Boolean).join(" ") || "-"}</td>
+                <td data-label="Localizador">${localizador}</td>
+                <td data-label="Assessoria">${assessoria}</td>
+                <td data-label="Entrada">${formatDateTime(v.data_entrada)}</td>
+                <td data-label="Saída">${formatDateTime(v.data_saida)}</td>
+                <td data-label="Valor">
+                  ${formatCurrency(total)}
+                  <span class="notice">(${calcDays(v)} diárias • ${calcHours(v)}h)</span>
+                </td>
+                <td class="actions" data-label="Ações">
+                  <span class="tag ${pago ? "success" : "warning"}">${pago ? "Pago" : "Em aberto"}</span>
+                  <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
+                  <button class="secondary" data-action="nfse" data-id="${v.id}">NFSe solicitada</button>
+                  <button class="secondary" data-action="pagamento" data-id="${v.id}">${pago ? "Marcar em aberto" : "Marcar pago"}</button>
+                  <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
+                  <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
+                  <span class="tag success">${status}</span>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function buildNfseText(vehicle) {
+        const dias = calcDays(vehicle);
+        const total = formatCurrency(calcTotal(vehicle));
+        const entrada = formatDate(vehicle.data_entrada);
+        const saida = vehicle.data_saida ? formatDate(vehicle.data_saida) : formatDate(new Date());
+        const placa = vehicle.placa || "-";
+        const veiculo = [vehicle.marca, vehicle.modelo].filter(Boolean).join(" ") || "-";
+        return `Serviço de guarda e custódia de veículo automotor realizado em pátio particular. Veículo: ${veiculo} de placa ${placa} Período de permanência:\n${entrada} a ${saida} (${dias} diárias) Valor total a pagar: ${total}. Dados para Pagamento: Fernando Vasconcellos de Albuquerque Lima CNPJ: 57.936.119/0001-98 Banco Inter (Código 077) Agência: 0001 Conta Corrente PJ: 44506284-3 PIX (CNPJ): 57.936.119/0001-98.`;
+      }
+
+      async function openNfseModal(vehicle) {
+        nfseVehicleId = vehicle.id;
+        nfseResumo.textContent = `Veículo: ${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`;
+        nfseTexto.value = buildNfseText(vehicle);
+        if (!vehicle.nfse_status || vehicle.nfse_status === "NAO_SOLICITADA") {
+          await supabase
+            .from("vehicles")
+            .update({ nfse_status: "PENDENTE", nfse_requested_at: new Date().toISOString() })
+            .eq("id", vehicle.id)
+            .eq("user_id", state.user.id);
+          await loadVehicles();
+          updateDashboard();
+        }
+        nfseModal.classList.remove("hidden");
+      }
+
+      async function openFicha(vehicle) {
+        const { data: ciclos, error: ciclosError } = await supabase
+          .from("receivables")
+          .select("responsavel_pagamento,valor,period_start,period_end,status")
+          .eq("user_id", state.user.id)
+          .eq("vehicle_id", vehicle.id)
+          .order("period_start", { ascending: true });
+
+        const ciclosHtml =
+          !ciclos || !ciclos.length
+            ? "<em>Sem ciclos financeiros cadastrados.</em>"
+            : ciclos
+                .map((c, idx) => {
+                  const inicio = c.period_start ? formatDate(c.period_start) : "-";
+                  const fim = c.period_end ? formatDate(c.period_end) : "aberto";
+                  const status = c.status === "PAGO" ? "Pago" : "Em aberto";
+                  return `Ciclo ${idx + 1}: ${inicio} a ${fim} • ${c.responsavel_pagamento || "-"} • ${formatCurrency(
+                    c.valor
+                  )} (${status})`;
+                })
+                .join("<br />");
+
+        fichaResumo.innerHTML = `
+          <strong>${vehicle.placa || "-"}</strong> • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ") || "-"}<br />
+          Entrada: ${formatDateTime(vehicle.data_entrada)} • Saída: ${formatDateTime(vehicle.data_saida)}<br />
+          Valor total: ${formatCurrency(calcTotal(vehicle))} • Pagamento: ${
+            vehicle.payment_status === "PAGO" ? "Pago" : "Em aberto"
+          }<br />
+          <span class="notice">Ciclos financeiros:</span><br />
+          ${ciclosError ? "<em>Erro ao carregar ciclos.</em>" : ciclosHtml}
+        `;
+
+        const { data, error } = await supabase
+          .from("vehicle_events")
+          .select("*")
+          .eq("vehicle_id", vehicle.id)
+          .order("data_evento", { ascending: true });
+
+        if (error) {
+          fichaTimeline.innerHTML = `<div class="timeline-item">Erro ao carregar histórico.</div>`;
+        } else if (!data || !data.length) {
+          fichaTimeline.innerHTML = `<div class="timeline-item">Sem histórico ainda.</div>`;
+        } else {
+          fichaTimeline.innerHTML = data
+            .map((evt) => {
+              const title = evt.tipo
+                .replace("LIBERACAO_", "Liberação ")
+                .replace("REMocao_", "Remoção ")
+                .replace("REMOVIDO", "Removido");
+              return `
+                <div class="timeline-item">
+                  <div class="timeline-title">${title}</div>
+                  <div>${evt.descricao || "-"}</div>
+                  <div class="timeline-meta">Responsável: ${evt.responsavel || "-"} • ${formatDateTime(
+                evt.data_evento
+              )}</div>
+                </div>
+              `;
+            })
+            .join("");
+        }
+        fichaModal.classList.remove("hidden");
+      }
+
+      function renderPartners() {
+        const parceiros = state.partners.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const assessorias = state.partners.filter((p) => p.tipo === "ASSESSORIA");
+
+        if (!parceiros.length) {
+          setEmptyRow(tablePartners, "Nenhum parceiro cadastrado.", 5);
+        } else {
+          tablePartners.innerHTML = parceiros
+            .map((p) => {
+              return `
+                <tr>
+                  <td>${p.nome || "-"}</td>
+                  <td>${p.contato || "-"}</td>
+                  <td>${p.email || "-"}</td>
+                  <td><span class="tag">Ativo</span></td>
+                  <td class="actions">
+                    <button class="secondary" data-action="editar-parceiro" data-id="${p.id}">Editar</button>
+                    <button class="secondary" data-action="apagar-parceiro" data-id="${p.id}">Apagar</button>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+        }
+
+        if (!assessorias.length) {
+          setEmptyRow(tableAssessorias, "Nenhuma assessoria cadastrada.", 5);
+        } else {
+          tableAssessorias.innerHTML = assessorias
+            .map((p) => {
+              return `
+                <tr>
+                  <td>${p.nome || "-"}</td>
+                  <td>${p.contato || "-"}</td>
+                  <td>${p.email || "-"}</td>
+                  <td><span class="tag">Ativo</span></td>
+                  <td class="actions">
+                    <button class="secondary" data-action="editar-parceiro" data-id="${p.id}">Editar</button>
+                    <button class="secondary" data-action="apagar-parceiro" data-id="${p.id}">Apagar</button>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("");
+        }
+
+        renderPartnerRankings();
+      }
+
+      function renderPartnerRankings() {
+        const parceiros = state.partners.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const partnerMap = new Map(parceiros.map((p) => [p.id, p.nome || "-"]));
+
+        const vehiclesByPartner = new Map();
+        state.vehicles.forEach((v) => {
+          if (!v.localizador_id) return;
+          vehiclesByPartner.set(v.localizador_id, (vehiclesByPartner.get(v.localizador_id) || 0) + 1);
+        });
+        const topVehicles = [...vehiclesByPartner.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([id, count], idx) => `${idx + 1}. ${partnerMap.get(id) || "Parceiro"} (${count})`);
+        rankByVehicles.textContent = topVehicles.length ? topVehicles.join(" • ") : "Sem dados";
+
+        const receivableMap = new Map(state.receivables.map((r) => [r.id, r]));
+        const vehicleMap = new Map(state.vehicles.map((v) => [v.id, v]));
+        const revenueByPartner = new Map();
+        state.cash
+          .filter((c) => c.tipo_conta === "RECEBER")
+          .forEach((c) => {
+            const receivable = receivableMap.get(c.conta_id);
+            if (!receivable) return;
+            const vehicle = vehicleMap.get(receivable.vehicle_id);
+            if (!vehicle || vehicle.status !== "REMOVIDO") return;
+            if (!vehicle.localizador_id) return;
+            revenueByPartner.set(
+              vehicle.localizador_id,
+              (revenueByPartner.get(vehicle.localizador_id) || 0) + Number(c.valor || 0)
+            );
+          });
+        const topRevenue = [...revenueByPartner.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([id, total], idx) => `${idx + 1}. ${partnerMap.get(id) || "Parceiro"} (${formatCurrency(total)})`);
+        rankByRevenue.textContent = topRevenue.length ? topRevenue.join(" • ") : "Sem dados";
+      }
+
+      function renderPartnerOptions() {
+        vehicleLocator.innerHTML = `<option value="">Sem localizador</option>`;
+        vehicleAssessor.innerHTML = `<option value="">Sem assessoria</option>`;
+        state.partners.forEach((p) => {
+          const type = p.tipo || "PARCEIRO";
+          const option = document.createElement("option");
+          option.value = p.id;
+          option.textContent = p.nome;
+          if (type === "ASSESSORIA") {
+            vehicleAssessor.appendChild(option);
+          } else {
+            vehicleLocator.appendChild(option);
+          }
+        });
+      }
+
+      function openVehicleModal(mode, vehicle) {
+        editingVehicleId = mode === "edit" ? vehicle.id : null;
+        editingVehicleData = mode === "edit" ? vehicle : null;
+        vehicleModalTitle.textContent = mode === "edit" ? "Editar veículo" : "Registrar veículo";
+        vehicleModalSubtitle.textContent =
+          mode === "edit" ? "Atualize os dados do veículo" : "Cadastro de entrada no pátio";
+        vehicleForm.reset();
+        vehicleExit.value = "";
+        if (mode === "edit" && vehicle) {
+          document.getElementById("vehiclePlate").value = vehicle.placa || "";
+          document.getElementById("vehicleBrand").value = vehicle.marca || "";
+          document.getElementById("vehicleModel").value = vehicle.modelo || "";
+          document.getElementById("vehicleDaily").value = vehicle.valor_diaria || "";
+          document.getElementById("vehicleEntry").value = toLocalInput(vehicle.data_entrada);
+          vehicleExit.value = toLocalInput(vehicle.data_saida);
+          vehicleLocator.value = vehicle.localizador_id || "";
+          vehicleAssessor.value = vehicle.assessoria_id || "";
+          document.getElementById("vehicleNotes").value = vehicle.observacoes || "";
+        } else {
+          const entryInput = document.getElementById("vehicleEntry");
+          if (!entryInput.value) {
+            entryInput.value = toLocalInput(new Date());
+          }
+        }
+        vehicleModal.classList.remove("hidden");
+      }
+
+      function renderFinance() {
+        const openReceivables = state.receivables.filter((r) => r.status === "EM_ABERTO");
+        const openPayables = state.payables.filter((p) => p.status === "EM_ABERTO");
+        const totalReceber = openReceivables.reduce((sum, r) => sum + Number(r.valor || 0), 0);
+        const totalPagar = openPayables.reduce((sum, p) => sum + Number(p.valor || 0), 0);
+        const caixa = state.cash.reduce((sum, mov) => {
+          if (mov.tipo_conta === "PAGAR") return sum - Number(mov.valor || 0);
+          return sum + Number(mov.valor || 0);
+        }, 0);
+
+        financeReceber.textContent = formatCurrency(totalReceber);
+        financeReceberCount.textContent = `${openReceivables.length} em aberto`;
+        financePagar.textContent = formatCurrency(totalPagar);
+        financePagarCount.textContent = `${openPayables.length} previstas`;
+        financeCaixa.textContent = formatCurrency(caixa);
+        financeCaixaStatus.textContent = caixa >= 0 ? "Positivo" : "Negativo";
+        financeCaixaStatus.className = caixa >= 0 ? "tag success" : "tag warning";
+
+        state.receivables.forEach((r) => {
+          if (r.status !== "EM_ABERTO") return;
+          const vehicle = state.vehicles.find((v) => v.id === r.vehicle_id);
+          if (!vehicle) return;
+          const totalAtual = calcTotal(vehicle);
+          if (Number(r.valor || 0) !== Number(totalAtual)) {
+            supabase
+              .from("receivables")
+              .update({ valor: totalAtual })
+              .eq("id", r.id)
+              .eq("user_id", state.user.id);
+            r.valor = totalAtual;
+          }
+        });
+
+        const now = Date.now();
+        const overdueReceivables = openReceivables.filter((r) => {
+          if (!r.created_at) return false;
+          const created = new Date(r.created_at).getTime();
+          const days = Math.floor((now - created) / 86400000);
+          return days > 10;
+        });
+        if (overdueReceivables.length) {
+          receivableAlert.textContent = `Atenção: ${overdueReceivables.length} contas a receber estão em aberto há mais de 10 dias.`;
+          receivableAlert.classList.remove("hidden");
+          const cardAlert = document.getElementById("cardReceberAtraso");
+          if (cardAlert) {
+            cardAlert.textContent = `${overdueReceivables.length} atrasadas`;
+            cardAlert.className = "tag danger";
+          }
+        } else {
+          receivableAlert.classList.add("hidden");
+          receivableAlert.textContent = "";
+          const cardAlert = document.getElementById("cardReceberAtraso");
+          if (cardAlert) {
+            cardAlert.textContent = "Em dia";
+            cardAlert.className = "tag success";
+          }
+        }
+
+        const rows = [];
+
+        if (currentFinanceView === "relatorios") {
+          financeHead.innerHTML = `
+            <tr>
+              <th>Relatório</th>
+              <th>Valor</th>
+            </tr>`;
+
+          const nowDate = new Date();
+          const months = [];
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date(nowDate.getFullYear(), nowDate.getMonth() - i, 1);
+            months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+          }
+
+          const monthLabel = (ym) => {
+            const [y, m] = ym.split("-");
+            return `${m}-${String(y).slice(-2)}`;
+          };
+
+          const toMonth = (value) => {
+            if (!value) return null;
+            const d = new Date(value);
+            if (Number.isNaN(d.getTime())) return null;
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const yy = d.getFullYear();
+            return `${yy}-${mm}`;
+          };
+
+          const receivablesPaid = state.receivables.filter((r) => r.status === "PAGO");
+          const payablesPaid = state.payables.filter((p) => p.status === "PAGO");
+
+          const reportFrom = filterFrom?.value || null;
+          const reportTo = filterTo?.value || null;
+
+          const toDateOnly = (value) => {
+            if (!value) return null;
+            const d = new Date(value);
+            if (Number.isNaN(d.getTime())) return null;
+            return d.toISOString().slice(0, 10);
+          };
+
+          const receivablesPaidFiltered = reportFrom || reportTo ? receivablesPaid.filter((r) => {
+            const dateStr = toDateOnly(r.period_start || r.created_at);
+            if (!dateStr) return false;
+            if (reportFrom && dateStr < reportFrom) return false;
+            if (reportTo && dateStr > reportTo) return false;
+            return true;
+          }) : receivablesPaid;
+
+          const payablesPaidFiltered = reportFrom || reportTo ? payablesPaid.filter((p) => {
+            const dateStr = toDateOnly(p.data_vencimento || p.created_at);
+            if (!dateStr) return false;
+            if (reportFrom && dateStr < reportFrom) return false;
+            if (reportTo && dateStr > reportTo) return false;
+            return true;
+          }) : payablesPaid;
+
+          const receiptsByMonth = new Map();
+          receivablesPaidFiltered.forEach((r) => {
+            const m = toMonth(r.period_start || r.created_at);
+            if (!m) return;
+            receiptsByMonth.set(m, (receiptsByMonth.get(m) || 0) + Number(r.valor || 0));
+          });
+
+          const expensesByMonth = new Map();
+          payablesPaidFiltered.forEach((p) => {
+            const m = toMonth(p.data_vencimento || p.created_at);
+            if (!m) return;
+            expensesByMonth.set(m, (expensesByMonth.get(m) || 0) + Number(p.valor || 0));
+          });
+
+          months.forEach((m) => {
+            const rec = receiptsByMonth.get(m) || 0;
+            const exp = expensesByMonth.get(m) || 0;
+            const resultado = rec - exp;
+            rows.push(`
+              <tr>
+                <td>Resultado do mês (${monthLabel(m)})</td>
+                <td>${formatCurrency(resultado)}</td>
+              </tr>
+            `);
+          });
+
+          // Top responsáveis (por recebimentos pagos)
+          const revenueByResp = new Map();
+          receivablesPaidFiltered.forEach((r) => {
+            const key = r.responsavel_pagamento || "Não informado";
+            revenueByResp.set(key, (revenueByResp.get(key) || 0) + Number(r.valor || 0));
+          });
+          const top = [...revenueByResp.entries()]
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+          rows.push(`
+            <tr>
+              <td colspan="2" style="padding-top:16px;"><strong>Top responsáveis (recebidos)</strong></td>
+            </tr>
+          `);
+          if (top.length) {
+            top.forEach(([k, v], idx) => {
+              rows.push(`
+                <tr>
+                  <td>${idx + 1}. ${k}</td>
+                  <td>${formatCurrency(v)}</td>
+                </tr>
+              `);
+            });
+          } else {
+            rows.push(`
+              <tr>
+                <td>Sem dados</td>
+                <td>-</td>
+              </tr>
+            `);
+          }
+
+          // Totais por parceiro/localizador e assessoria (por ciclos pagos)
+          const vehicleById = new Map(state.vehicles.map((v) => [v.id, v]));
+          const partnerById = new Map(state.partners.map((p) => [p.id, p.nome || "-"]));
+          const totalsByLocator = new Map();
+          const totalsByAssessoria = new Map();
+
+          receivablesPaid.forEach((r) => {
+            const vehicle = vehicleById.get(r.vehicle_id);
+            if (!vehicle) return;
+            if (vehicle.localizador_id) {
+              const name = partnerById.get(vehicle.localizador_id) || "Sem localizador";
+              totalsByLocator.set(name, (totalsByLocator.get(name) || 0) + Number(r.valor || 0));
+            }
+            if (vehicle.assessoria_id) {
+              const name = partnerById.get(vehicle.assessoria_id) || "Sem assessoria";
+              totalsByAssessoria.set(name, (totalsByAssessoria.get(name) || 0) + Number(r.valor || 0));
+            }
+          });
+
+          const pushTopByMap = (title, map) => {
+            rows.push(`
+              <tr>
+                <td colspan="2" style="padding-top:16px;"><strong>${title}</strong></td>
+              </tr>
+            `);
+            const entries = [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+            if (!entries.length) {
+              rows.push(`
+                <tr>
+                  <td>Sem dados</td>
+                  <td>-</td>
+                </tr>
+              `);
+              return;
+            }
+            entries.forEach(([name, val], idx) => {
+              rows.push(`
+                <tr>
+                  <td>${idx + 1}. ${name}</td>
+                  <td>${formatCurrency(val)}</td>
+                </tr>
+              `);
+            });
+          };
+
+          pushTopByMap("Recebido por localizador (ciclos pagos)", totalsByLocator);
+          pushTopByMap("Recebido por assessoria (ciclos pagos)", totalsByAssessoria);
+
+          // Lista dos últimos ciclos pagos
+          rows.push(`
+            <tr>
+              <td colspan="2" style="padding-top:16px;"><strong>Últimos ciclos pagos</strong></td>
+            </tr>
+          `);
+          const lastCycles = [...receivablesPaidFiltered]
+            .sort((a, b) => new Date(b.period_start || b.created_at || 0).getTime() - new Date(a.period_start || a.created_at || 0).getTime())
+            .slice(0, 10);
+
+          lastCycles.forEach((r) => {
+            const vehicle = vehicleById.get(r.vehicle_id);
+            const locatorName = vehicle?.localizador_id ? partnerById.get(vehicle.localizador_id) || "Sem localizador" : "Sem localizador";
+            const assessName = vehicle?.assessoria_id ? partnerById.get(vehicle.assessoria_id) || "Sem assessoria" : "Sem assessoria";
+            const inicio = r.period_start ? formatDate(r.period_start) : "-";
+            const fim = r.period_end ? formatDate(r.period_end) : "aberto";
+            const resp = r.responsavel_pagamento || "-";
+            rows.push(`
+              <tr>
+                <td>${locatorName} / ${assessName} • ${inicio} a ${fim} • ${resp}</td>
+                <td>${formatCurrency(r.valor)}</td>
+              </tr>
+            `);
+          });
+
+          // Projeção de caixa
+          const openReceivables = state.receivables.filter((r) => r.status === "EM_ABERTO");
+          const openPayables = state.payables.filter((p) => p.status === "EM_ABERTO");
+          const caixaAtual = state.cash.reduce((sum, mov) => {
+            if (mov.tipo_conta === "PAGAR") return sum - Number(mov.valor || 0);
+            return sum + Number(mov.valor || 0);
+          }, 0);
+
+          const projetado = caixaAtual + openReceivables.reduce((s, r) => s + Number(r.valor || 0), 0) - openPayables.reduce((s, p) => s + Number(p.valor || 0), 0);
+
+          rows.push(`
+            <tr>
+              <td style="padding-top:16px;"><strong>Projeção de caixa</strong> (caixa atual + em aberto)</td>
+              <td>${formatCurrency(projetado)}</td>
+            </tr>
+          `);
+
+          if (!rows.length) {
+            setEmptyRow(tableFinance, "Nenhum dado para relatórios.", 2);
+          } else {
+            tableFinance.innerHTML = rows.join("");
+          }
+          return;
+        }
+
+        if (currentFinanceView === "caixa") {
+          financeHead.innerHTML = `
+            <tr>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Descrição</th>
+              <th>Valor</th>
+            </tr>`;
+          state.cash.forEach((mov) => {
+            rows.push(`
+              <tr>
+                <td>${formatDateTime(mov.data_movimento)}</td>
+                <td>${mov.tipo_conta}</td>
+                <td>${mov.descricao || "-"}</td>
+                <td>${formatCurrency(mov.valor)}</td>
+              </tr>
+            `);
+          });
+          if (!rows.length) {
+            setEmptyRow(tableFinance, "Nenhum movimento em caixa.", 4);
+          } else {
+            tableFinance.innerHTML = rows.join("");
+          }
+          return;
+        }
+
+        if (currentFinanceView === "pagar") {
+          financeHead.innerHTML = `
+            <tr>
+              <th>Tipo</th>
+              <th>Categoria / Descrição</th>
+              <th>Valor</th>
+              <th>Vencimento</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>`;
+        } else {
+          financeHead.innerHTML = `
+            <tr>
+              <th>Tipo</th>
+              <th>Categoria / Origem</th>
+              <th>Valor</th>
+              <th>Dias em aberto</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>`;
+        }
+
+        if (currentFinanceView === "receber" || currentFinanceView === "receber_alerta") {
+          state.receivables
+            .filter((r) => r.status === "EM_ABERTO")
+            .filter((r) => {
+              if (currentFinanceView !== "receber_alerta") return true;
+              if (!r.created_at) return false;
+              const created = new Date(r.created_at).getTime();
+              const days = Math.floor((now - created) / 86400000);
+              return days > 10;
+            })
+            .forEach((r) => {
+              const created = r.created_at ? new Date(r.created_at).getTime() : 0;
+              const daysOpen = created ? Math.floor((now - created) / 86400000) : 0;
+              const isOverdue = created ? daysOpen > 10 : false;
+              const vehicle = state.vehicles.find((v) => v.id === r.vehicle_id);
+              const vehicleInfo = vehicle
+                ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+                : "-";
+              rows.push(`
+                <tr>
+                  <td>Receber</td>
+                  <td>
+                    <span class="notice">${r.receivable_category || "GUARDA_PATIO"}</span><br />
+                    ${r.responsavel_pagamento || "Responsável não informado"}<br />
+                    <span class="notice">${vehicleInfo}</span><br />
+                    <span class="notice">Valor: ${formatCurrency(r.valor)}</span>
+                  </td>
+                  <td>${formatCurrency(r.valor)}</td>
+                  <td>${daysOpen} dia(s)</td>
+                  <td><span class="tag ${isOverdue ? "danger" : "warning"}">${isOverdue ? "Atrasada" : "Em aberto"}</span></td>
+                  <td class="actions">
+                    <button class="secondary" data-action="cobranca" data-id="${r.id}">Cobrança</button>
+                    <button class="secondary" data-action="nota" data-id="${r.id}">Nota fiscal</button>
+                    <button class="secondary" data-action="receber" data-id="${r.id}">Pagamento</button>
+                  </td>
+                </tr>
+              `);
+            });
+        }
+
+        if (currentFinanceView === "pagar") {
+          state.payables.filter((p) => p.status === "EM_ABERTO").forEach((p) => {
+            rows.push(`
+              <tr>
+                <td>Pagar</td>
+                <td>
+                  <span class="notice">${p.payable_category || "OUTROS"}</span><br />
+                  ${p.descricao || "Despesa"}
+                </td>
+                <td>${formatCurrency(p.valor)}</td>
+                <td>${formatDate(p.data_vencimento)}</td>
+                <td><span class="tag">Prevista</span></td>
+                <td class="actions">
+                  <button class="secondary" data-action="pagar" data-id="${p.id}">Pagamento</button>
+                  <button class="secondary" data-action="editar-despesa" data-id="${p.id}">Editar</button>
+                  <button class="secondary" data-action="apagar-despesa" data-id="${p.id}">Excluir</button>
+                </td>
+              </tr>
+            `);
+          });
+        }
+
+        if (currentFinanceView === "historico_receber") {
+          financeHead.innerHTML = `
+            <tr>
+              <th>Tipo</th>
+              <th>Origem</th>
+              <th>Valor</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th></th>
+            </tr>`;
+          const cashByReceivable = new Map(
+            state.cash.filter((c) => c.tipo_conta === "RECEBER").map((c) => [c.conta_id, c])
+          );
+          const filtered = state.receivables.filter((r) => r.status === "PAGO").filter((r) => {
+            if (!historyFilter.from && !historyFilter.to) return true;
+            const mov = cashByReceivable.get(r.id);
+            const dateStr = (mov?.data_movimento || r.created_at || "").toString().slice(0, 10);
+            if (!dateStr) return false;
+            if (historyFilter.from && dateStr < historyFilter.from) return false;
+            if (historyFilter.to && dateStr > historyFilter.to) return false;
+            return true;
+          });
+          filtered.forEach((r) => {
+            const vehicle = state.vehicles.find((v) => v.id === r.vehicle_id);
+            const origem = vehicle ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}` : "-";
+            const mov = cashByReceivable.get(r.id);
+            rows.push(`
+              <tr>
+                <td>Receber</td>
+                <td>${origem}</td>
+                <td>${formatCurrency(mov?.valor || r.valor)}</td>
+                <td>${formatDate(mov?.data_movimento || r.created_at)}</td>
+                <td><span class="tag success">Pago</span></td>
+                <td class="actions">
+                  <button class="secondary" data-action="editar-recebido" data-id="${r.id}">Editar</button>
+                  <button class="secondary" data-action="apagar-recebido" data-id="${r.id}">Apagar</button>
+                </td>
+              </tr>
+            `);
+          });
+        }
+
+        if (currentFinanceView === "historico_pagar") {
+          financeHead.innerHTML = `
+            <tr>
+              <th>Tipo</th>
+              <th>Origem</th>
+              <th>Valor</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th></th>
+            </tr>`;
+          const cashByPayable = new Map(
+            state.cash.filter((c) => c.tipo_conta === "PAGAR").map((c) => [c.conta_id, c])
+          );
+          const filtered = state.payables.filter((p) => p.status === "PAGO").filter((p) => {
+            if (!historyFilter.from && !historyFilter.to) return true;
+            const mov = cashByPayable.get(p.id);
+            const dateStr = (mov?.data_movimento || p.data_vencimento || "").toString().slice(0, 10);
+            if (!dateStr) return false;
+            if (historyFilter.from && dateStr < historyFilter.from) return false;
+            if (historyFilter.to && dateStr > historyFilter.to) return false;
+            return true;
+          });
+          filtered.forEach((p) => {
+            const mov = cashByPayable.get(p.id);
+            rows.push(`
+              <tr>
+                <td>Pagar</td>
+                <td>${p.descricao || "Despesa"}</td>
+                <td>${formatCurrency(mov?.valor || p.valor)}</td>
+                <td>${formatDate(mov?.data_movimento || p.data_vencimento)}</td>
+                <td><span class="tag success">Pago</span></td>
+                <td class="actions">
+                  <button class="secondary" data-action="editar-pago" data-id="${p.id}">Editar</button>
+                  <button class="secondary" data-action="apagar-pago" data-id="${p.id}">Apagar</button>
+                </td>
+              </tr>
+            `);
+          });
+        }
+
+        if (!rows.length) {
+          setEmptyRow(tableFinance, "Nenhum registro financeiro.", 6);
+        } else {
+          tableFinance.innerHTML = rows.join("");
+        }
+      }
+
+      function setFinanceView(view) {
+        currentFinanceView = view;
+        const isNone = !view || view === "none";
+        financeSubnav.querySelectorAll("button").forEach((btn) => {
+          btn.classList.toggle("active", !isNone && btn.getAttribute("data-subview") === view);
+        });
+        if (isNone) {
+          financeFilters.classList.add("hidden");
+          receivableAlert.classList.add("hidden");
+          if (financeContent) financeContent.classList.add("hidden");
+          return;
+        }
+        if (financeContent) {
+          financeContent.classList.remove("hidden");
+          financeContent.classList.remove("air-open");
+          void financeContent.offsetWidth;
+          financeContent.classList.add("air-open");
+        }
+        financeFilters.classList.toggle("hidden", !["historico_receber", "historico_pagar", "relatorios"].includes(view));
+        renderFinance();
+      }
+
+      openVehicleForm.addEventListener("click", () => {
+        openVehicleModal("create");
+      });
+
+      cancelVehicleForm.addEventListener("click", () => {
+        vehicleForm.reset();
+        editingVehicleId = null;
+        vehicleModal.classList.add("hidden");
+      });
+
+      openPartnerForm.addEventListener("click", () => {
+        partnerModalTitle.textContent = currentPartnerView === "assessorias" ? "Nova assessoria" : "Novo parceiro";
+        partnerForm.reset();
+        partnerModal.classList.remove("hidden");
+      });
+
+      cancelPartnerForm.addEventListener("click", () => {
+        partnerForm.reset();
+        partnerModal.classList.add("hidden");
+      });
+
+      openPayableForm.addEventListener("click", () => {
+        payableModal.classList.remove("hidden");
+      });
+
+      cancelPayableForm.addEventListener("click", () => {
+        payableForm.reset();
+        payableModal.classList.add("hidden");
+      });
+
+      closeVehicleModal.addEventListener("click", () => vehicleModal.classList.add("hidden"));
+      closePartnerModal.addEventListener("click", () => partnerModal.classList.add("hidden"));
+      closeDateModal.addEventListener("click", () => {
+        dateModal.classList.add("hidden");
+        if (dateModalResolver) {
+          dateModalResolver(null);
+          dateModalResolver = null;
+        }
+      });
+      closePayableModal.addEventListener("click", () => payableModal.classList.add("hidden"));
+      closeFichaModal.addEventListener("click", () => fichaModal.classList.add("hidden"));
+      closeNfseModal.addEventListener("click", () => nfseModal.classList.add("hidden"));
+      closeNfseModal2.addEventListener("click", () => nfseModal.classList.add("hidden"));
+      printFicha.addEventListener("click", () => window.print());
+      downloadFicha.addEventListener("click", async () => {
+        if (!window.html2canvas || !fichaCapture) return;
+        const canvas = await window.html2canvas(fichaCapture, { backgroundColor: "#ffffff", scale: 2 });
+        const link = document.createElement("a");
+        link.href = canvas.toDataURL("image/png");
+        link.download = "ficha-veiculo.png";
+        link.click();
+      });
+      closeTextModal.addEventListener("click", () => textModal.classList.add("hidden"));
+      closeTextModal2.addEventListener("click", () => textModal.classList.add("hidden"));
+      copyTextModal.addEventListener("click", async () => {
+        if (!textModalBody.value) return;
+        await navigator.clipboard.writeText(textModalBody.value);
+      });
+      confirmDateModal.addEventListener("click", () => {
+        const value = dateModalInput.value || null;
+        if (!value) {
+          alert("Selecione uma data para continuar.");
+          return;
+        }
+        dateModal.classList.add("hidden");
+        if (dateModalResolver) {
+          dateModalResolver(value);
+          dateModalResolver = null;
+        }
+      });
+      cancelDateModal.addEventListener("click", () => {
+        dateModal.classList.add("hidden");
+        if (dateModalResolver) {
+          dateModalResolver(null);
+          dateModalResolver = null;
+        }
+      });
+
+      [vehicleModal, partnerModal, payableModal, fichaModal, nfseModal, textModal].forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) {
+            modal.classList.add("hidden");
+          }
+        });
+      });
+
+      function openTextModal(title, body) {
+        textModalTitle.textContent = title;
+        textModalBody.value = body;
+        textModal.classList.remove("hidden");
+      }
+
+      let dateModalResolver = null;
+      function openDateModal({ title, label, type = "date", value = "" }) {
+        return new Promise((resolve) => {
+          dateModalResolver = resolve;
+          dateModalTitle.textContent = title || "Selecionar data";
+          dateModalLabel.textContent = label || (type === "datetime-local" ? "Data e hora" : "Data");
+          dateModalInput.type = type;
+          dateModalInput.value = value || "";
+          dateModal.classList.remove("hidden");
+          // showPicker exige gesto do usuário; deixamos o usuário abrir o calendário.
+        });
+      }
+
+      reloadPatio.addEventListener("click", () => {
+        loadVehicles();
+      });
+
+      reloadFinanceiro.addEventListener("click", () => {
+        Promise.all([loadReceivables(), loadPayables(), loadCash()]).then(() => {
+          if (!currentFinanceView || currentFinanceView === "none") {
+            setFinanceView("receber");
+          } else {
+            renderFinance();
+          }
+          updateDashboard();
+        });
+      });
+
+      patioSubnav.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-subview]");
+        if (!button) return;
+        if (plateQuery) {
+          plateFilter.value = "";
+          plateQuery = "";
+          setPlateSearchHints("", false);
+          renderVehicles();
+        }
+        openPatioSubview(button.getAttribute("data-subview"));
+      });
+
+      cardNfseLink.addEventListener("click", () => {
+        openPatioSubview("nfse_pendente");
+      });
+
+      const cardVeiculosLink = document.getElementById("cardVeiculosLink");
+      const cardSolicitadasLink = document.getElementById("cardSolicitadasLink");
+      const cardConfirmadasLink = document.getElementById("cardConfirmadasLink");
+      const cardVencidasLink = document.getElementById("cardVencidasLink");
+      const cardHojeLink = document.getElementById("cardHojeLink");
+      const cardCaixaLink = document.getElementById("cardCaixaLink");
+      const cardReceberAtrasoLink = document.getElementById("cardReceberAtrasoLink");
+
+      function showMainView(view) {
+        document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-view") === view);
+        });
+        Object.values(views).forEach((panel) => panel.classList.add("hidden"));
+        if (views[view]) {
+          views[view].classList.remove("hidden");
+          views[view].classList.remove("air-open");
+          void views[view].offsetWidth;
+          views[view].classList.add("air-open");
+        }
+      }
+
+      function openMainView(view) {
+        const top = navStack[navStack.length - 1];
+        if (top === view || (typeof top === "string" && top.startsWith(`${view}:`))) {
+          showMainView(view);
+          return;
+        }
+
+        navStack.push(view);
+        showMainView(view);
+
+        if (view === "patio") setPatioView("none");
+        if (view === "parceiros") setPartnerView("none");
+        if (view === "financeiro") setFinanceView("none");
+      }
+
+      function goToPatioForPlateSearch() {
+        const top = navStack[navStack.length - 1];
+        const onPatio = top === "patio" || (typeof top === "string" && top.startsWith("patio:"));
+        if (!onPatio) {
+          openMainView("patio");
+        } else {
+          showMainView("patio");
+        }
+      }
+
+      function openPatioSubview(sub) {
+        const top = navStack[navStack.length - 1];
+        if (!sub) return;
+        if (top === `patio:${sub}`) return;
+        if (top && typeof top === "string" && top.startsWith("patio:")) navStack.pop();
+
+        if (navStack[navStack.length - 1] !== "patio") {
+          navStack.push("patio");
+          showMainView("patio");
+          setPatioView("none");
+        } else {
+          showMainView("patio");
+        }
+
+        navStack.push(`patio:${sub}`);
+        setPatioView(sub);
+      }
+
+      function openPartnerSubview(sub) {
+        const top = navStack[navStack.length - 1];
+        if (!sub) return;
+        if (top === `parceiros:${sub}`) return;
+        if (top && typeof top === "string" && top.startsWith("parceiros:")) navStack.pop();
+
+        if (navStack[navStack.length - 1] !== "parceiros") {
+          navStack.push("parceiros");
+          showMainView("parceiros");
+          setPartnerView("none");
+        } else {
+          showMainView("parceiros");
+        }
+
+        navStack.push(`parceiros:${sub}`);
+        setPartnerView(sub);
+      }
+
+      function openFinanceSubview(sub) {
+        const top = navStack[navStack.length - 1];
+        if (!sub) return;
+        if (top === `financeiro:${sub}`) return;
+        if (top && typeof top === "string" && top.startsWith("financeiro:")) navStack.pop();
+
+        if (navStack[navStack.length - 1] !== "financeiro") {
+          navStack.push("financeiro");
+          showMainView("financeiro");
+          setFinanceView("none");
+        } else {
+          showMainView("financeiro");
+        }
+
+        navStack.push(`financeiro:${sub}`);
+        setFinanceView(sub);
+      }
+
+      function closeStackTop() {
+        if (navStack.length <= 1) return;
+        navStack.pop();
+        const top = navStack[navStack.length - 1];
+
+        if (top === "dashboard") return showMainView("dashboard");
+        if (top === "patio") {
+          showMainView("patio");
+          return setPatioView("none");
+        }
+        if (top === "parceiros") {
+          showMainView("parceiros");
+          return setPartnerView("none");
+        }
+        if (top === "financeiro") {
+          showMainView("financeiro");
+          return setFinanceView("none");
+        }
+        if (top === "configuracoes") return showMainView("configuracoes");
+
+        if (top && typeof top === "string" && top.startsWith("patio:")) {
+          const sub = top.split(":")[1];
+          showMainView("patio");
+          return setPatioView(sub);
+        }
+        if (top && typeof top === "string" && top.startsWith("parceiros:")) {
+          const sub = top.split(":")[1];
+          showMainView("parceiros");
+          return setPartnerView(sub);
+        }
+        if (top && typeof top === "string" && top.startsWith("financeiro:")) {
+          const sub = top.split(":")[1];
+          showMainView("financeiro");
+          return setFinanceView(sub);
+        }
+      }
+
+      // Cards do painel: abrem direto a sub-aba correspondente
+      cardVeiculosLink.addEventListener("click", () => openPatioSubview("no_patio"));
+      cardSolicitadasLink.addEventListener("click", () => openPatioSubview("liberacao_solicitada"));
+      cardConfirmadasLink.addEventListener("click", () => openPatioSubview("removidos"));
+      cardVencidasLink.addEventListener("click", () => openFinanceSubview("pagar"));
+      cardHojeLink.addEventListener("click", () => openFinanceSubview("pagar"));
+      cardCaixaLink.addEventListener("click", () => openFinanceSubview("caixa"));
+      cardReceberAtrasoLink.addEventListener("click", () => openFinanceSubview("receber_alerta"));
+
+      plateFilter.addEventListener("input", (event) => {
+        plateQuery = event.target.value.trim().toLowerCase();
+        if (plateQuery) {
+          goToPatioForPlateSearch();
+        }
+        renderVehicles();
+      });
+
+      clearPlateFilter.addEventListener("click", () => {
+        plateFilter.value = "";
+        plateQuery = "";
+        setPlateSearchHints("", false);
+        renderVehicles();
+      });
+
+      financeSubnav.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-subview]");
+        if (!button) return;
+        openFinanceSubview(button.getAttribute("data-subview"));
+      });
+
+      applyFilter.addEventListener("click", () => {
+        historyFilter.from = filterFrom.value || null;
+        historyFilter.to = filterTo.value || null;
+        renderFinance();
+      });
+
+      clearFilter.addEventListener("click", () => {
+        filterFrom.value = "";
+        filterTo.value = "";
+        historyFilter = { from: null, to: null };
+        renderFinance();
+      });
+
+      function applyQuickDays(days) {
+        const now = new Date();
+        const from = new Date(now.getTime() - days * 86400000);
+        const to = now;
+        const fromStr = new Date(from.getTime() - from.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        const toStr = new Date(to.getTime() - to.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+        filterFrom.value = fromStr;
+        filterTo.value = toStr;
+        historyFilter = { from: fromStr, to: toStr };
+        renderFinance();
+      }
+
+      quick7.addEventListener("click", () => applyQuickDays(7));
+      quick30.addEventListener("click", () => applyQuickDays(30));
+      quick90.addEventListener("click", () => applyQuickDays(90));
+
+      exportHistory.addEventListener("click", () => {
+        if (!["historico_receber", "historico_pagar"].includes(currentFinanceView)) return;
+
+        if (currentFinanceView === "historico_receber") {
+          const cashByReceivable = new Map(
+            state.cash.filter((c) => c.tipo_conta === "RECEBER").map((c) => [c.conta_id, c])
+          );
+          const rows = state.receivables
+            .filter((r) => r.status === "PAGO")
+            .filter((r) => {
+              if (!historyFilter.from && !historyFilter.to) return true;
+              const mov = cashByReceivable.get(r.id);
+              const dateStr = (mov?.data_movimento || r.created_at || r.period_end || r.period_start || "").toString().slice(0, 10);
+              if (!dateStr) return false;
+              if (historyFilter.from && dateStr < historyFilter.from) return false;
+              if (historyFilter.to && dateStr > historyFilter.to) return false;
+              return true;
+            })
+            .map((r) => {
+              const vehicle = state.vehicles.find((v) => v.id === r.vehicle_id);
+              const origem = vehicle ? `${vehicle.placa || "-"} ${vehicle.marca || ""} ${vehicle.modelo || ""}`.trim() : "-";
+              const mov = cashByReceivable.get(r.id);
+              const data = formatDate(mov?.data_movimento || r.created_at || r.period_end || r.period_start);
+              const valor = formatCurrency(mov?.valor || r.valor);
+              return [data, origem, valor, "Pago"];
+            });
+
+          const csv = ["Data,Origem,Valor,Status", ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+          const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = "historico-recebimentos.csv";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+          return;
+        }
+
+        const cashByPayable = new Map(
+          state.cash.filter((c) => c.tipo_conta === "PAGAR").map((c) => [c.conta_id, c])
+        );
+        const rows = state.payables
+          .filter((p) => p.status === "PAGO")
+          .filter((p) => {
+            if (!historyFilter.from && !historyFilter.to) return true;
+            const mov = cashByPayable.get(p.id);
+            const dateStr = (mov?.data_movimento || p.data_vencimento || "").toString().slice(0, 10);
+            if (!dateStr) return false;
+            if (historyFilter.from && dateStr < historyFilter.from) return false;
+            if (historyFilter.to && dateStr > historyFilter.to) return false;
+            return true;
+          })
+          .map((p) => {
+            const mov = cashByPayable.get(p.id);
+            const data = formatDate(mov?.data_movimento || p.data_vencimento);
+            const valor = formatCurrency(mov?.valor || p.valor);
+            return [data, p.descricao || "Despesa", valor, "Pago"];
+          });
+
+        const csv = ["Data,Origem,Valor,Status", ...rows.map((r) => r.map((c) => `"${c}"`).join(","))].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "historico-pagamentos.csv";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+      });
+
+      partnerSubnav.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-subview]");
+        if (!button) return;
+        openPartnerSubview(button.getAttribute("data-subview"));
+      });
+
+      vehicleForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          user_id: state.user.id,
+          placa: document.getElementById("vehiclePlate").value.trim(),
+          marca: document.getElementById("vehicleBrand").value.trim(),
+          modelo: document.getElementById("vehicleModel").value.trim(),
+          valor_diaria: Number(document.getElementById("vehicleDaily").value),
+          data_entrada: new Date(document.getElementById("vehicleEntry").value).toISOString(),
+          data_saida: vehicleExit.value ? new Date(vehicleExit.value).toISOString() : null,
+          localizador_id: vehicleLocator.value || null,
+          assessoria_id: vehicleAssessor.value || null,
+          observacoes: document.getElementById("vehicleNotes").value.trim(),
+          status: editingVehicleData?.status || "NO_PATIO",
+          payment_status: editingVehicleData?.payment_status || "EM_ABERTO",
+          nfse_status: editingVehicleData?.nfse_status || "NAO_SOLICITADA",
+          nfse_requested_at: editingVehicleData?.nfse_requested_at || null,
+          nfse_issued_at: editingVehicleData?.nfse_issued_at || null,
+        };
+        const vehicleOp = editingVehicleId
+          ? supabase.from("vehicles").update(payload).eq("id", editingVehicleId).eq("user_id", state.user.id)
+          : supabase.from("vehicles").insert(payload);
+        const { error } = await vehicleOp;
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        vehicleForm.reset();
+        editingVehicleId = null;
+        editingVehicleData = null;
+        vehicleModal.classList.add("hidden");
+        loadVehicles();
+      });
+
+      confirmNfse.addEventListener("click", async () => {
+        if (!nfseVehicleId) return;
+        const { error } = await supabase
+          .from("vehicles")
+          .update({ nfse_status: "EMITIDA", nfse_issued_at: new Date().toISOString() })
+          .eq("id", nfseVehicleId)
+          .eq("user_id", state.user.id);
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        nfseModal.classList.add("hidden");
+        nfseVehicleId = null;
+        await loadVehicles();
+        updateDashboard();
+      });
+
+      partnerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          user_id: state.user.id,
+          nome: document.getElementById("partnerName").value.trim(),
+          cpf: document.getElementById("partnerCpf").value.trim(),
+          email: document.getElementById("partnerEmail").value.trim(),
+          contato: document.getElementById("partnerContact").value.trim(),
+          tipo: currentPartnerView === "assessorias" ? "ASSESSORIA" : "PARCEIRO",
+        };
+        const { error } = await supabase.from("partners").insert(payload);
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        partnerForm.reset();
+        partnerModal.classList.add("hidden");
+        loadPartners();
+      });
+
+      payableForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = {
+          user_id: state.user.id,
+          tipo: document.getElementById("payableType").value,
+          payable_category: (payableCategory?.value || "OUTROS").trim(),
+          descricao: document.getElementById("payableDesc").value.trim(),
+          valor: Number(document.getElementById("payableValue").value),
+          data_vencimento: document.getElementById("payableDue").value,
+          status: "EM_ABERTO",
+        };
+        const { error } = await supabase.from("payables").insert(payload);
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        payableForm.reset();
+        payableModal.classList.add("hidden");
+        loadPayables().then(() => renderFinance());
+      });
+
+      saveSettings.addEventListener("click", async () => {
+        const payload = {
+          user_id: state.user.id,
+          cnpj: settingsCnpj.value.trim(),
+          nome_patio: settingsName.value.trim(),
+          conta_bancaria: settingsBank.value.trim(),
+          texto_cobranca: settingsCharge.value.trim(),
+          texto_nota_fiscal: settingsInvoice.value.trim(),
+        };
+        const settingsOp = state.settings?.id
+          ? supabase.from("settings").update(payload).eq("id", state.settings.id)
+          : supabase.from("settings").insert(payload);
+        const { error } = await settingsOp;
+        if (error) {
+          alert(error.message);
+          return;
+        }
+        alert("Configurações salvas.");
+        loadSettings();
+      });
+
+      document.getElementById("viewPatio").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const id = button.getAttribute("data-id");
+        const action = button.getAttribute("data-action");
+        const vehicle = state.vehicles.find((v) => v.id === id);
+        if (!vehicle) return;
+
+        if (action === "apagar") {
+          if (!confirm("Deseja apagar este veículo?")) return;
+          const { error } = await supabase.from("vehicles").delete().eq("id", id).eq("user_id", state.user.id);
+          if (error) alert(error.message);
+          loadVehicles();
+          return;
+        }
+
+        if (action === "ficha") {
+          await openFicha(vehicle);
+          return;
+        }
+
+        if (action === "nfse") {
+          await openNfseModal(vehicle);
+          return;
+        }
+
+        if (action === "trocar-responsavel") {
+          // Regra A: responsável antigo até o dia anterior (inclusive).
+          const novoResp = prompt("Novo responsável financeiro:");
+          if (!novoResp) return;
+          const dataTroca = await openDateModal({
+            title: "Data da troca (novo responsável a partir desta data)",
+            label: "Data",
+            type: "date",
+          });
+          if (!dataTroca) return;
+
+          const periodEnd = endOfPreviousLocalDayIso(dataTroca);
+          const periodStartNew = startOfLocalDayIso(dataTroca);
+          if (!periodEnd || !periodStartNew) {
+            alert("Data inválida.");
+            return;
+          }
+
+          const { data: currentCycle, error: cycleErr } = await supabase
+            .from("receivables")
+            .select("id,period_start,period_end,status,valor,vehicle_id")
+            .eq("user_id", state.user.id)
+            .eq("vehicle_id", id)
+            .is("period_end", null)
+            .eq("status", "EM_ABERTO")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (cycleErr) {
+            alert(cycleErr.message);
+            return;
+          }
+          if (!currentCycle) {
+            alert("Nenhum ciclo em aberto encontrado para este veículo.");
+            return;
+          }
+
+          // fecha ciclo atual
+          const valorFechamento = calcPeriodTotal(vehicle, currentCycle.period_start, periodEnd);
+          const { error: closeErr } = await supabase
+            .from("receivables")
+            .update({ period_end: periodEnd, valor: valorFechamento })
+            .eq("id", currentCycle.id)
+            .eq("user_id", state.user.id);
+          if (closeErr) {
+            alert(closeErr.message);
+            return;
+          }
+
+          // abre novo ciclo
+          const valorNovo = calcPeriodTotal(vehicle, periodStartNew, null);
+          const { error: newErr } = await supabase.from("receivables").insert({
+            user_id: state.user.id,
+            vehicle_id: id,
+            responsavel_pagamento: novoResp,
+            receivable_category: "GUARDA_PATIO",
+            valor: valorNovo,
+            status: "EM_ABERTO",
+            period_start: periodStartNew,
+            period_end: null,
+          });
+          if (newErr) {
+            alert(newErr.message);
+            return;
+          }
+
+          await supabase.from("vehicle_events").insert({
+            vehicle_id: id,
+            tipo: "RESPONSAVEL_TROCADO",
+            responsavel: novoResp,
+            descricao: `Responsável financeiro alterado. Novo responsável a partir de ${dataTroca}.`,
+          });
+
+          await loadReceivables();
+          renderFinance();
+          alert("Ciclo fechado e novo responsável definido.");
+          return;
+        }
+
+        if (action === "pagamento") {
+          const nextStatus = vehicle.payment_status === "PAGO" ? "EM_ABERTO" : "PAGO";
+          const totalAtual = calcTotal(vehicle);
+          const { error } = await supabase
+            .from("vehicles")
+            .update({ payment_status: nextStatus })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          const { data: receivable } = await supabase
+            .from("receivables")
+            .select("id,status,valor,vehicle_id")
+            .eq("vehicle_id", id)
+            .eq("user_id", state.user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (receivable) {
+            await supabase
+              .from("receivables")
+              .update({ status: nextStatus, valor: totalAtual })
+              .eq("id", receivable.id)
+              .eq("user_id", state.user.id);
+            if (nextStatus === "PAGO") {
+              const { data: existingMov } = await supabase
+                .from("cash_movements")
+                .select("id")
+                .eq("conta_id", receivable.id)
+                .eq("tipo_conta", "RECEBER")
+                .limit(1);
+              if (!existingMov || existingMov.length === 0) {
+                const vehicleInfo = `${vehicle?.placa || "-"} • ${[vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ")}`.trim();
+                await supabase.from("cash_movements").insert({
+                  user_id: state.user.id,
+                  tipo_conta: "RECEBER",
+                  conta_id: receivable.id,
+                  valor: totalAtual,
+                  descricao: vehicleInfo ? `Diárias - ${vehicleInfo}` : "Diárias",
+                });
+              } else {
+                await supabase
+                  .from("cash_movements")
+                  .update({ valor: totalAtual })
+                  .eq("conta_id", receivable.id)
+                  .eq("tipo_conta", "RECEBER");
+              }
+            }
+          }
+          loadVehicles();
+          await Promise.all([loadReceivables(), loadCash()]);
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "editar") {
+          openVehicleModal("edit", vehicle);
+          return;
+        }
+
+        if (action === "solicitar") {
+          const responsavel = prompt("Quem solicitou a liberação?");
+          if (!responsavel) return;
+          await supabase.from("vehicle_events").insert({
+            vehicle_id: id,
+            tipo: "LIBERACAO_SOLICITADA",
+            responsavel,
+            descricao: "Liberação solicitada",
+          });
+          const { error: upErr } = await supabase
+            .from("vehicles")
+            .update({ status: "LIBERACAO_SOLICITADA" })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (upErr) {
+            alert(upErr.message);
+            return;
+          }
+
+          // Cria automaticamente 1 recebimento (ciclo) ao entrar no VLS
+          const { data: existingCycle, error: cycleCheckErr } = await supabase
+            .from("receivables")
+            .select("id,period_start,period_end,status")
+            .eq("user_id", state.user.id)
+            .eq("vehicle_id", id)
+            .is("period_end", null)
+            .eq("status", "EM_ABERTO")
+            .limit(1);
+          if (cycleCheckErr) {
+            // se ainda não existir colunas (schema cache), o usuário verá o erro aqui
+            console.warn(cycleCheckErr);
+          }
+
+          if (!existingCycle || existingCycle.length === 0) {
+            const assessorName = state.partners.find((p) => p.id === vehicle.assessoria_id)?.nome || "";
+            const locatorName = state.partners.find((p) => p.id === vehicle.localizador_id)?.nome || "";
+            const responsavelPagamento = assessorName || locatorName || "Não informado";
+            const periodStart = vehicle.data_entrada || new Date().toISOString();
+            const valor = calcPeriodTotal(vehicle, periodStart, null);
+
+            const { error: insErr } = await supabase.from("receivables").insert({
+              user_id: state.user.id,
+              vehicle_id: id,
+              responsavel_pagamento: responsavelPagamento,
+              receivable_category: "GUARDA_PATIO",
+              valor,
+              status: "EM_ABERTO",
+              period_start: periodStart,
+              period_end: null,
+            });
+            if (insErr) {
+              alert(insErr.message);
+              return;
+            }
+          }
+
+          await loadVehicles();
+          await loadReceivables();
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "confirmar") {
+          await supabase.from("vehicle_events").insert({
+            vehicle_id: id,
+            tipo: "LIBERACAO_CONFIRMADA",
+            descricao: "Liberação confirmada",
+          });
+          await supabase
+            .from("vehicles")
+            .update({ status: "LIBERACAO_CONFIRMADA", payment_status: "EM_ABERTO" })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          await loadVehicles();
+          await loadReceivables();
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "remocao") {
+          const responsavel = prompt("Responsável pela remoção?");
+          if (!responsavel) return;
+          await supabase.from("vehicle_events").insert({
+            vehicle_id: id,
+            tipo: "REMocao_CONFIRMADA",
+            responsavel,
+            descricao: "Remoção confirmada",
+          });
+          await supabase.from("vehicles").update({ status: "REMocao_CONFIRMADA" }).eq("id", id).eq("user_id", state.user.id);
+          loadVehicles();
+          return;
+        }
+
+        if (action === "remover") {
+          const responsavel = prompt("Quem removeu o veículo?");
+          if (!responsavel) return;
+          const dataSaidaInput = await openDateModal({
+            title: "Data e hora da remoção",
+            label: "Data e hora",
+            type: "datetime-local",
+            value: toLocalInput(new Date()),
+          });
+          if (!dataSaidaInput) return;
+          const parsed = new Date(dataSaidaInput);
+          if (Number.isNaN(parsed.getTime())) {
+            alert("Data inválida. Selecione novamente.");
+            return;
+          }
+          const dataSaida = parsed.toISOString();
+          const { error: eventError } = await supabase.from("vehicle_events").insert({
+            vehicle_id: id,
+            tipo: "REMOVIDO",
+            responsavel,
+            descricao: "Veículo removido",
+          });
+          if (eventError) {
+            alert(eventError.message);
+            return;
+          }
+          const { data: updatedVehicle, error: vehicleError } = await supabase
+            .from("vehicles")
+            .update({ status: "REMOVIDO", data_saida: dataSaida })
+            .eq("id", id)
+            .eq("user_id", state.user.id)
+            .select("id");
+          if (vehicleError) {
+            alert(vehicleError.message);
+            return;
+          }
+          if (!updatedVehicle || updatedVehicle.length === 0) {
+            alert("Não foi possível atualizar o veículo. Verifique se o registro está no seu usuário.");
+            return;
+          }
+          await loadVehicles();
+          openPatioSubview("removidos");
+          alert("Remoção registrada com sucesso.");
+          return;
+        }
+      });
+
+      document.getElementById("viewParceiros").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const id = button.getAttribute("data-id");
+        const action = button.getAttribute("data-action");
+        const partner = state.partners.find((p) => p.id === id);
+        if (!partner) return;
+
+        if (action === "apagar-parceiro") {
+          if (!confirm("Deseja apagar este parceiro?")) return;
+          const { error } = await supabase.from("partners").delete().eq("id", id).eq("user_id", state.user.id);
+          if (error) alert(error.message);
+          loadPartners();
+          return;
+        }
+
+        if (action === "editar-parceiro") {
+          const nome = prompt("Nome:", partner.nome || "");
+          const contato = prompt("Contato:", partner.contato || "");
+          const email = prompt("E-mail:", partner.email || "");
+          const { error } = await supabase
+            .from("partners")
+            .update({ nome: nome || null, contato: contato || null, email: email || null })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) alert(error.message);
+          loadPartners();
+        }
+      });
+
+      document.getElementById("viewFinanceiro").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const id = button.getAttribute("data-id");
+        const action = button.getAttribute("data-action");
+
+        if (action === "cobranca") {
+          const receivable = state.receivables.find((r) => r.id === id);
+          if (!receivable) return;
+          const texto = state.settings?.texto_cobranca || "Cobrança de diárias";
+          const vehicle = state.vehicles.find((v) => v.id === receivable.vehicle_id);
+          const vehicleInfo = vehicle
+            ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+            : "-";
+          const body = `${texto}\nResponsável: ${receivable.responsavel_pagamento || "-"}\nVeículo: ${vehicleInfo}\nValor: ${formatCurrency(
+            receivable.valor
+          )}`;
+          openTextModal("Cobrança", body);
+          return;
+        }
+
+        if (action === "nota") {
+          const receivable = state.receivables.find((r) => r.id === id);
+          if (!receivable) return;
+          const vehicle = state.vehicles.find((v) => v.id === receivable.vehicle_id);
+          if (!vehicle) return;
+          openTextModal("Nota Fiscal", buildNfseText(vehicle));
+          return;
+        }
+
+        if (action === "receber") {
+          const receivable = state.receivables.find((r) => r.id === id);
+          if (!receivable) return;
+          const vehicle = state.vehicles.find((v) => v.id === receivable.vehicle_id);
+          const totalAtual = vehicle ? calcTotal(vehicle) : Number(receivable.valor || 0);
+          if (Number(receivable.valor || 0) <= 0) {
+            alert("Valor inválido para recebimento.");
+            return;
+          }
+          if (receivable.status === "PAGO") {
+            alert("Este recebimento já foi marcado como pago.");
+            return;
+          }
+          const { error } = await supabase
+            .from("receivables")
+            .update({ status: "PAGO", valor: totalAtual })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          if (receivable.vehicle_id) {
+            await supabase
+              .from("vehicles")
+              .update({ payment_status: "PAGO" })
+              .eq("id", receivable.vehicle_id)
+              .eq("user_id", state.user.id);
+          }
+          const { data: existingMov } = await supabase
+            .from("cash_movements")
+            .select("id")
+            .eq("conta_id", id)
+            .eq("tipo_conta", "RECEBER")
+            .limit(1);
+          if (!existingMov || existingMov.length === 0) {
+            const vehicleInfo = `${vehicle?.placa || "-"} • ${[vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ")}`.trim();
+            await supabase.from("cash_movements").insert({
+              user_id: state.user.id,
+              tipo_conta: "RECEBER",
+              conta_id: id,
+              valor: totalAtual,
+              descricao: vehicleInfo ? `Diárias - ${vehicleInfo}` : "Diárias",
+            });
+          } else {
+            await supabase
+              .from("cash_movements")
+              .update({ valor: totalAtual })
+              .eq("conta_id", id)
+              .eq("tipo_conta", "RECEBER");
+          }
+          await Promise.all([loadReceivables(), loadCash()]);
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "pagar") {
+          const payable = state.payables.find((p) => p.id === id);
+          if (!payable) return;
+          const { error } = await supabase
+            .from("payables")
+            .update({ status: "PAGO" })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await supabase.from("cash_movements").insert({
+            user_id: state.user.id,
+            tipo_conta: "PAGAR",
+            conta_id: id,
+            valor: payable.valor,
+            descricao: payable.descricao,
+          });
+          await Promise.all([loadPayables(), loadCash()]);
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "editar-despesa") {
+          const payable = state.payables.find((p) => p.id === id);
+          if (!payable) return;
+          const descricao = prompt("Descrição:", payable.descricao || "");
+          const valor = prompt("Valor:", payable.valor || "");
+          const vencimento = await openDateModal({
+            title: "Vencimento",
+            label: "Data",
+            type: "date",
+            value: payable.data_vencimento || "",
+          });
+          if (!vencimento) return;
+          const { error } = await supabase
+            .from("payables")
+            .update({ descricao: descricao || null, valor: Number(valor || 0), data_vencimento: vencimento || null })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) alert(error.message);
+          await loadPayables();
+          renderFinance();
+          return;
+        }
+
+        if (action === "apagar-despesa") {
+          if (!confirm("Excluir esta despesa?")) return;
+          const { error } = await supabase.from("payables").delete().eq("id", id).eq("user_id", state.user.id);
+          if (error) alert(error.message);
+          await loadPayables();
+          renderFinance();
+        }
+
+        if (action === "editar-recebido") {
+          const receivable = state.receivables.find((r) => r.id === id);
+          if (!receivable) return;
+          const responsavel = prompt("Responsável pelo pagamento:", receivable.responsavel_pagamento || "");
+          const valor = prompt("Valor:", receivable.valor || "");
+          const { error } = await supabase
+            .from("receivables")
+            .update({
+              responsavel_pagamento: responsavel || null,
+              valor: Number(valor || 0),
+            })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await loadReceivables();
+          renderFinance();
+          return;
+        }
+
+        if (action === "apagar-recebido") {
+          if (!confirm("Excluir este recebimento?")) return;
+          const { error } = await supabase.from("receivables").delete().eq("id", id).eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await supabase
+            .from("cash_movements")
+            .delete()
+            .eq("conta_id", id)
+            .eq("tipo_conta", "RECEBER")
+            .eq("user_id", state.user.id);
+          await Promise.all([loadReceivables(), loadCash()]);
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "editar-pago") {
+          const payable = state.payables.find((p) => p.id === id);
+          if (!payable) return;
+          const descricao = prompt("Descrição:", payable.descricao || "");
+          const valor = prompt("Valor:", payable.valor || "");
+          const data = await openDateModal({
+            title: "Data do pagamento",
+            label: "Data",
+            type: "date",
+            value: payable.data_vencimento || "",
+          });
+          if (!data) return;
+          const { error } = await supabase
+            .from("payables")
+            .update({ descricao: descricao || null, valor: Number(valor || 0), data_vencimento: data || null })
+            .eq("id", id)
+            .eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await loadPayables();
+          renderFinance();
+          return;
+        }
+
+        if (action === "apagar-pago") {
+          if (!confirm("Excluir este pagamento?")) return;
+          const { error } = await supabase.from("payables").delete().eq("id", id).eq("user_id", state.user.id);
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await supabase
+            .from("cash_movements")
+            .delete()
+            .eq("conta_id", id)
+            .eq("tipo_conta", "PAGAR")
+            .eq("user_id", state.user.id);
+          await Promise.all([loadPayables(), loadCash()]);
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+      });
+
+      const navButtons = document.querySelectorAll(".nav button[data-view]");
+      const views = {
+        dashboard: document.getElementById("viewDashboard"),
+        patio: document.getElementById("viewPatio"),
+        parceiros: document.getElementById("viewParceiros"),
+        financeiro: document.getElementById("viewFinanceiro"),
+        configuracoes: document.getElementById("viewConfiguracoes"),
+      };
+
+      document.querySelectorAll('[data-close-stack="true"]').forEach((btn) => {
+        btn.addEventListener("click", closeStackTop);
+      });
+
+      navButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+          const view = button.getAttribute("data-view");
+          if (view === "dashboard") {
+            navStack.splice(0, navStack.length, "dashboard");
+            showMainView("dashboard");
+            setPatioView("none");
+            setPartnerView("none");
+            setFinanceView("none");
+            return;
+          }
+          openMainView(view);
+        });
+      });
+
+      bootstrap();
+      setPatioView("none");
+      setFinanceView("none");
+      setPartnerView("none");
+    </script>
+  </body>
+</html>
