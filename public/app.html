@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- amplipatio-static v=2026-03-26-assets-root -->
+<!-- amplipatio-static v=2026-03-26-logo-svg -->
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
@@ -103,6 +103,15 @@
         height: 120px;
         width: auto;
         display: block;
+      }
+      .brand-logo-svg {
+        max-width: min(100%, 380px);
+      }
+      .brand-logo-svg .logo-word {
+        fill: var(--text);
+      }
+      .brand-logo-svg .logo-suffix {
+        fill: #e11d2e;
       }
       .brand-text {
         display: flex;
@@ -804,7 +813,38 @@
     <header>
       <div class="brand">
         <div class="brand-stack">
-          <img id="brandLogo" src="/assets/logo.png" alt="Ampliauto" class="brand-logo" />
+          <svg
+            id="brandLogo"
+            class="brand-logo brand-logo-svg"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 380 88"
+            role="img"
+            aria-label="Ampliauto"
+          >
+            <title>Ampliauto</title>
+            <rect x="2" y="6" width="72" height="72" rx="18" fill="#e11d2e" />
+            <text
+              x="38"
+              y="58"
+              text-anchor="middle"
+              fill="#ffffff"
+              font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif"
+              font-size="48"
+              font-weight="800"
+            >
+              A
+            </text>
+            <text
+              x="92"
+              y="60"
+              font-family="Inter, system-ui, -apple-system, Segoe UI, sans-serif"
+              font-size="42"
+              font-weight="700"
+              letter-spacing="-0.02em"
+            >
+              <tspan class="logo-word">Amplia</tspan><tspan class="logo-suffix">uto</tspan>
+            </text>
+          </svg>
           <div class="brand-text">
             <span class="brand-subtitle">Pátio inteligente 24hrs</span>
           </div>
@@ -1853,7 +1893,7 @@
 
       function stylizeLogo() {
         const logoEl = document.getElementById("brandLogo");
-        if (!logoEl) return;
+        if (!logoEl || logoEl.tagName.toLowerCase() === "svg") return;
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.src = logoEl.src;
