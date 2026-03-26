@@ -2024,6 +2024,40 @@
           vehicleDailyInput.value = "";
           vehicleDailyInput.required = false;
         }
+
+        // Oculta cabeçalhos/colunas de valores e pagamento apenas no modo gestor.
+        // Ordem das colunas:
+        // - VNP/VLS/NFSe: 1 Placa, 2 Veículo, 3 Localizador, 4 Assessoria, 5 Entrada, 6 Valor, 7 Pagamento, 8 Ações
+        // - VRP (removidos): 1 Placa, 2 Veículo, 3 Localizador, 4 Assessoria, 5 Entrada, 6 Saída, 7 Valor, 8 Pagamento/Status
+        const style = document.createElement("style");
+        style.id = "track-manager-hide-values-style";
+        style.textContent = `
+          #viewPatio [data-subview="no_patio"] table thead th:nth-child(6),
+          #viewPatio [data-subview="no_patio"] table thead th:nth-child(7),
+          #viewPatio [data-subview="no_patio"] table tbody td:nth-child(6),
+          #viewPatio [data-subview="no_patio"] table tbody td:nth-child(7) {
+            display: none !important;
+          }
+          #viewPatio [data-subview="liberacao_solicitada"] table thead th:nth-child(6),
+          #viewPatio [data-subview="liberacao_solicitada"] table thead th:nth-child(7),
+          #viewPatio [data-subview="liberacao_solicitada"] table tbody td:nth-child(6),
+          #viewPatio [data-subview="liberacao_solicitada"] table tbody td:nth-child(7) {
+            display: none !important;
+          }
+          #viewPatio [data-subview="nfse_pendente"] table thead th:nth-child(6),
+          #viewPatio [data-subview="nfse_pendente"] table thead th:nth-child(7),
+          #viewPatio [data-subview="nfse_pendente"] table tbody td:nth-child(6),
+          #viewPatio [data-subview="nfse_pendente"] table tbody td:nth-child(7) {
+            display: none !important;
+          }
+          #viewPatio [data-subview="removidos"] table thead th:nth-child(7),
+          #viewPatio [data-subview="removidos"] table thead th:nth-child(8),
+          #viewPatio [data-subview="removidos"] table tbody td:nth-child(7),
+          #viewPatio [data-subview="removidos"] table tbody td:nth-child(8) {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(style);
       }
 
       async function bootstrap() {
