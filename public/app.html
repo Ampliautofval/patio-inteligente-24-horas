@@ -1344,16 +1344,16 @@
           <div class="section-card" style="margin-top: 18px;">
             <div class="form-grid">
               <div class="full">
-                <label>Gestor de Pista - User ID</label>
+                <label>Gestor de Pista - Email</label>
                 <input
-                  id="trackManagerUserId"
+                  id="trackManagerEmail"
                   type="text"
-                  placeholder="UUID do gestor (copie no login do gestor)"
+                  placeholder="email@dominio.com"
                 />
               </div>
               <div class="full">
-                <label>Email (opcional)</label>
-                <input id="trackManagerEmail" type="email" placeholder="email@dominio.com" />
+                <label>Gestor de Pista - Senha</label>
+                <input id="trackManagerPassword" type="password" placeholder="Crie uma senha" />
               </div>
             </div>
             <div class="form-actions" style="margin-top: 10px;">
@@ -1727,8 +1727,8 @@
       const settingsInvoice = document.getElementById("settingsInvoice");
       const saveSettings = document.getElementById("saveSettings");
 
-      const trackManagerUserId = document.getElementById("trackManagerUserId");
       const trackManagerEmail = document.getElementById("trackManagerEmail");
+      const trackManagerPassword = document.getElementById("trackManagerPassword");
       const addTrackManager = document.getElementById("addTrackManager");
       const trackManagerStatus = document.getElementById("trackManagerStatus");
 
@@ -3850,24 +3850,45 @@
       if (addTrackManager) {
         addTrackManager.addEventListener("click", async () => {
           if (!supabase || !state?.user?.id) return;
-          const userId = (trackManagerUserId?.value || "").trim();
           const email = (trackManagerEmail?.value || "").trim();
-          if (!userId) {
-            if (trackManagerStatus) trackManagerStatus.textContent = "Informe o User ID do gestor.";
+          const password = (trackManagerPassword?.value || "").trim();
+          if (!email) {
+            if (trackManagerStatus) trackManagerStatus.textContent = "Informe o email do gestor.";
+            return;
+          }
+          if (!password) {
+            if (trackManagerStatus) trackManagerStatus.textContent = "Defina uma senha para o gestor.";
             return;
           }
           if (trackManagerStatus) trackManagerStatus.textContent = "Adicionando gestor...";
 
           try {
-            const { error } = await supabase.from("track_managers").insert({
-              owner_user_id: state.user.id,
-              user_id: userId,
-              email: email || null,
+            const sessionRes = await supabase.auth.getSession();
+            const accessToken = sessionRes?.data?.session?.access_token;
+            if (!accessToken) throw new Error("Sessao nao encontrada.");
+
+            const resp = await fetch("/api/create-track-manager", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${accessToken}`,
+              },
+              body: JSON.stringify({ email, password }),
             });
-            if (error) throw error;
-            if (trackManagerStatus) trackManagerStatus.textContent = "Gestor de pista adicionado.";
-            if (trackManagerUserId) trackManagerUserId.value = "";
+
+            const json = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+              throw new Error(json?.error || `Erro (${resp.status}) ao criar gestor.`);
+            }
+
+            const newUserId = json?.user_id || "";
+            if (trackManagerStatus) {
+              trackManagerStatus.textContent = newUserId
+                ? `Gestor de pista criado. User ID: ${newUserId}`
+                : "Gestor de pista criado.";
+            }
             if (trackManagerEmail) trackManagerEmail.value = "";
+            if (trackManagerPassword) trackManagerPassword.value = "";
           } catch (e) {
             if (trackManagerStatus) trackManagerStatus.textContent = "Erro ao adicionar gestor. Verifique a tabela/policies no Supabase.";
             console.error(e);
