@@ -1453,7 +1453,7 @@
           <div class="toolbar">
             <div>
               <h2>Parceiros</h2>
-              <p class="subtitle">Cadastro de localizadores e assessorias.</p>
+              <p class="subtitle">Cadastro de empresas de remoção e assessorias.</p>
             </div>
             <div class="actions">
               <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
@@ -1461,12 +1461,12 @@
             </div>
           </div>
           <div class="subnav" id="partnerSubnav">
-            <button data-subview="parceiros">Parceiros</button>
+            <button data-subview="parceiros">Empresas de remoção</button>
             <button data-subview="assessorias">Assessoria</button>
           </div>
           <div class="grid" style="margin-bottom: 18px;">
             <div class="card">
-              <div class="card-title">Top localizadores por veículos</div>
+                <div class="card-title">Top empresas por veículos</div>
               <div id="rankByVehicles" class="notice">Sem dados</div>
             </div>
             <div class="card">
@@ -1747,7 +1747,7 @@
                 <input id="vehicleExit" type="datetime-local" />
               </div>
               <div>
-                <label>Localizador</label>
+                <label>Empresa de remoção</label>
                 <select id="vehicleLocator"></select>
               </div>
               <div>
@@ -3300,7 +3300,7 @@
       }
 
       function renderPartnerOptions() {
-        vehicleLocator.innerHTML = `<option value="">Sem localizador</option>`;
+        vehicleLocator.innerHTML = `<option value="">Sem empresa de remoção</option>`;
         vehicleAssessor.innerHTML = `<option value="">Sem assessoria</option>`;
         state.partners.forEach((p) => {
           const type = p.tipo || "PARCEIRO";
@@ -3313,6 +3313,15 @@
             vehicleLocator.appendChild(option);
           }
         });
+      }
+
+      function openPartnerRegistrationFlow(targetType) {
+        const isAssessoria = targetType === "ASSESSORIA";
+        openMainView("parceiros");
+        openPartnerSubview(isAssessoria ? "assessorias" : "parceiros");
+        partnerModalTitle.textContent = isAssessoria ? "Nova assessoria" : "Nova empresa de remoção";
+        partnerForm.reset();
+        partnerModal.classList.remove("hidden");
       }
 
       function openVehicleModal(mode, vehicle) {
@@ -3859,7 +3868,8 @@
       });
 
       openPartnerForm.addEventListener("click", () => {
-        partnerModalTitle.textContent = currentPartnerView === "assessorias" ? "Nova assessoria" : "Novo parceiro";
+        partnerModalTitle.textContent =
+          currentPartnerView === "assessorias" ? "Nova assessoria" : "Nova empresa de remoção";
         partnerForm.reset();
         partnerModal.classList.remove("hidden");
       });
@@ -4714,9 +4724,28 @@
         }
 
         if (action === "solicitar") {
+          const empresaRemocao =
+            vehicle.localizador_id &&
+            state.partners.find((p) => p.id === vehicle.localizador_id && (p.tipo || "PARCEIRO") === "PARCEIRO");
+          if (!empresaRemocao) {
+            alert("Cadastre primeiro a empresa responsável pela remoção (aba Parceiros).");
+            openPartnerRegistrationFlow("PARCEIRO");
+            return;
+          }
+          const assessoria =
+            vehicle.assessoria_id &&
+            state.partners.find((p) => p.id === vehicle.assessoria_id && p.tipo === "ASSESSORIA");
+          if (!assessoria) {
+            alert("Cadastre primeiro a assessoria responsável pelo pagamento (aba Assessoria).");
+            openPartnerRegistrationFlow("ASSESSORIA");
+            return;
+          }
+
           const responsavel = (prompt("1) Quem solicitou a liberação?") || "").trim();
           if (!responsavel) return;
-          const responsavelPagamento = (prompt("2) Quem será o responsável pelo pagamento?") || "").trim();
+          const responsavelPagamento = (
+            prompt("2) Quem será o responsável pelo pagamento?", assessoria?.nome || "") || ""
+          ).trim();
           if (!responsavelPagamento) {
             alert("Informe o responsável pelo pagamento para continuar.");
             return;
