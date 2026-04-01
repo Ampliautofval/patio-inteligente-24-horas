@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- amplipatio-static v=2026-03-31-print-patio-nfse -->
+<!-- amplipatio-static v=2026-03-31-print-vnp-vls-no-period -->
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
@@ -1850,13 +1850,14 @@
           </div>
           <div class="form-grid">
             <div>
-              <label for="printPatioFrom">Data inicial</label>
+              <label for="printPatioFrom">Data inicial (VRP / NFSe)</label>
               <input id="printPatioFrom" type="date" />
             </div>
             <div>
-              <label for="printPatioTo">Data final</label>
+              <label for="printPatioTo">Data final (VRP / NFSe)</label>
               <input id="printPatioTo" type="date" />
             </div>
+            <p class="notice full" style="margin: 0">Período obrigatório só se você marcar VRP ou NFSe pendente.</p>
             <div class="full" style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center">
               <label style="display: flex; gap: 8px; align-items: center; font-weight: normal">
                 <input type="checkbox" id="printPatioIncludeVnp" checked />
@@ -2381,13 +2382,16 @@
         const incNfse = document.getElementById("printPatioIncludeNfse")?.checked;
         const fromStr = fromEl?.value || "";
         const toStr = toEl?.value || "";
-        if (!fromStr || !toStr) {
-          alert("Informe a data inicial e a data final do período.");
-          return;
-        }
-        if (fromStr > toStr) {
-          alert("A data inicial não pode ser maior que a data final.");
-          return;
+        const needsPeriod = incVrp || incNfse;
+        if (needsPeriod) {
+          if (!fromStr || !toStr) {
+            alert("Para VRP ou NFSe pendente, informe a data inicial e a data final.");
+            return;
+          }
+          if (fromStr > toStr) {
+            alert("A data inicial não pode ser maior que a data final.");
+            return;
+          }
         }
         if (!incVnp && !incVls && !incVrp && !incNfse) {
           alert("Marque pelo menos uma listagem: VNP, VLS, VRP ou NFSe pendente.");
@@ -2397,17 +2401,24 @@
         const vehicles = state.vehicles || [];
         const nomePatio = state.settings?.nome_patio || "Pátio";
         const nowStr = formatDateTime(new Date().toISOString());
-        const periodLabel = `${formatYmdToBr(fromStr)} a ${formatYmdToBr(toStr)}`;
+        const metaParts = [];
+        if (incVnp || incVls) metaParts.push("VNP/VLS: listas atuais (sem filtro por data)");
+        if (needsPeriod && fromStr && toStr) {
+          metaParts.push(`VRP/NFSe: ${formatYmdToBr(fromStr)} a ${formatYmdToBr(toStr)}`);
+        }
+        metaParts.push(`Emitido em: ${nowStr}`);
+        const metaLine = metaParts.join(" · ");
 
         const sections = [];
 
-        const pushTable = (title, subtitle, theadHtml, bodyRowsHtml, count) => {
+        const pushTable = (title, subtitle, theadHtml, bodyRowsHtml, count, emptyText) => {
+          const emptyMsg = emptyText || "Nenhum registro.";
           sections.push(`
             <h2>${escapeHtml(title)}</h2>
             <p class="section-sub">${escapeHtml(subtitle)} · ${count} veículo(s)</p>
             ${
               count === 0
-                ? `<p class="empty-note">Nenhum veículo neste período.</p>`
+                ? `<p class="empty-note">${escapeHtml(emptyMsg)}</p>`
                 : `<table>
               <thead><tr>${theadHtml}</tr></thead>
               <tbody>${bodyRowsHtml}</tbody>
@@ -2417,11 +2428,7 @@
         };
 
         if (incVnp) {
-          const list = sortVehiclesByPlaca(
-            vehicles.filter(
-              (v) => v.status === "NO_PATIO" && inDateRangeInclusive(v.data_entrada, fromStr, toStr)
-            )
-          );
+          const list = sortVehiclesByPlaca(vehicles.filter((v) => v.status === "NO_PATIO"));
           const rows = list
             .map((v) => {
               const { loc, ass } = patioPrintPartnerNames(v);
@@ -2436,20 +2443,17 @@
             .join("");
           pushTable(
             "VNP — Veículos no pátio",
-            "Filtrado por data de entrada no período",
+            "Mesmos veículos da lista VNP no sistema",
             "<th>Veículo</th><th>Data de entrada</th><th>Localizador</th><th>Assessoria</th><th>Observações</th>",
             rows,
-            list.length
+            list.length,
+            "Nenhum veículo na lista VNP."
           );
         }
 
         if (incVls) {
           const list = sortVehiclesByPlaca(
-            vehicles.filter(
-              (v) =>
-                VLS_PRINT_STATUSES.includes(v.status) &&
-                inDateRangeInclusive(v.data_entrada, fromStr, toStr)
-            )
+            vehicles.filter((v) => VLS_PRINT_STATUSES.includes(v.status))
           );
           const rows = list
             .map((v) => {
@@ -2467,10 +2471,11 @@
             .join("");
           pushTable(
             "VLS — Liberação em andamento",
-            "Filtrado por data de entrada no período",
+            "Mesmos veículos da lista VLS no sistema",
             "<th>Veículo</th><th>Data de entrada</th><th>Situação</th><th>Localizador</th><th>Assessoria</th><th>Observações</th>",
             rows,
-            list.length
+            list.length,
+            "Nenhum veículo na lista VLS."
           );
         }
 
@@ -2500,7 +2505,8 @@
             "Filtrado por data de saída no período (se não houver saída, usa a data de entrada)",
             "<th>Veículo</th><th>Entrada</th><th>Saída</th><th>Localizador</th><th>Assessoria</th><th>Observações</th>",
             rows,
-            list.length
+            list.length,
+            "Nenhum veículo removido neste período."
           );
         }
 
@@ -2531,7 +2537,8 @@
             "Mesmo critério da aba do sistema (status pendente); período pela data da solicitação ou, se vazia, pela entrada",
             "<th>Veículo</th><th>Data de entrada</th><th>Solicitação NFSe</th><th>Localizador</th><th>Assessoria</th><th>Observações</th>",
             rows,
-            list.length
+            list.length,
+            "Nenhum veículo com NFSe pendente neste período."
           );
         }
 
@@ -2550,7 +2557,7 @@
   @media print { body { margin: 0; } h2 { page-break-before: auto; } }
 </style></head><body>
   <h1>${escapeHtml(nomePatio)} — Listagens do pátio</h1>
-  <div class="meta">Período: ${escapeHtml(periodLabel)} · Emitido em: ${escapeHtml(nowStr)}</div>
+  <div class="meta">${escapeHtml(metaLine)}</div>
   ${sections.join("")}
 </body></html>`;
 
