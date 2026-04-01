@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- amplipatio-static v=2026-03-31-print-by-partner -->
+<!-- amplipatio-static v=2026-04-01-liberados-filtro-print -->
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
@@ -1338,6 +1338,9 @@
               <button class="secondary" type="button" id="printPatioByPartner" title="Agrupar por empresa de remoção, assessoria e etapa de remoção">
                 Imprimir por parceiro/remoção
               </button>
+              <button class="secondary" type="button" id="printPatioLiberados" title="Veículos em liberação/removidos, pagos ou não, por localizador e assessoria">
+                Liberados: filtro / impressão
+              </button>
               <button class="secondary" id="reloadPatio">Atualizar</button>
             </div>
           </div>
@@ -1394,6 +1397,22 @@
             </div>
             <div class="section-card patio-subview hidden" data-subview="liberacao_solicitada">
               <div class="pill">VLS</div>
+              <div id="vlsToolbarFilters" class="filter-bar hidden" style="margin-bottom: 10px">
+                <span class="notice">Filtros</span>
+                <label>Pagamento</label>
+                <button type="button" class="secondary vls-pay-filter active" data-vls-pay="all">Todos</button>
+                <button type="button" class="secondary vls-pay-filter" data-vls-pay="pago">Pagos</button>
+                <button type="button" class="secondary vls-pay-filter" data-vls-pay="aberto">Não pagos</button>
+                <label for="vlsFilterLocator">Localizador</label>
+                <select id="vlsFilterLocator">
+                  <option value="">Todos</option>
+                </select>
+                <label for="vlsFilterAssessoria">Assessoria</label>
+                <select id="vlsFilterAssessoria">
+                  <option value="">Todas</option>
+                </select>
+                <button type="button" class="secondary" id="vlsFiltersClear">Limpar filtros</button>
+              </div>
               <div class="table-wrap">
                 <table class="table stacked">
                 <thead>
@@ -1929,6 +1948,48 @@
         </div>
       </div>
 
+      <div id="patioLiberadosPrintModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <div>
+              <h3>Liberados: filtro e impressão</h3>
+              <p class="subtitle">VLS + removidos (VRP), com pagamento e agrupamento por localizador e assessoria</p>
+            </div>
+            <button type="button" class="modal-close" id="closePatioLiberadosPrintModal">Fechar</button>
+          </div>
+          <div class="form-grid">
+            <div id="printLibPaymentFilters" class="full" style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center">
+              <span class="notice">Incluir no relatório:</span>
+              <label style="display: flex; gap: 8px; align-items: center; font-weight: normal">
+                <input type="checkbox" id="printLibIncludePago" checked />
+                Pagos
+              </label>
+              <label style="display: flex; gap: 8px; align-items: center; font-weight: normal">
+                <input type="checkbox" id="printLibIncludeNaoPago" checked />
+                Não pagos
+              </label>
+            </div>
+            <p id="printLibGestorPaymentHint" class="notice full hidden" style="margin: 0">
+              Como gestor de pista, o relatório lista todos os liberados; a coluna de pagamento não é exibida.
+            </p>
+            <div class="full" style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center">
+              <label style="display: flex; gap: 8px; align-items: center; font-weight: normal">
+                <input type="checkbox" id="printLibByLocator" checked />
+                Agrupar por localizador (empresa de remoção)
+              </label>
+              <label style="display: flex; gap: 8px; align-items: center; font-weight: normal">
+                <input type="checkbox" id="printLibByAssessoria" checked />
+                Agrupar por assessoria
+              </label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="confirmPatioLiberadosPrintModal">Gerar impressão</button>
+            <button type="button" class="secondary" id="cancelPatioLiberadosPrintModal">Cancelar</button>
+          </div>
+        </div>
+      </div>
+
       <div id="liberacaoModal" class="modal-backdrop hidden">
         <div class="modal">
           <div class="modal-header">
@@ -2243,6 +2304,7 @@
       const reloadPatio = document.getElementById("reloadPatio");
       const printPatioVehicleListBtn = document.getElementById("printPatioVehicleList");
       const printPatioByPartnerBtn = document.getElementById("printPatioByPartner");
+      const printPatioLiberadosBtn = document.getElementById("printPatioLiberados");
       const reloadFinanceiro = document.getElementById("reloadFinanceiro");
       const patioSubnav = document.getElementById("patioSubnav");
       const financeSubnav = document.getElementById("financeSubnav");
@@ -2267,6 +2329,9 @@
       let plateQuery = "";
       let financePlateQuery = "";
       let financePlateInputTimer = null;
+      let vlsListFilterPay = "all";
+      let vlsListFilterLocatorId = "";
+      let vlsListFilterAssessoriaId = "";
       let editingVehicleId = null;
       let editingVehicleData = null;
       let nfseVehicleId = null;
@@ -2398,6 +2463,67 @@
         REMocao_CONFIRMADA: "Remoção confirmada",
         REMOVIDO: "Removido (VRP)",
       };
+
+      const LIBERADOS_PAYMENT_PRINT_STATUSES = [
+        "LIBERACAO_SOLICITADA",
+        "LIBERACAO_CONFIRMADA",
+        "REMocao_CONFIRMADA",
+        "REMOVIDO",
+      ];
+
+      function mergeVlsItems(byStatus) {
+        return [
+          ...byStatus.LIBERACAO_SOLICITADA,
+          ...byStatus.LIBERACAO_CONFIRMADA,
+          ...byStatus.REMocao_CONFIRMADA,
+        ];
+      }
+
+      function filterVlsToolbarItems(items) {
+        if (userIsTrackManager) return items;
+        return items.filter((v) => {
+          if (vlsListFilterPay === "pago" && v.payment_status !== "PAGO") return false;
+          if (vlsListFilterPay === "aberto" && v.payment_status === "PAGO") return false;
+          if (vlsListFilterLocatorId && v.localizador_id !== vlsListFilterLocatorId) return false;
+          if (vlsListFilterAssessoriaId && v.assessoria_id !== vlsListFilterAssessoriaId) return false;
+          return true;
+        });
+      }
+
+      function syncVlsFilterSelects() {
+        const locSel = document.getElementById("vlsFilterLocator");
+        const assSel = document.getElementById("vlsFilterAssessoria");
+        if (!locSel || !assSel) return;
+        const parceiros = state.partners.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const assessorias = state.partners.filter((p) => p.tipo === "ASSESSORIA");
+        const opt = (id, label) => {
+          const vid = String(id).replace(/"/g, "&quot;");
+          return `<option value="${vid}">${escapeHtml(label)}</option>`;
+        };
+        locSel.innerHTML =
+          `<option value="">Todos os localizadores</option>` +
+          parceiros.map((p) => opt(p.id, p.nome || "-")).join("");
+        assSel.innerHTML =
+          `<option value="">Todas as assessorias</option>` +
+          assessorias.map((p) => opt(p.id, p.nome || "-")).join("");
+        if (parceiros.some((p) => p.id === vlsListFilterLocatorId)) locSel.value = vlsListFilterLocatorId;
+        else {
+          locSel.value = "";
+          vlsListFilterLocatorId = "";
+        }
+        if (assessorias.some((p) => p.id === vlsListFilterAssessoriaId)) assSel.value = vlsListFilterAssessoriaId;
+        else {
+          assSel.value = "";
+          vlsListFilterAssessoriaId = "";
+        }
+      }
+
+      function updateVlsPayFilterButtons() {
+        document.querySelectorAll(".vls-pay-filter").forEach((b) => {
+          const k = b.getAttribute("data-vls-pay") || "all";
+          b.classList.toggle("active", k === vlsListFilterPay);
+        });
+      }
 
       function printHtmlInHiddenIframe(html, opts = {}) {
         const iframeTitle = opts.iframeTitle || "Impressão";
@@ -2619,6 +2745,167 @@
         printHtmlInHiddenIframe(html, {
           iframeTitle: "Impressão por parceiro e remoção",
           closeModalId: "patioPartnerPrintModal",
+        });
+      }
+
+      function openPatioLiberadosPrintModal() {
+        const modal = document.getElementById("patioLiberadosPrintModal");
+        const payF = document.getElementById("printLibPaymentFilters");
+        const hint = document.getElementById("printLibGestorPaymentHint");
+        if (payF) payF.classList.toggle("hidden", !!userIsTrackManager);
+        if (hint) hint.classList.toggle("hidden", !userIsTrackManager);
+        modal?.classList.remove("hidden");
+      }
+
+      function runPatioLiberadosPrintDocument() {
+        let inclPago = document.getElementById("printLibIncludePago")?.checked;
+        let inclNaoPago = document.getElementById("printLibIncludeNaoPago")?.checked;
+        if (userIsTrackManager) {
+          inclPago = true;
+          inclNaoPago = true;
+        }
+        if (!inclPago && !inclNaoPago) {
+          alert("Marque pelo menos: Pagos ou Não pagos.");
+          return;
+        }
+        const byLoc = document.getElementById("printLibByLocator")?.checked;
+        const byAss = document.getElementById("printLibByAssessoria")?.checked;
+        if (!byLoc && !byAss) {
+          alert("Marque pelo menos um agrupamento: localizador ou assessoria.");
+          return;
+        }
+
+        const showPayCol = !userIsTrackManager;
+        let vehicles = (state.vehicles || []).filter((v) =>
+          LIBERADOS_PAYMENT_PRINT_STATUSES.includes(v.status)
+        );
+        vehicles = vehicles.filter((v) => {
+          const okPago = v.payment_status === "PAGO";
+          if (okPago) return inclPago;
+          return inclNaoPago;
+        });
+
+        const partnerByIdMap = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
+        const partnerTitle = (k) =>
+          k === "__sem__" ? "Não informado" : partnerByIdMap.get(k) || "Parceiro não encontrado";
+
+        const nomePatio = state.settings?.nome_patio || "Pátio";
+        const nowStr = formatDateTime(new Date().toISOString());
+        const partesFiltro = [];
+        if (inclPago) partesFiltro.push("pagos");
+        if (inclNaoPago) partesFiltro.push("não pagos");
+        const metaLine = [
+          `Pagamento: ${partesFiltro.join(" e ")}`,
+          `Total: ${vehicles.length} veículo(s)`,
+          `Emitido em: ${nowStr}`,
+        ].join(" · ");
+
+        const situacaoCell = (v) => escapeHtml(REMOVAL_FLOW_LABELS[v.status] || v.status || "—");
+        const payCol = (v) =>
+          showPayCol
+            ? `<td>${escapeHtml(v.payment_status === "PAGO" ? "Pago" : "Em aberto")}</td>`
+            : "";
+        const theadLoc = showPayCol
+          ? "<th>Veículo</th><th>Entrada</th><th>Saída</th><th>Situação</th><th>Pagamento</th><th>Assessoria</th><th>Observações</th>"
+          : "<th>Veículo</th><th>Entrada</th><th>Saída</th><th>Situação</th><th>Assessoria</th><th>Observações</th>";
+        const theadAss = showPayCol
+          ? "<th>Veículo</th><th>Entrada</th><th>Saída</th><th>Situação</th><th>Pagamento</th><th>Empresa de remoção</th><th>Observações</th>"
+          : "<th>Veículo</th><th>Entrada</th><th>Saída</th><th>Situação</th><th>Empresa de remoção</th><th>Observações</th>";
+
+        const rowLoc = (v) => {
+          const { ass } = patioPrintPartnerNames(v);
+          const sai = v.data_saida ? formatDateTime(v.data_saida) : "—";
+          return `<tr>
+            <td>${patioPrintVehicleLine(v)}</td>
+            <td>${escapeHtml(formatDateTime(v.data_entrada))}</td>
+            <td>${escapeHtml(sai)}</td>
+            <td>${situacaoCell(v)}</td>
+            ${payCol(v)}
+            <td>${escapeHtml(ass)}</td>
+            <td>${patioPrintObsCell(v)}</td>
+          </tr>`;
+        };
+        const rowAss = (v) => {
+          const { loc } = patioPrintPartnerNames(v);
+          const sai = v.data_saida ? formatDateTime(v.data_saida) : "—";
+          return `<tr>
+            <td>${patioPrintVehicleLine(v)}</td>
+            <td>${escapeHtml(formatDateTime(v.data_entrada))}</td>
+            <td>${escapeHtml(sai)}</td>
+            <td>${situacaoCell(v)}</td>
+            ${payCol(v)}
+            <td>${escapeHtml(loc)}</td>
+            <td>${patioPrintObsCell(v)}</td>
+          </tr>`;
+        };
+
+        const blocks = [];
+        if (!vehicles.length) {
+          blocks.push(`<p class="empty-note">Nenhum veículo com estes filtros (liberados e pagamento).</p>`);
+        } else {
+          if (byLoc) {
+            blocks.push(`<h2>Por localizador (empresa de remoção)</h2>`);
+            const map = bucketVehiclesByPartnerField(vehicles, "localizador_id");
+            const keys = sortPartnerBucketKeys([...map.keys()], partnerByIdMap);
+            keys.forEach((key) => {
+              const items = sortVehiclesByPlaca(map.get(key) || []);
+              blocks.push(
+                `<h3>${escapeHtml(partnerTitle(key))} <span class="count">(${items.length})</span></h3>`
+              );
+              if (!items.length) {
+                blocks.push(`<p class="empty-note">Nenhum veículo.</p>`);
+              } else {
+                blocks.push(
+                  `<table><thead><tr>${theadLoc}</tr></thead><tbody>${items.map(rowLoc).join("")}</tbody></table>`
+                );
+              }
+            });
+          }
+          if (byAss) {
+            blocks.push(`<h2>Por assessoria</h2>`);
+            const map = bucketVehiclesByPartnerField(vehicles, "assessoria_id");
+            const keys = sortPartnerBucketKeys([...map.keys()], partnerByIdMap);
+            keys.forEach((key) => {
+              const items = sortVehiclesByPlaca(map.get(key) || []);
+              blocks.push(
+                `<h3>${escapeHtml(partnerTitle(key))} <span class="count">(${items.length})</span></h3>`
+              );
+              if (!items.length) {
+                blocks.push(`<p class="empty-note">Nenhum veículo.</p>`);
+              } else {
+                blocks.push(
+                  `<table><thead><tr>${theadAss}</tr></thead><tbody>${items.map(rowAss).join("")}</tbody></table>`
+                );
+              }
+            });
+          }
+        }
+
+        const printCss = `
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
+  h1 { font-size: 1.25rem; margin: 0 0 4px; }
+  h2 { font-size: 1.08rem; margin: 22px 0 8px; page-break-after: avoid; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  h3 { font-size: 0.95rem; margin: 14px 0 6px; page-break-after: avoid; }
+  h3 .count { font-weight: normal; color: #555; }
+  .meta { font-size: 0.8rem; color: #444; margin-bottom: 14px; }
+  .empty-note { font-size: 0.85rem; color: #666; font-style: italic; margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.76rem; margin-bottom: 14px; }
+  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 12mm; }
+  @media print { body { margin: 0; } }`;
+
+        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>Liberados — pagamento</title>
+<style>${printCss}</style></head><body>
+  <h1>${escapeHtml(nomePatio)} — Veículos liberados (pagamento)</h1>
+  <div class="meta">${escapeHtml(metaLine)}</div>
+  <p class="meta">Inclui VLS (liberação em andamento) e VRP (removidos), conforme filtros.</p>
+  ${blocks.join("")}
+</body></html>`;
+
+        printHtmlInHiddenIframe(html, {
+          iframeTitle: "Impressão liberados e pagamento",
+          closeModalId: "patioLiberadosPrintModal",
         });
       }
 
@@ -3547,32 +3834,39 @@
         });
         const nfsePendentes = filteredVehicles.filter((v) => v.nfse_status === "PENDENTE");
 
+        const vlsMerged = mergeVlsItems(byStatus);
+        const vlsForTable = filterVlsToolbarItems(vlsMerged);
+        const vlsToolbar = document.getElementById("vlsToolbarFilters");
+        if (vlsToolbar) {
+          vlsToolbar.classList.toggle("hidden", !!userIsTrackManager);
+          if (!userIsTrackManager) {
+            syncVlsFilterSelects();
+            updateVlsPayFilterButtons();
+          }
+        }
+
         renderVehicleTable(tableNoPatio, byStatus.NO_PATIO, "solicitar");
-        renderVlsTable(
-          tableSolicitada,
-          [...byStatus.LIBERACAO_SOLICITADA, ...byStatus.LIBERACAO_CONFIRMADA, ...byStatus.REMocao_CONFIRMADA]
-        );
+        renderVlsTable(tableSolicitada, vlsForTable);
         renderRemovedVehicles(tableRemovidos, byStatus.REMOVIDO);
         renderVehicleTable(tableNfsePendentes, nfsePendentes, "nfse_pendente");
         updateDashboard();
 
         if (qNorm) {
-          applyGlobalPlateSearchLayout(byStatus, nfsePendentes);
+          applyGlobalPlateSearchLayout(byStatus, nfsePendentes, vlsForTable.length);
         } else {
           setPlateSearchHints("", false);
           setPatioView(currentPatioView, { silent: true });
         }
       }
 
-      function applyGlobalPlateSearchLayout(byStatus, nfsePendentesList) {
-        const vlsItems = [
-          ...byStatus.LIBERACAO_SOLICITADA,
-          ...byStatus.LIBERACAO_CONFIRMADA,
-          ...byStatus.REMocao_CONFIRMADA,
-        ];
+      function applyGlobalPlateSearchLayout(byStatus, nfsePendentesList, vlsFilteredCount) {
+        const vlsCount =
+          typeof vlsFilteredCount === "number"
+            ? vlsFilteredCount
+            : mergeVlsItems(byStatus).length;
         const counts = {
           no_patio: byStatus.NO_PATIO.length,
-          liberacao_solicitada: vlsItems.length,
+          liberacao_solicitada: vlsCount,
           removidos: byStatus.REMOVIDO.length,
           nfse_pendente: nfsePendentesList.length,
         };
@@ -4810,6 +5104,50 @@
 
       printPatioByPartnerBtn?.addEventListener("click", () => {
         openPatioPartnerPrintModal();
+      });
+
+      printPatioLiberadosBtn?.addEventListener("click", () => {
+        openPatioLiberadosPrintModal();
+      });
+
+      document.getElementById("closePatioLiberadosPrintModal")?.addEventListener("click", () => {
+        document.getElementById("patioLiberadosPrintModal")?.classList.add("hidden");
+      });
+      document.getElementById("cancelPatioLiberadosPrintModal")?.addEventListener("click", () => {
+        document.getElementById("patioLiberadosPrintModal")?.classList.add("hidden");
+      });
+      document.getElementById("confirmPatioLiberadosPrintModal")?.addEventListener("click", () => {
+        runPatioLiberadosPrintDocument();
+      });
+      document.getElementById("patioLiberadosPrintModal")?.addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
+      });
+
+      document.getElementById("vlsToolbarFilters")?.addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-vls-pay]");
+        if (!btn) return;
+        vlsListFilterPay = btn.getAttribute("data-vls-pay") || "all";
+        updateVlsPayFilterButtons();
+        renderVehicles();
+      });
+      document.getElementById("vlsFilterLocator")?.addEventListener("change", (e) => {
+        vlsListFilterLocatorId = e.target.value || "";
+        renderVehicles();
+      });
+      document.getElementById("vlsFilterAssessoria")?.addEventListener("change", (e) => {
+        vlsListFilterAssessoriaId = e.target.value || "";
+        renderVehicles();
+      });
+      document.getElementById("vlsFiltersClear")?.addEventListener("click", () => {
+        vlsListFilterPay = "all";
+        vlsListFilterLocatorId = "";
+        vlsListFilterAssessoriaId = "";
+        const loc = document.getElementById("vlsFilterLocator");
+        const ass = document.getElementById("vlsFilterAssessoria");
+        if (loc) loc.value = "";
+        if (ass) ass.value = "";
+        updateVlsPayFilterButtons();
+        renderVehicles();
       });
 
       document.getElementById("closePatioPartnerPrintModal")?.addEventListener("click", () => {
