@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- amplipatio-static v=2026-04-01-finance-print-open-rec -->
+<!-- amplipatio-static v=2026-04-01-finance-print-filters -->
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
@@ -1998,11 +1998,34 @@
           <div class="modal-header">
             <div>
               <h3>Imprimir contas a receber em aberto</h3>
-              <p class="subtitle">Agrupamento por localizador, responsável financeiro e assessoria. Respeita o filtro por placa acima, se estiver preenchido.</p>
+              <p class="subtitle">Opcional: liste só um localizador, uma assessoria ou um responsável. Depois escolha como agrupar na folha. O filtro por placa do financeiro também vale aqui.</p>
             </div>
             <button type="button" class="modal-close" id="closeFinanceOpenRecPrintModal">Fechar</button>
           </div>
           <div class="form-grid">
+            <p class="notice full" style="margin: 0 0 4px">Restringir quem entra no relatório (opcional)</p>
+            <div>
+              <label for="financePrintFilterLocator">Apenas localizador</label>
+              <select id="financePrintFilterLocator">
+                <option value="">Todos os localizadores</option>
+              </select>
+            </div>
+            <div>
+              <label for="financePrintFilterAssessoria">Apenas assessoria</label>
+              <select id="financePrintFilterAssessoria">
+                <option value="">Todas as assessorias</option>
+              </select>
+            </div>
+            <div class="full">
+              <label for="financePrintFilterResponsavel">Apenas responsável financeiro</label>
+              <select id="financePrintFilterResponsavel">
+                <option value="">Todos os responsáveis</option>
+              </select>
+            </div>
+            <div class="full">
+              <button type="button" class="secondary" id="financePrintFilterClear">Limpar seleção dos filtros</button>
+            </div>
+            <p class="notice full" style="margin: 8px 0 4px">Como organizar na impressão</p>
             <div class="full" style="display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center">
               <label style="display: flex; gap: 8px; align-items: center; font-weight: normal">
                 <input type="checkbox" id="financePrintOpenByLocator" checked />
@@ -2970,7 +2993,69 @@
         });
       }
 
+      function financeReceivableMatchesPlateQuery(r, vehicleById, financePlateNorm) {
+        if (!financePlateNorm) return true;
+        const v = vehicleById.get(r.vehicle_id);
+        if (!v || !v.placa) return false;
+        return plateNormMatchesQuery(normalizePlateSearch(v.placa), financePlateNorm);
+      }
+
+      function syncFinanceOpenRecPrintFilterOptions() {
+        const locSel = document.getElementById("financePrintFilterLocator");
+        const assSel = document.getElementById("financePrintFilterAssessoria");
+        const respSel = document.getElementById("financePrintFilterResponsavel");
+        if (!locSel || !assSel || !respSel) return;
+
+        const preserveLoc = locSel.value;
+        const preserveAss = assSel.value;
+        const preserveResp = respSel.value;
+
+        const vehicleById = new Map(state.vehicles.map((v) => [v.id, v]));
+        const financePlateNorm = normalizePlateSearch(financePlateQuery);
+        const openList = (state.receivables || []).filter(
+          (r) => r.status === "EM_ABERTO" && financeReceivableMatchesPlateQuery(r, vehicleById, financePlateNorm)
+        );
+
+        const partnersList = state.partners || [];
+        const parceiros = partnersList.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const assessorias = partnersList.filter((p) => p.tipo === "ASSESSORIA");
+
+        const optId = (id, label) => {
+          const v = String(id).replace(/"/g, "&quot;");
+          return `<option value="${v}">${escapeHtml(label)}</option>`;
+        };
+
+        locSel.innerHTML =
+          `<option value="">Todos os localizadores</option>` +
+          parceiros.map((p) => optId(p.id, p.nome || "-")).join("");
+        assSel.innerHTML =
+          `<option value="">Todas as assessorias</option>` +
+          assessorias.map((p) => optId(p.id, p.nome || "-")).join("");
+
+        const names = [
+          ...new Set(openList.map((r) => (r.responsavel_pagamento || "").trim()).filter(Boolean)),
+        ].sort((a, b) => a.localeCompare(b, "pt-BR"));
+        respSel.innerHTML =
+          `<option value="">Todos os responsáveis</option>` +
+          names.map((n) => `<option value="${encodeURIComponent(n)}">${escapeHtml(n)}</option>`).join("");
+
+        if (parceiros.some((p) => p.id === preserveLoc)) locSel.value = preserveLoc;
+        else locSel.value = "";
+        if (assessorias.some((p) => p.id === preserveAss)) assSel.value = preserveAss;
+        else assSel.value = "";
+        if (preserveResp) {
+          try {
+            const dec = decodeURIComponent(preserveResp);
+            if (names.includes(dec)) respSel.value = encodeURIComponent(dec);
+            else respSel.value = "";
+          } catch (e) {
+            respSel.value = "";
+          }
+        } else respSel.value = "";
+      }
+
       function openFinanceOpenRecPrintModal() {
+        syncFinanceOpenRecPrintFilterOptions();
         document.getElementById("financeOpenRecPrintModal")?.classList.remove("hidden");
       }
 
@@ -2987,22 +3072,30 @@
         const vehicleById = new Map(state.vehicles.map((v) => [v.id, v]));
         const partnerByIdMap = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
 
-        const plateMatchesRec = (r) => {
-          if (!financePlateNorm) return true;
-          const v = vehicleById.get(r.vehicle_id);
-          if (!v || !v.placa) return false;
-          return plateNormMatchesQuery(normalizePlateSearch(v.placa), financePlateNorm);
-        };
-
-        const openRec = (state.receivables || []).filter(
-          (r) => r.status === "EM_ABERTO" && plateMatchesRec(r)
+        let openRec = (state.receivables || []).filter(
+          (r) => r.status === "EM_ABERTO" && financeReceivableMatchesPlateQuery(r, vehicleById, financePlateNorm)
         );
+
+        const filterLocId = document.getElementById("financePrintFilterLocator")?.value || "";
+        const filterAssId = document.getElementById("financePrintFilterAssessoria")?.value || "";
+        const filterRespEnc = document.getElementById("financePrintFilterResponsavel")?.value || "";
+        const filterResp = filterRespEnc ? decodeURIComponent(filterRespEnc) : "";
+
+        openRec = openRec.filter((r) => {
+          const v = vehicleById.get(r.vehicle_id);
+          if (filterLocId && (v?.localizador_id || "") !== filterLocId) return false;
+          if (filterAssId && (v?.assessoria_id || "") !== filterAssId) return false;
+          if (filterResp && (r.responsavel_pagamento || "").trim() !== filterResp) return false;
+          return true;
+        });
 
         if (!openRec.length) {
           alert(
-            financePlateNorm
-              ? "Nenhuma conta em aberto com o filtro de placa atual. Limpe a busca ou ajuste a placa."
-              : "Não há contas a receber em aberto."
+            filterLocId || filterAssId || filterResp
+              ? "Nenhuma conta em aberto com os filtros escolhidos (placa, localizador, assessoria ou responsável)."
+              : financePlateNorm
+                ? "Nenhuma conta em aberto com o filtro de placa atual. Limpe a busca ou ajuste a placa."
+                : "Não há contas a receber em aberto."
           );
           return;
         }
@@ -3042,6 +3135,19 @@
         ];
         if (financePlateQuery.trim()) {
           metaParts.unshift(`Filtro placa: ${financePlateQuery.trim()}`);
+        }
+        const filtroIndiv = [];
+        if (filterLocId) {
+          filtroIndiv.push(`Só localizador: ${partnerByIdMap.get(filterLocId) || "-"}`);
+        }
+        if (filterAssId) {
+          filtroIndiv.push(`Só assessoria: ${partnerByIdMap.get(filterAssId) || "-"}`);
+        }
+        if (filterResp) {
+          filtroIndiv.push(`Só responsável: ${filterResp}`);
+        }
+        if (filtroIndiv.length) {
+          metaParts.unshift(filtroIndiv.join(" · "));
         }
         const metaLine = metaParts.join(" · ");
 
@@ -5452,6 +5558,15 @@
       });
       document.getElementById("confirmFinanceOpenRecPrintModal")?.addEventListener("click", () => {
         runFinanceOpenReceivablesPrint();
+      });
+      document.getElementById("financePrintFilterClear")?.addEventListener("click", () => {
+        ["financePrintFilterLocator", "financePrintFilterAssessoria", "financePrintFilterResponsavel"].forEach(
+          (id) => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+          }
+        );
+        syncFinanceOpenRecPrintFilterOptions();
       });
       document.getElementById("financeOpenRecPrintModal")?.addEventListener("click", (e) => {
         if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
