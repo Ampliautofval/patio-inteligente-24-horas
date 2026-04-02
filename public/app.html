@@ -3127,6 +3127,11 @@
         const assNome = (v) =>
           v?.assessoria_id ? partnerByIdMap.get(v.assessoria_id) || "-" : "-";
 
+        const diariasPatioCell = (v) => {
+          if (!v?.data_entrada) return "—";
+          return String(calcDays(v));
+        };
+
         const totalGeral = openRec.reduce((s, r) => s + receivableValor(r), 0);
         const metaParts = [
           `${openRec.length} conta(s) em aberto`,
@@ -3152,11 +3157,11 @@
         const metaLine = metaParts.join(" · ");
 
         const theadLoc =
-          "<th>Veículo</th><th>Responsável financeiro</th><th>Assessoria</th><th>Valor</th><th>Dias em aberto</th>";
+          "<th>Veículo</th><th>Responsável financeiro</th><th>Assessoria</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
         const theadResp =
-          "<th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Valor</th><th>Dias em aberto</th>";
+          "<th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
         const theadAss =
-          "<th>Veículo</th><th>Responsável financeiro</th><th>Localizador</th><th>Valor</th><th>Dias em aberto</th>";
+          "<th>Veículo</th><th>Responsável financeiro</th><th>Localizador</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
 
         const rowLoc = (r) => {
           const v = vehicleById.get(r.vehicle_id);
@@ -3165,6 +3170,7 @@
             <td>${escapeHtml(r.responsavel_pagamento || "—")}</td>
             <td>${escapeHtml(assNome(v))}</td>
             <td>${escapeHtml(formatCurrency(receivableValor(r)))}</td>
+            <td>${escapeHtml(diariasPatioCell(v))}</td>
             <td>${escapeHtml(diasAberto(r))}</td>
           </tr>`;
         };
@@ -3175,6 +3181,7 @@
             <td>${escapeHtml(locNome(v))}</td>
             <td>${escapeHtml(assNome(v))}</td>
             <td>${escapeHtml(formatCurrency(receivableValor(r)))}</td>
+            <td>${escapeHtml(diariasPatioCell(v))}</td>
             <td>${escapeHtml(diasAberto(r))}</td>
           </tr>`;
         };
@@ -3185,6 +3192,7 @@
             <td>${escapeHtml(r.responsavel_pagamento || "—")}</td>
             <td>${escapeHtml(locNome(v))}</td>
             <td>${escapeHtml(formatCurrency(receivableValor(r)))}</td>
+            <td>${escapeHtml(diariasPatioCell(v))}</td>
             <td>${escapeHtml(diasAberto(r))}</td>
           </tr>`;
         };
