@@ -5101,6 +5101,7 @@
               const daysOpen = created ? Math.floor((now - created) / 86400000) : 0;
               const isOverdue = created ? daysOpen > 10 : false;
               const vehicle = state.vehicles.find((v) => v.id === r.vehicle_id);
+              const valorCobranca = vehicle ? calcTotal(vehicle) : Number(r.valor || 0);
               const vehicleInfo = vehicle
                 ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
                 : "-";
@@ -5111,9 +5112,9 @@
                     <span class="notice">${r.receivable_category || "GUARDA_PATIO"}</span><br />
                     ${r.responsavel_pagamento || "Responsável não informado"}<br />
                     <span class="notice">${vehicleInfo}</span><br />
-                    <span class="notice">Valor: ${formatCurrency(r.valor)}</span>
+                    <span class="notice">Valor: ${formatCurrency(valorCobranca)}</span>
                   </td>
-                  <td>${formatCurrency(r.valor)}</td>
+                  <td>${formatCurrency(valorCobranca)}</td>
                   <td>${daysOpen} dia(s)</td>
                   <td><span class="tag ${isOverdue ? "danger" : "warning"}">${isOverdue ? "Atrasada" : "Em aberto"}</span></td>
                   <td class="actions">
@@ -6601,11 +6602,18 @@
 
         if (action === "receber") {
           const receivable = state.receivables.find((r) => r.id === id);
-          if (!receivable) return;
+          if (!receivable) {
+            alert("Recebimento não encontrado. Atualize a página (Financeiro) e tente de novo.");
+            return;
+          }
           const vehicle = state.vehicles.find((v) => v.id === receivable.vehicle_id);
           const totalAtual = vehicle ? calcTotal(vehicle) : Number(receivable.valor || 0);
-          if (Number(receivable.valor || 0) <= 0) {
-            alert("Valor inválido para recebimento.");
+          if (totalAtual <= 0) {
+            alert(
+              vehicle
+                ? "Valor inválido para recebimento. Confira diária, data de entrada e (se houver) saída do veículo."
+                : "Valor inválido para recebimento (veículo não encontrado ou valor zerado)."
+            );
             return;
           }
           if (receivable.status === "PAGO") {
