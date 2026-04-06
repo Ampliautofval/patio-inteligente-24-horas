@@ -179,6 +179,78 @@
         box-shadow: var(--shadow-soft);
       }
 
+      .dashboard-modules {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 18px;
+        margin-bottom: 6px;
+      }
+      .card.dashboard-module-card {
+        min-height: 148px;
+        padding: 22px 20px;
+        justify-content: flex-start;
+        gap: 0;
+      }
+      .dashboard-module-card .module-eyebrow {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .dashboard-module-card .module-title {
+        font-size: 1.28rem;
+        font-weight: 700;
+        margin: 0 0 10px;
+        line-height: 1.25;
+        color: var(--text);
+      }
+      .dashboard-module-card .module-desc {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.5;
+        margin: 0 0 16px;
+        flex: 1;
+      }
+      .dashboard-module-card .module-cta {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--primary);
+        margin-top: auto;
+      }
+      .card.dashboard-module-card.dashboard--patio {
+        border-color: rgba(248, 113, 113, 0.42);
+        background: linear-gradient(155deg, rgba(225, 29, 46, 0.11), rgba(15, 19, 26, 0.52));
+      }
+      [data-theme="light"] .card.dashboard-module-card.dashboard--patio {
+        background: linear-gradient(155deg, rgba(225, 29, 46, 0.07), rgba(255, 255, 255, 0.88));
+      }
+      .card.dashboard-module-card.dashboard--finance {
+        border-color: rgba(45, 212, 191, 0.42);
+        background: linear-gradient(155deg, rgba(13, 148, 136, 0.12), rgba(15, 19, 26, 0.52));
+      }
+      [data-theme="light"] .card.dashboard-module-card.dashboard--finance {
+        background: linear-gradient(155deg, rgba(13, 148, 136, 0.09), rgba(255, 255, 255, 0.88));
+      }
+      .patio-module-ribbon-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+      }
+      .patio-module-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .module-back-ribbon {
+        padding-bottom: 12px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid var(--border);
+      }
+
       /* Fechamento mensal (Financeiro) - layout mais moderno */
       #financeClosureArea .finance-closure-hero {
         display: flex;
@@ -1138,10 +1210,6 @@
         <div class="panel">
           <div class="nav">
             <button class="active" data-view="dashboard">Painel</button>
-            <button data-view="patio">Gestão de Pátio</button>
-            <button data-view="parceiros">Parceiros</button>
-            <button data-view="financeiro">Gestão financeira</button>
-            <button data-view="configuracoes">Configurações</button>
             <button id="logoutBtn" class="secondary">Sair</button>
           </div>
         </div>
@@ -1150,10 +1218,40 @@
           <div class="toolbar">
             <div>
               <h2>Painel</h2>
+              <p class="subtitle" style="margin-bottom: 0">Resumo e acesso aos módulos principais</p>
             </div>
             <span class="pill">Atualizado em tempo real</span>
           </div>
           <div class="grid">
+            <div class="dashboard-modules" style="grid-column: 1 / -1">
+              <div
+                class="card clickable dashboard-module-card dashboard--patio"
+                id="cardModuloPatio"
+                role="button"
+                tabindex="0"
+              >
+                <div class="module-eyebrow">Operação</div>
+                <h3 class="module-title">Gestão de pátio</h3>
+                <p class="module-desc">
+                  Veículos, liberações e remoções. A partir daqui você também abre <strong>Parceiros</strong> e
+                  <strong>Configurações</strong>.
+                </p>
+                <span class="module-cta">Abrir módulo →</span>
+              </div>
+              <div id="dashboardModuleFinanceWrap">
+                <div
+                  class="card clickable dashboard-module-card dashboard--finance"
+                  id="cardModuloFinanceiro"
+                  role="button"
+                  tabindex="0"
+                >
+                  <div class="module-eyebrow">Financeiro</div>
+                  <h3 class="module-title">Gestão financeira</h3>
+                  <p class="module-desc">Contas a receber e a pagar, caixa, fechamento mensal e históricos.</p>
+                  <span class="module-cta">Abrir módulo →</span>
+                </div>
+              </div>
+            </div>
             <div class="card" style="grid-column: 1 / -1">
               <div class="card-head">
                 <span class="card-title">Buscar por placa</span>
@@ -1337,9 +1435,17 @@
 
         <div id="viewPatio" class="panel hidden patio-module-shell">
           <div class="patio-module-ribbon">
-            <button type="button" id="exitPatioModule" class="secondary">← Voltar ao Painel</button>
-            <div class="patio-module-meta">
-              <span class="patio-module-name">Gestão de pátio</span>
+            <div class="patio-module-ribbon-left">
+              <button type="button" id="exitPatioModule" class="secondary">← Voltar ao Painel</button>
+            </div>
+            <div class="patio-module-ribbon-right">
+              <div class="patio-module-tools">
+                <button type="button" class="secondary" id="openParceirosFromPatio">Parceiros</button>
+                <button type="button" class="secondary" id="openConfigFromPatio">Configurações</button>
+              </div>
+              <div class="patio-module-meta">
+                <span class="patio-module-name">Gestão de pátio</span>
+              </div>
             </div>
           </div>
           <div class="toolbar">
@@ -1474,6 +1580,9 @@
         </div>
 
         <div id="viewParceiros" class="panel hidden">
+          <div class="module-back-ribbon">
+            <button type="button" class="secondary" id="exitParceirosToPatio">← Voltar à Gestão de pátio</button>
+          </div>
           <div class="toolbar">
             <div>
               <h2>Parceiros</h2>
@@ -1697,6 +1806,9 @@
         </div>
 
         <div id="viewConfiguracoes" class="panel hidden">
+          <div class="module-back-ribbon">
+            <button type="button" class="secondary" id="exitConfigToPatio">← Voltar à Gestão de pátio</button>
+          </div>
           <div class="toolbar">
             <div>
               <h2>Configurações</h2>
@@ -3667,11 +3779,13 @@
       function applyRoleRestrictions() {
         if (!userIsTrackManager) return;
 
-        // Deixa somente "Gestão de Pátio" visível.
+        // Navegação: só Painel; sem módulo financeiro no painel; configurações só para administrador.
         document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
           const view = btn.getAttribute("data-view");
-          btn.style.display = view === "patio" ? "" : "none";
+          btn.style.display = view === "dashboard" ? "" : "none";
         });
+        document.getElementById("dashboardModuleFinanceWrap")?.classList.add("hidden");
+        document.getElementById("openConfigFromPatio")?.classList.add("hidden");
 
         // Garante que nenhuma outra aba fique acessivel via UI.
         showMainView("patio");
@@ -5596,6 +5710,24 @@
         openPatioSubview("nfse_pendente");
       });
 
+      function bindModuleCardActivate(el, fn) {
+        if (!el) return;
+        el.addEventListener("click", fn);
+        el.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fn();
+          }
+        });
+      }
+      bindModuleCardActivate(document.getElementById("cardModuloPatio"), () => openPatioSubview("no_patio"));
+      bindModuleCardActivate(document.getElementById("cardModuloFinanceiro"), () => openFinanceSubview("receber"));
+
+      document.getElementById("openParceirosFromPatio")?.addEventListener("click", () => openMainView("parceiros"));
+      document.getElementById("openConfigFromPatio")?.addEventListener("click", () => openMainView("configuracoes"));
+      document.getElementById("exitParceirosToPatio")?.addEventListener("click", () => closeStackTop());
+      document.getElementById("exitConfigToPatio")?.addEventListener("click", () => closeStackTop());
+
       const cardVeiculosLink = document.getElementById("cardVeiculosLink");
       const cardSolicitadasLink = document.getElementById("cardSolicitadasLink");
       const cardConfirmadasLink = document.getElementById("cardConfirmadasLink");
@@ -5625,7 +5757,7 @@
       }
 
       function openMainView(view) {
-        if (userIsTrackManager && view !== "patio") {
+        if (userIsTrackManager && view !== "patio" && view !== "parceiros") {
           showMainView("patio");
           return;
         }
