@@ -1386,6 +1386,24 @@
         font-size: 12px;
         color: var(--muted);
       }
+      .ficha-section-title {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .ficha-inline-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .ficha-inline-actions button.secondary {
+        font-size: 12px;
+        padding: 8px 12px;
+      }
       .textarea {
         width: 100%;
         min-height: 160px;
@@ -1867,7 +1885,7 @@
             <div class="section-card patio-subview hidden" data-subview="no_patio">
               <div class="pill">VNP</div>
               <p class="notice vnp-hint">
-                Veículos no pátio e em fase de liberação ficam nesta lista; os em liberação aparecem no topo, em destaque. Após a remoção, o registro vai para <strong>VRP</strong>.
+                Veículos no pátio e em fase de liberação ficam nesta lista; os em liberação aparecem no topo, em destaque. Na linha use <strong>Ficha</strong> (HV, NFSe e SLV), <strong>Editar</strong> e <strong>Apagar</strong>. Após a remoção, o registro vai para <strong>VRP</strong>.
               </p>
               <div id="vlsToolbarFilters" class="filter-bar hidden" style="margin-bottom: 10px">
                 <span class="notice">Filtros (liberação em andamento)</span>
@@ -2621,7 +2639,7 @@
       <div id="fichaModal" class="modal-backdrop hidden">
         <div class="modal">
           <div class="modal-header">
-            <h3>Ficha do veículo</h3>
+            <h3 id="fichaModalTitle">Ficha do veículo</h3>
             <div class="actions">
               <button class="secondary" id="downloadFicha">Baixar imagem</button>
               <button class="secondary" id="printFicha">Imprimir</button>
@@ -2630,7 +2648,18 @@
           </div>
           <div id="fichaCapture">
             <div id="fichaResumo" class="section-card" style="margin-bottom: 12px;"></div>
-            <div id="fichaTimeline" class="timeline"></div>
+            <div class="section-card" style="margin-bottom: 12px">
+              <h4 class="ficha-section-title">HV · Histórico do veículo</h4>
+              <div id="fichaTimeline" class="timeline"></div>
+            </div>
+            <div class="section-card" style="margin-bottom: 12px">
+              <h4 class="ficha-section-title">NFSe · Solicitação de nota fiscal de serviço</h4>
+              <div id="fichaSectionSnf"></div>
+            </div>
+            <div class="section-card" style="margin-bottom: 12px">
+              <h4 class="ficha-section-title">SLV · Solicitação de liberação do veículo</h4>
+              <div id="fichaSectionSlv"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -2784,6 +2813,9 @@
       const fichaCapture = document.getElementById("fichaCapture");
       const fichaResumo = document.getElementById("fichaResumo");
       const fichaTimeline = document.getElementById("fichaTimeline");
+      const fichaSectionSnf = document.getElementById("fichaSectionSnf");
+      const fichaSectionSlv = document.getElementById("fichaSectionSlv");
+      const fichaModalTitle = document.getElementById("fichaModalTitle");
       const nfseModal = document.getElementById("nfseModal");
       const closeNfseModal = document.getElementById("closeNfseModal");
       const closeNfseModal2 = document.getElementById("closeNfseModal2");
@@ -4706,17 +4738,6 @@
           return;
         }
         const showGestor = userIsTrackManager;
-        const FLUXO_LIBERACAO_STATUSES = [
-          "LIBERACAO_SOLICITADA",
-          "LIBERACAO_CONFIRMADA",
-          "REMocao_CONFIRMADA",
-        ];
-        const actionLabels = {
-          solicitar: "Solicitar liberação",
-          confirmar: "Confirmar liberação",
-          nfse_pendente: "NFSe solicitada",
-        };
-
         tbody.innerHTML = items
           .map((v) => {
             const total = calcTotal(v);
@@ -4740,26 +4761,11 @@
 
             let actionsCell = "";
             if (!showGestor) {
-              if (v.status === "NO_PATIO") {
-                actionsCell = `
+              actionsCell = `
                   <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
-                  <button class="secondary" data-action="nfse" data-id="${v.id}">NFSe solicitada</button>
-                  <button class="secondary" data-action="solicitar" data-id="${v.id}">${actionLabels.solicitar}</button>
-                  <button class="secondary" data-action="pagamento" data-id="${v.id}">${pago ? "Marcar em aberto" : "Marcar pago"}</button>
                   <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
                   <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
                 `;
-              } else if (FLUXO_LIBERACAO_STATUSES.includes(v.status)) {
-                actionsCell = `
-                  <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
-                  <button class="secondary" data-action="nfse" data-id="${v.id}">NFSe solicitada</button>
-                  <button class="secondary" data-action="trocar-responsavel" data-id="${v.id}">Trocar responsável</button>
-                  <button class="secondary" data-action="confirmar" data-id="${v.id}">${actionLabels.confirmar}</button>
-                  <button class="secondary" data-action="pagamento" data-id="${v.id}">${pago ? "Marcar em aberto" : "Marcar pago"}</button>
-                  <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
-                  <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
-                `;
-              }
             }
 
             return `
@@ -4949,10 +4955,16 @@
           await loadVehicles();
           updateDashboard();
         }
+        await refreshFichaIfOpen(vehicle.id);
         nfseModal.classList.remove("hidden");
       }
 
       async function openFicha(vehicle) {
+        if (fichaModalTitle) {
+          fichaModalTitle.textContent = `Ficha — ${vehicle.placa || "veículo"}`;
+        }
+        fichaModal.dataset.openVehicleId = vehicle.id;
+
         const { data: ciclos, error: ciclosError } = await supabase
           .from("receivables")
           .select("responsavel_pagamento,valor,period_start,period_end,status")
@@ -4984,6 +4996,79 @@
           ${ciclosError ? "<em>Erro ao carregar ciclos.</em>" : ciclosHtml}
         `;
 
+        const FLUXO_SLV = ["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMocao_CONFIRMADA"];
+
+        if (fichaSectionSnf) {
+          if (userIsTrackManager) {
+            fichaSectionSnf.innerHTML = `<p class="notice" style="margin:0">Visualização do gestor de pista.</p>`;
+          } else {
+            const st = vehicle.nfse_status || "NAO_SOLICITADA";
+            let statusLine = "";
+            if (st === "EMITIDA") {
+              statusLine = `Status: <strong>NFSe emitida</strong>${
+                vehicle.nfse_issued_at ? ` • ${formatDateTime(vehicle.nfse_issued_at)}` : ""
+              }.`;
+            } else if (st === "PENDENTE") {
+              statusLine = `Status: <strong>Pendente de emissão</strong>${
+                vehicle.nfse_requested_at ? ` • Solicitada em ${formatDateTime(vehicle.nfse_requested_at)}` : ""
+              }.`;
+            } else {
+              statusLine =
+                "Status: nota fiscal ainda <strong>não solicitada</strong>. Use o botão para registrar a solicitação e abrir o texto.";
+            }
+            fichaSectionSnf.innerHTML = `
+              <p class="notice" style="margin:0">${statusLine}</p>
+              <div class="ficha-inline-actions">
+                <button type="button" class="secondary" data-action="nfse" data-id="${vehicle.id}">Abrir NFSe</button>
+              </div>
+            `;
+          }
+        }
+
+        if (fichaSectionSlv) {
+          if (userIsTrackManager) {
+            fichaSectionSlv.innerHTML = `<p class="notice" style="margin:0">Visualização do gestor de pista.</p>`;
+          } else {
+            const pago = vehicle.payment_status === "PAGO";
+            let situacao = "";
+            if (vehicle.status === "NO_PATIO") {
+              situacao =
+                '<p class="notice" style="margin:0">Veículo <strong>no pátio</strong>. Registre a <strong>SLV</strong> para iniciar o fluxo de liberação.</p>';
+            } else if (vehicle.status === "LIBERACAO_SOLICITADA") {
+              situacao =
+                '<p class="notice" style="margin:0"><strong>SLV registrada</strong> — liberação solicitada. Use os botões abaixo quando aplicável.</p>';
+            } else if (vehicle.status === "LIBERACAO_CONFIRMADA") {
+              situacao =
+                '<p class="notice" style="margin:0">Liberação <strong>confirmada</strong> — aguardando remoção.</p>';
+            } else if (vehicle.status === "REMocao_CONFIRMADA") {
+              situacao = '<p class="notice" style="margin:0">Remoção <strong>confirmada</strong>.</p>';
+            } else {
+              situacao = `<p class="notice" style="margin:0">Situação: ${escapeHtml(
+                VLS_STATUS_LABELS[vehicle.status] || vehicle.status || "-"
+              )}</p>`;
+            }
+            const botoes = [];
+            if (vehicle.status === "NO_PATIO") {
+              botoes.push(
+                `<button type="button" class="secondary" data-action="solicitar" data-id="${vehicle.id}">Registrar SLV</button>`
+              );
+            } else if (FLUXO_SLV.includes(vehicle.status)) {
+              botoes.push(
+                `<button type="button" class="secondary" data-action="trocar-responsavel" data-id="${vehicle.id}">Trocar responsável</button>`
+              );
+              botoes.push(
+                `<button type="button" class="secondary" data-action="confirmar" data-id="${vehicle.id}">Confirmar liberação / remoção</button>`
+              );
+            }
+            botoes.push(
+              `<button type="button" class="secondary" data-action="pagamento" data-id="${vehicle.id}">${
+                pago ? "Marcar em aberto" : "Marcar pago"
+              }</button>`
+            );
+            fichaSectionSlv.innerHTML = `${situacao}<div class="ficha-inline-actions">${botoes.join("")}</div>`;
+          }
+        }
+
         const { data, error } = await supabase
           .from("vehicle_events")
           .select("*")
@@ -5014,6 +5099,12 @@
             .join("");
         }
         fichaModal.classList.remove("hidden");
+      }
+
+      async function refreshFichaIfOpen(vehicleId) {
+        if (!vehicleId || !fichaModal || fichaModal.classList.contains("hidden")) return;
+        const v = state.vehicles.find((x) => x.id === vehicleId);
+        if (v) await openFicha(v);
       }
 
       function renderPartners() {
@@ -5737,7 +5828,10 @@
         }
       });
       closePayableModal.addEventListener("click", () => payableModal.classList.add("hidden"));
-      closeFichaModal.addEventListener("click", () => fichaModal.classList.add("hidden"));
+      closeFichaModal.addEventListener("click", () => {
+        fichaModal.classList.add("hidden");
+        delete fichaModal.dataset.openVehicleId;
+      });
       closeNfseModal.addEventListener("click", () => nfseModal.classList.add("hidden"));
       closeNfseModal2.addEventListener("click", () => nfseModal.classList.add("hidden"));
       printFicha.addEventListener("click", () => window.print());
@@ -5815,6 +5909,7 @@
         modal.addEventListener("click", (event) => {
           if (event.target === modal) {
             modal.classList.add("hidden");
+            if (modal === fichaModal) delete fichaModal.dataset.openVehicleId;
             if (modal === dateModal && dateModalResolver) {
               dateModalResolver(null);
               dateModalResolver = null;
@@ -6454,11 +6549,13 @@
           alert(error.message);
           return;
         }
+        const savedEditId = editingVehicleId;
         vehicleForm.reset();
         editingVehicleId = null;
         editingVehicleData = null;
         vehicleModal.classList.add("hidden");
-        loadVehicles();
+        await loadVehicles();
+        await refreshFichaIfOpen(savedEditId);
       });
 
       confirmNfse.addEventListener("click", async () => {
@@ -6473,9 +6570,11 @@
           return;
         }
         nfseModal.classList.add("hidden");
+        const vid = nfseVehicleId;
         nfseVehicleId = null;
         await loadVehicles();
         updateDashboard();
+        await refreshFichaIfOpen(vid);
       });
 
       partnerForm.addEventListener("submit", async (event) => {
@@ -6589,24 +6688,26 @@
         });
       }
 
-      document.getElementById("viewPatio").addEventListener("click", async (event) => {
-        const button = event.target.closest("button[data-action]");
-        if (!button) return;
+      async function handleVnpVehicleAction(button) {
         const id = button.getAttribute("data-id");
         const action = button.getAttribute("data-action");
         const vehicle = state.vehicles.find((v) => v.id === id);
         if (!vehicle) return;
 
         if (userIsTrackManager) {
-          // Gestor de pista: apenas visualizar e lançar veículos.
           return;
         }
 
         if (action === "apagar") {
           if (!confirm("Deseja apagar este veículo?")) return;
           const { error } = await supabase.from("vehicles").delete().eq("id", id).eq("user_id", state.user.id);
-          if (error) alert(error.message);
-          loadVehicles();
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          fichaModal.classList.add("hidden");
+          delete fichaModal.dataset.openVehicleId;
+          await loadVehicles();
           return;
         }
 
@@ -6696,6 +6797,7 @@
           await loadReceivables();
           renderFinance();
           alert("Ciclo fechado e novo responsável definido.");
+          await refreshFichaIfOpen(id);
           return;
         }
 
@@ -6750,10 +6852,11 @@
               }
             }
           }
-          loadVehicles();
+          await loadVehicles();
           await Promise.all([loadReceivables(), loadCash()]);
           renderFinance();
           updateDashboard();
+          await refreshFichaIfOpen(id);
           return;
         }
 
@@ -6842,6 +6945,7 @@
           await loadReceivables();
           renderFinance();
           updateDashboard();
+          await refreshFichaIfOpen(id);
           return;
         }
 
@@ -6897,8 +7001,22 @@
           updateDashboard();
           openPatioSubview("removidos");
           alert("Veículo removido do pátio (VRP).");
+          fichaModal.classList.add("hidden");
+          delete fichaModal.dataset.openVehicleId;
           return;
         }
+      }
+
+      document.getElementById("viewPatio").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button || !event.currentTarget.contains(button)) return;
+        await handleVnpVehicleAction(button);
+      });
+
+      fichaModal.addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button || !fichaModal.contains(button)) return;
+        await handleVnpVehicleAction(button);
       });
 
       document.getElementById("viewParceiros").addEventListener("click", async (event) => {
