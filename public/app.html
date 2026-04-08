@@ -4040,6 +4040,31 @@
         return new Date(startMs - 1).toISOString();
       }
 
+      /** Último instante do dia local YYYY-MM-DD (23:59:59.999). */
+      function endOfLocalDayIso(dateStr) {
+        const [y, m, d] = (dateStr || "").split("-").map((v) => Number(v));
+        if (!y || !m || !d) return null;
+        const nextMidnight = new Date(y, m - 1, d + 1, 0, 0, 0, 0);
+        return new Date(nextMidnight.getTime() - 1).toISOString();
+      }
+
+      /** Início do dia local seguinte ao YYYY-MM-DD informado (novo ciclo). */
+      function startOfNextLocalDayIso(dateStr) {
+        const [y, m, d] = (dateStr || "").split("-").map((v) => Number(v));
+        if (!y || !m || !d) return null;
+        return new Date(y, m - 1, d + 1, 0, 0, 0, 0).toISOString();
+      }
+
+      function formatNextCalendarDayPt(dateStr) {
+        const [y, m, d] = (dateStr || "").split("-").map((v) => Number(v));
+        if (!y || !m || !d) return "";
+        const dt = new Date(y, m - 1, d + 1);
+        const dd = String(dt.getDate()).padStart(2, "0");
+        const mm = String(dt.getMonth() + 1).padStart(2, "0");
+        const yy = dt.getFullYear();
+        return `${dd}/${mm}/${yy}`;
+      }
+
       function calcDays(vehicle) {
         if (!vehicle?.data_entrada) return 0;
         const start = new Date(vehicle.data_entrada);
@@ -6722,18 +6747,19 @@
         }
 
         if (action === "trocar-responsavel") {
-          // Regra A: responsável antigo até o dia anterior (inclusive).
+          // Responsável atual “acerta” diárias até o fim do dia do acerto (inclusive);
+          // a partir do dia seguinte, o ciclo é do novo responsável.
           const novoResp = prompt("Novo responsável financeiro:");
           if (!novoResp) return;
-          const dataTroca = await openDateModal({
-            title: "Data da troca (novo responsável a partir desta data)",
-            label: "Data",
+          const dataAcerto = await openDateModal({
+            title: "Data do acerto das diárias (até este dia, inclusive, fica com o responsável atual)",
+            label: "Data do acerto",
             type: "date",
           });
-          if (!dataTroca) return;
+          if (!dataAcerto) return;
 
-          const periodEnd = endOfPreviousLocalDayIso(dataTroca);
-          const periodStartNew = startOfLocalDayIso(dataTroca);
+          const periodEnd = endOfLocalDayIso(dataAcerto);
+          const periodStartNew = startOfNextLocalDayIso(dataAcerto);
           if (!periodEnd || !periodStartNew) {
             alert("Data inválida.");
             return;
@@ -6791,12 +6817,18 @@
             vehicle_id: id,
             tipo: "RESPONSAVEL_TROCADO",
             responsavel: novoResp,
-            descricao: `Responsável financeiro alterado. Novo responsável a partir de ${dataTroca}.`,
+            descricao: `Troca de responsável: ciclo anterior encerrado em ${dataAcerto} (inclusive). Novo responsável (${novoResp}) a partir de ${formatNextCalendarDayPt(
+              dataAcerto
+            )}.`,
           });
 
           await loadReceivables();
           renderFinance();
-          alert("Ciclo fechado e novo responsável definido.");
+          alert(
+            `Ciclo do responsável anterior encerrado em ${dataAcerto} (fim desse dia). Novo responsável a partir de ${formatNextCalendarDayPt(
+              dataAcerto
+            )}.`
+          );
           await refreshFichaIfOpen(id);
           return;
         }
