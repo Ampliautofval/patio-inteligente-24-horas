@@ -1743,7 +1743,7 @@
                 >
                   <div class="module-eyebrow">Financeiro</div>
                   <h3 class="module-title">Gestão financeira</h3>
-                  <p class="module-desc">Contas a receber e a pagar, caixa, fechamento mensal e históricos.</p>
+                  <p class="module-desc">Aguardando lançamento (saída do pátio), contas a receber, caixa, fechamento e históricos.</p>
                   <span class="module-cta">Abrir módulo →</span>
                 </div>
               </div>
@@ -2030,7 +2030,7 @@
               <p class="module-kicker module-kicker--finance">Financeiro</p>
               <h2>Gestão financeira</h2>
               <p class="module-lede">
-                Recebíveis, despesas, caixa e fechamento — interface alinhada ao painel e ao módulo de pátio.
+                Primeiro «Aguardando lançamento» (saída do pátio), depois contas a receber ou caixa — despesas, fechamento e históricos no mesmo módulo.
               </p>
             </div>
             <div class="actions">
@@ -2044,8 +2044,8 @@
           </div>
           <div id="receivableAlert" class="alert hidden"></div>
           <div class="subnav" id="financeSubnav">
-            <button data-subview="receber">Contas a receber</button>
             <button data-subview="aguardando_lancamento">Aguardando lançamento</button>
+            <button data-subview="receber">Contas a receber</button>
             <button data-subview="receber_alerta">Recebimentos em alerta</button>
             <button data-subview="pagar">Contas a pagar</button>
             <button data-subview="caixa">Caixa</button>
@@ -2072,9 +2072,9 @@
             <button type="button" class="secondary" id="clearFinancePlateFilter">Limpar</button>
           </form>
           <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45">
-            <strong>Aguardando lançamento</strong> — triagem dos ciclos que o pátio encerrou (troca de responsável ou veículo removido/liberado).
-            <strong>Ir para contas a receber</strong> deixa o valor em aberto para cobrança na aba homónima.
-            <strong>Baixar como pago</strong> quando já foi quitado (regista entrada em caixa).
+            <strong>Fluxo:</strong> ao sair do pátio (VRP) ou ao trocar responsável, o ciclo cai aqui primeiro — antes de «Contas a receber».
+            Depois do teu OK: <strong>Ir para contas a receber</strong> abre a cobrança na aba seguinte;
+            <strong>Baixar como pago</strong> quita o ciclo e regista entrada em <strong>caixa</strong>.
           </p>
           <div id="financeFilters" class="filter-bar hidden">
             <label>De</label>
@@ -5300,7 +5300,7 @@
           if (!rows.length) {
             setEmptyRow(
               tableFinance,
-              "Nenhum registo nesta fila. Ciclos aparecem aqui após troca de responsável no pátio ou remoção do veículo (VRP).",
+              "Nenhum registo nesta fila. Quando o veículo sai do pátio (VRP) ou há troca de responsável, o ciclo aparece aqui para o teu OK antes de «Contas a receber» ou caixa.",
               5
             );
           } else {
@@ -6053,7 +6053,7 @@
           loadVehicles(),
         ]).then(() => {
           if (!currentFinanceView || currentFinanceView === "none") {
-            setFinanceView("receber");
+            setFinanceView("aguardando_lancamento");
           } else {
             renderFinance();
           }
@@ -6136,7 +6136,7 @@
         });
       }
       bindModuleCardActivate(document.getElementById("cardModuloPatio"), () => openPatioSubview("no_patio"));
-      bindModuleCardActivate(document.getElementById("cardModuloFinanceiro"), () => openFinanceSubview("receber"));
+      bindModuleCardActivate(document.getElementById("cardModuloFinanceiro"), () => openFinanceSubview("aguardando_lancamento"));
 
       document.getElementById("openParceirosFromPatio")?.addEventListener("click", () => openMainView("parceiros"));
       document.getElementById("openConfigFromPatio")?.addEventListener("click", () => openMainView("configuracoes"));
@@ -6967,7 +6967,7 @@
           updateDashboard();
           openPatioSubview("removidos");
           alert(
-            "Veículo removido do pátio (VRP). O ciclo financeiro encerrado aparece no Financeiro, em «Aguardando lançamento», para lançamento ou pagamento."
+            "Veículo removido do pátio (VRP). O ciclo vai primeiro para Financeiro → «Aguardando lançamento»; depois do teu OK passa a «Contas a receber» ou baixa em caixa."
           );
           fichaModal.classList.add("hidden");
           delete fichaModal.dataset.openVehicleId;
@@ -7063,7 +7063,7 @@
             return;
           }
           await loadReceivables();
-          renderFinance();
+          openFinanceSubview("receber");
           updateDashboard();
           return;
         }
@@ -7105,7 +7105,7 @@
             descricao: vehicleInfo ? `Diárias - ${vehicleInfo}` : "Diárias",
           });
           await Promise.all([loadReceivables(), loadCash(), loadVehicles()]);
-          renderFinance();
+          openFinanceSubview("caixa");
           updateDashboard();
           return;
         }
