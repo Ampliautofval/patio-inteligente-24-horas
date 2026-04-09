@@ -8,10 +8,7 @@
 --    -- ALTER TABLE receivables ADD CONSTRAINT receivables_status_check
 --    --   CHECK (status IN ('EM_ABERTO', 'PAGO', 'AGUARDANDO_LANCAMENTO'));
 --
--- 2) Opcional: alinhar dados antigos (ciclo já com fim no pátio mas ainda EM_ABERTO):
+-- 2) Opcional: migrar na base ciclos EM_ABERTO com período já fechado → AGUARDANDO_LANCAMENTO
+--    (ficheiro dedicado: receivables_migrar_em_aberto_com_fim_para_aguardando.sql).
 --
---    -- UPDATE receivables
---    -- SET status = 'AGUARDANDO_LANCAMENTO'
---    -- WHERE status = 'EM_ABERTO' AND period_end IS NOT NULL;
---
--- Descomente e adapte após confirmar políticas RLS e o schema da sua base.
+-- A interface também trata estes registos em «Aguardando lançamento» sem esse UPDATE.
