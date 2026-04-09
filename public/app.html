@@ -2070,6 +2070,11 @@
             <button type="submit">Buscar</button>
             <button type="button" class="secondary" id="clearFinancePlateFilter">Limpar</button>
           </form>
+          <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45">
+            <strong>Aguardando lançamento</strong> — triagem dos ciclos que o pátio encerrou (troca de responsável ou veículo removido/liberado).
+            <strong>Ir para contas a receber</strong> deixa o valor em aberto para cobrança na aba homónima.
+            <strong>Baixar como pago</strong> quando já foi quitado (regista entrada em caixa).
+          </p>
           <div id="financeFilters" class="filter-bar hidden">
             <label>De</label>
             <input id="filterFrom" type="date" />
@@ -5256,11 +5261,11 @@
         if (currentFinanceView === "aguardando_lancamento") {
           financeHead.innerHTML = `
             <tr>
-              <th>Tipo</th>
+              <th>Origem</th>
               <th>Período / Responsável / Veículo</th>
               <th>Valor</th>
-              <th>Situação</th>
-              <th>Ações</th>
+              <th>Triagem</th>
+              <th>Decisão</th>
             </tr>`;
           state.receivables
             .filter((r) => r.status === RECEIVABLE_AGUARDANDO_LANCAMENTO)
@@ -5275,7 +5280,7 @@
               const valor = Number(r.valor || 0);
               rows.push(`
                 <tr>
-                  <td>Ciclo encerrado</td>
+                  <td>Pátio — ciclo encerrado</td>
                   <td>
                     <span class="notice">${r.receivable_category || "GUARDA_PATIO"}</span><br />
                     ${escapeHtml(r.responsavel_pagamento || "—")}<br />
@@ -5283,16 +5288,20 @@
                     <span class="notice">${escapeHtml(ini)} → ${escapeHtml(fim)}</span>
                   </td>
                   <td>${formatCurrency(valor)}</td>
-                  <td><span class="tag warning">Aguardando</span></td>
+                  <td><span class="tag warning">Decidir: a receber ou pago</span></td>
                   <td class="actions">
-                    <button class="secondary" data-action="lancar_conta" data-id="${r.id}">Lançar em aberto</button>
-                    <button class="secondary" data-action="receber_aguardando" data-id="${r.id}">Registrar pagamento</button>
+                    <button class="secondary" type="button" data-action="lancar_conta" data-id="${r.id}" title="Envia para a aba Contas a receber (valor em aberto)">Ir para contas a receber</button>
+                    <button class="secondary" type="button" data-action="receber_aguardando" data-id="${r.id}" title="Quita o ciclo e lança entrada em caixa">Baixar como pago</button>
                   </td>
                 </tr>
               `);
             });
           if (!rows.length) {
-            setEmptyRow(tableFinance, "Nenhum ciclo aguardando lançamento no financeiro.", 5);
+            setEmptyRow(
+              tableFinance,
+              "Nenhum registo nesta fila. Ciclos aparecem aqui após troca de responsável no pátio ou remoção do veículo (VRP).",
+              5
+            );
           } else {
             tableFinance.innerHTML = rows.join("");
           }
@@ -5747,6 +5756,7 @@
           financeFilters.classList.add("hidden");
           receivableAlert.classList.add("hidden");
           if (financeContent) financeContent.classList.add("hidden");
+          document.getElementById("financeAguardandoIntro")?.classList.add("hidden");
           return;
         }
         if (financeContent) {
@@ -5756,6 +5766,7 @@
           financeContent.classList.add("air-open");
         }
         financeFilters.classList.toggle("hidden", !["historico_receber", "historico_pagar", "relatorios"].includes(view));
+        document.getElementById("financeAguardandoIntro")?.classList.toggle("hidden", view !== "aguardando_lancamento");
         renderFinance();
       }
 
