@@ -4,8 +4,8 @@
 ALTER TABLE track_managers
   ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'GESTOR_PISTA';
 
--- Opcional: unificar linhas antigas se existir OPERADOR_CADASTRO
--- UPDATE track_managers SET role = 'GESTOR_PISTA' WHERE role = 'OPERADOR_CADASTRO';
+-- Unificar linhas antigas (executar no mesmo script ou só o ficheiro track_managers_normalizar_role.sql)
+UPDATE track_managers SET role = 'GESTOR_PISTA' WHERE role = 'OPERADOR_CADASTRO';
 
 ALTER TABLE track_managers DROP CONSTRAINT IF EXISTS track_managers_role_check;
 ALTER TABLE track_managers ADD CONSTRAINT track_managers_role_check
