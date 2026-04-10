@@ -35,7 +35,8 @@ export async function runCreateTrackManager(
     return {
       status: 500,
       body: {
-        error: "Server env missing: SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY",
+        error:
+          "No servidor (Vercel) faltam SUPABASE_URL e/ou SUPABASE_SERVICE_ROLE_KEY. Vercel → Settings → Environment Variables → Production → adiciona as duas e faz Redeploy.",
       },
     };
   }
