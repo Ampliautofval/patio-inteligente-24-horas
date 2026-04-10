@@ -1729,8 +1729,8 @@
                 <div class="module-eyebrow">Operação</div>
                 <h3 class="module-title">Gestão de pátio</h3>
                 <p class="module-desc">
-                  Veículos, liberações e remoções. A partir daqui você também abre <strong>Parceiros</strong> e
-                  <strong>Configurações</strong>.
+                  Veículos, liberações e remoções. A partir daqui também abres <strong>Parceiros</strong> e
+                  <strong>Configurações</strong> (pátio, textos e aba <strong>Usuários</strong>).
                 </p>
                 <span class="module-cta">Abrir módulo →</span>
               </div>
@@ -2205,62 +2205,91 @@
             <div>
               <p class="module-kicker module-kicker--config">Administrativo</p>
               <h2>Configurações</h2>
-              <p class="module-lede">
-                Dados do pátio, textos padrão de cobrança e nota, e gestores de pista — salvos com um clique.
+              <p class="module-lede" id="configModuleLede">
+                Dados do pátio, utilizadores e textos padrão.
               </p>
             </div>
             <div class="actions">
               <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
-              <button id="saveSettings">Salvar alterações</button>
+              <button type="button" id="saveSettings">Salvar alterações</button>
             </div>
           </div>
-          <div class="section-card">
-            <div class="form-grid">
-              <div>
-                <label>CNPJ</label>
-                <input id="settingsCnpj" type="text" placeholder="00.000.000/0000-00" />
-              </div>
-              <div>
-                <label>Nome do pátio</label>
-                <input id="settingsName" type="text" placeholder="Amplipatio" />
-              </div>
-              <div>
-                <label>Conta bancária</label>
-                <input id="settingsBank" type="text" placeholder="Banco / Agência / Conta" />
-              </div>
-              <div class="full">
-                <label>Texto padrão de cobrança</label>
-                <input id="settingsCharge" type="text" placeholder="Mensagem para cobrança" />
-              </div>
-              <div class="full">
-                <label>Texto padrão para nota fiscal</label>
-                <input id="settingsInvoice" type="text" placeholder="Mensagem para nota fiscal" />
-              </div>
-            </div>
-            <p class="notice">Essas informações serão usadas automaticamente nas cobranças e notas.</p>
+          <div class="subnav" id="configSubnav" role="tablist" style="margin-bottom: 14px">
+            <button type="button" role="tab" data-config-subview="dados" class="active">Pátio e textos</button>
+            <button type="button" role="tab" data-config-subview="usuarios">Usuários</button>
           </div>
-          <div class="section-card" style="margin-top: 18px;">
-            <div class="form-grid">
-              <div class="full">
-                <label>Email do gestor de pista</label>
-                <input
-                  id="trackManagerEmail"
-                  type="text"
-                  placeholder="email@dominio.com"
-                />
+
+          <div id="configPanelDados" data-config-panel="dados">
+            <div class="section-card">
+              <div class="form-grid">
+                <div>
+                  <label>CNPJ</label>
+                  <input id="settingsCnpj" type="text" placeholder="00.000.000/0000-00" />
+                </div>
+                <div>
+                  <label>Nome do pátio</label>
+                  <input id="settingsName" type="text" placeholder="Amplipatio" />
+                </div>
+                <div>
+                  <label>Conta bancária</label>
+                  <input id="settingsBank" type="text" placeholder="Banco / Agência / Conta" />
+                </div>
+                <div class="full">
+                  <label>Texto padrão de cobrança</label>
+                  <input id="settingsCharge" type="text" placeholder="Mensagem para cobrança" />
+                </div>
+                <div class="full">
+                  <label>Texto padrão para nota fiscal</label>
+                  <input id="settingsInvoice" type="text" placeholder="Mensagem para nota fiscal" />
+                </div>
               </div>
-              <div class="full">
-                <label>Senha inicial</label>
-                <input id="trackManagerPassword" type="password" placeholder="Crie uma senha" />
+              <p class="notice">Essas informações serão usadas automaticamente nas cobranças e notas.</p>
+            </div>
+          </div>
+
+          <div id="configPanelUsuarios" data-config-panel="usuarios" class="hidden">
+            <div class="section-card">
+              <h3 style="margin: 0 0 10px; font-size: 1.1rem">Gestor geral</h3>
+              <p class="notice" style="margin: 0 0 10px">
+                É a <strong>conta principal</strong> (tu): acesso completo — financeiro, parceiros, liberações, configurações e dados do pátio.
+              </p>
+              <p style="margin: 0"><strong>Email:</strong> <span id="configGestorGeralEmail">—</span></p>
+              <p class="notice" style="margin: 10px 0 0">
+                O login e a palavra-passe são os do registo inicial (Supabase Auth). Não se cria aqui outro «gestor geral».
+              </p>
+            </div>
+            <div class="section-card" style="margin-top: 18px">
+              <h3 style="margin: 0 0 10px; font-size: 1.1rem">Gestor de pista</h3>
+              <p class="notice" style="margin: 0 0 14px">
+                Utilizador delegado: regista <strong>placa, modelo, localizador e entrada</strong> (sem valores), consulta tempo no pátio e <strong>não</strong> edita, apaga nem libera veículos.
+              </p>
+              <div class="form-grid">
+                <div class="full">
+                  <label>Email do gestor de pista</label>
+                  <input id="trackManagerEmail" type="text" placeholder="email@dominio.com" />
+                </div>
+                <div class="full">
+                  <label>Senha inicial</label>
+                  <input id="trackManagerPassword" type="password" placeholder="Crie uma senha" />
+                </div>
+              </div>
+              <div class="form-actions" style="margin-top: 10px">
+                <button type="button" id="addTrackManager">Criar gestor de pista</button>
+              </div>
+              <p class="notice" id="trackManagerStatus" style="margin-top: 12px"></p>
+              <div class="table-wrap" style="margin-top: 18px">
+                <p class="notice" style="margin: 0 0 8px">Gestores de pista ligados a esta conta</p>
+                <table class="table stacked">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Perfil</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableTrackManagersBody"></tbody>
+                </table>
               </div>
             </div>
-            <p class="notice" style="margin-top: 8px">
-              O gestor regista <strong>placa, modelo, localizador e entrada</strong> (sem valores), consulta tempo no pátio e <strong>não</strong> edita, apaga nem libera veículos.
-            </p>
-            <div class="form-actions" style="margin-top: 10px;">
-              <button type="button" id="addTrackManager">Criar gestor de pista</button>
-            </div>
-            <p class="notice" id="trackManagerStatus" style="margin-top: 12px;"></p>
           </div>
         </div>
       </section>
@@ -2850,6 +2879,13 @@
       const trackManagerPassword = document.getElementById("trackManagerPassword");
       const addTrackManager = document.getElementById("addTrackManager");
       const trackManagerStatus = document.getElementById("trackManagerStatus");
+      const configSubnav = document.getElementById("configSubnav");
+      const configPanelDados = document.getElementById("configPanelDados");
+      const configPanelUsuarios = document.getElementById("configPanelUsuarios");
+      const configGestorGeralEmail = document.getElementById("configGestorGeralEmail");
+      const tableTrackManagersBody = document.getElementById("tableTrackManagersBody");
+      const configModuleLede = document.getElementById("configModuleLede");
+      let currentConfigSubview = "dados";
 
       const reloadPatio = document.getElementById("reloadPatio");
       const printPatioVehicleListBtn = document.getElementById("printPatioVehicleList");
@@ -6308,7 +6344,75 @@
           void views[view].offsetWidth;
           views[view].classList.add("air-open");
         }
+        if (view === "configuracoes") {
+          setConfigSubview("dados");
+        }
       }
+
+      function setConfigSubview(sub) {
+        currentConfigSubview = sub === "usuarios" ? "usuarios" : "dados";
+        configSubnav?.querySelectorAll("button[data-config-subview]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-config-subview") === currentConfigSubview);
+        });
+        configPanelDados?.classList.toggle("hidden", currentConfigSubview !== "dados");
+        configPanelUsuarios?.classList.toggle("hidden", currentConfigSubview !== "usuarios");
+        const saveCfgBtn = document.getElementById("saveSettings");
+        if (saveCfgBtn) saveCfgBtn.classList.toggle("hidden", currentConfigSubview !== "dados");
+        if (configModuleLede) {
+          configModuleLede.textContent =
+            currentConfigSubview === "usuarios"
+              ? "Gestor geral (conta principal) e gestores de pista delegados."
+              : "CNPJ, nome do pátio e textos de cobrança e nota — use Salvar alterações.";
+        }
+        if (currentConfigSubview === "usuarios") {
+          refreshConfigUsuariosPanel();
+        }
+      }
+
+      async function refreshConfigUsuariosPanel() {
+        if (configGestorGeralEmail) configGestorGeralEmail.textContent = state.user?.email || "—";
+        await loadTrackManagersList();
+      }
+
+      async function loadTrackManagersList() {
+        if (!tableTrackManagersBody || !supabase || !state.user?.id || isGestorPista) return;
+        let { data, error } = await supabase
+          .from("track_managers")
+          .select("email, role")
+          .eq("owner_user_id", state.user.id)
+          .order("email", { ascending: true });
+        if (error && /role|column|schema cache|PGRST204/i.test(error.message || "")) {
+          const r2 = await supabase
+            .from("track_managers")
+            .select("email")
+            .eq("owner_user_id", state.user.id)
+            .order("email", { ascending: true });
+          data = (r2.data || []).map((row) => ({ ...row, role: "GESTOR_PISTA" }));
+          error = r2.error;
+        }
+        if (error) {
+          tableTrackManagersBody.innerHTML = `<tr><td colspan="2"><em>Erro ao carregar lista.</em></td></tr>`;
+          console.warn(error);
+          return;
+        }
+        const rows = data || [];
+        if (!rows.length) {
+          tableTrackManagersBody.innerHTML = `<tr><td colspan="2"><em>Nenhum gestor de pista. Cria um acima.</em></td></tr>`;
+          return;
+        }
+        tableTrackManagersBody.innerHTML = rows
+          .map((r) => {
+            const perfil = "Gestor de pista";
+            return `<tr><td data-label="Email">${escapeHtml(r.email || "—")}</td><td data-label="Perfil">${escapeHtml(perfil)}</td></tr>`;
+          })
+          .join("");
+      }
+
+      configSubnav?.addEventListener("click", (event) => {
+        const btn = event.target.closest("button[data-config-subview]");
+        if (!btn) return;
+        setConfigSubview(btn.getAttribute("data-config-subview"));
+      });
 
       function openMainView(view) {
         if (isGestorPista && view !== "patio") {
@@ -6807,6 +6911,7 @@
             }
             if (trackManagerEmail) trackManagerEmail.value = "";
             if (trackManagerPassword) trackManagerPassword.value = "";
+            await loadTrackManagersList();
           } catch (e) {
             if (trackManagerStatus) trackManagerStatus.textContent = "Erro ao criar utilizador. Verifique a tabela/policies no Supabase (coluna role).";
             console.error(e);
