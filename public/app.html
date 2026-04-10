@@ -2277,7 +2277,29 @@
                 <button type="button" id="addTrackManager">Criar gestor de pista</button>
               </div>
               <p class="notice" id="trackManagerStatus" style="margin-top: 12px"></p>
-              <div class="table-wrap" style="margin-top: 18px">
+            </div>
+            <div class="section-card" style="margin-top: 18px">
+              <h3 style="margin: 0 0 10px; font-size: 1.1rem">Associar gestor (sem API na Vercel)</h3>
+              <p class="notice" style="margin: 0 0 14px">
+                Se <strong>Criar gestor de pista</strong> falhar (404 ou variáveis em falta), cria o utilizador em
+                <strong>Supabase → Authentication → Users → Add user</strong>, copia o <strong>User UID</strong> (UUID) e cola abaixo.
+                Depois corre o SQL <code>supabase/track_managers_rls_policies.sql</code> no editor SQL do Supabase para permitir esta ligação.
+              </p>
+              <div class="form-grid">
+                <div class="full">
+                  <label>User UID (UUID do Auth)</label>
+                  <input id="trackManagerLinkUid" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+                </div>
+                <div class="full">
+                  <label>Email (igual ao do utilizador no Auth)</label>
+                  <input id="trackManagerLinkEmail" type="text" placeholder="email@dominio.com" />
+                </div>
+              </div>
+              <div class="form-actions" style="margin-top: 10px">
+                <button type="button" id="linkTrackManager">Associar como gestor de pista</button>
+              </div>
+              <p class="notice" id="trackManagerLinkStatus" style="margin-top: 12px"></p>
+              <div class="section-card" style="margin-top: 18px; box-shadow: none; border: 1px dashed var(--border, #ccc); padding: 14px">
                 <p class="notice" style="margin: 0 0 8px">Gestores de pista ligados a esta conta</p>
                 <table class="table stacked">
                   <thead>
@@ -2879,6 +2901,10 @@
       const trackManagerPassword = document.getElementById("trackManagerPassword");
       const addTrackManager = document.getElementById("addTrackManager");
       const trackManagerStatus = document.getElementById("trackManagerStatus");
+      const trackManagerLinkUid = document.getElementById("trackManagerLinkUid");
+      const trackManagerLinkEmail = document.getElementById("trackManagerLinkEmail");
+      const linkTrackManager = document.getElementById("linkTrackManager");
+      const trackManagerLinkStatus = document.getElementById("trackManagerLinkStatus");
       const configSubnav = document.getElementById("configSubnav");
       const configPanelDados = document.getElementById("configPanelDados");
       const configPanelUsuarios = document.getElementById("configPanelUsuarios");
@@ -6925,6 +6951,73 @@
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
             if (trackManagerStatus) trackManagerStatus.textContent = msg || "Erro ao criar utilizador.";
+            console.error(e);
+          }
+        });
+      }
+
+      function isTrackManagerUuid(s) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test((s || "").trim());
+      }
+
+      if (linkTrackManager) {
+        linkTrackManager.addEventListener("click", async () => {
+          if (!supabase || !state?.user?.id) return;
+          const uid = (trackManagerLinkUid?.value || "").trim();
+          const email = (trackManagerLinkEmail?.value || "").trim();
+          if (!isTrackManagerUuid(uid)) {
+            if (trackManagerLinkStatus)
+              trackManagerLinkStatus.textContent = "Cole um User UID válido (formato UUID).";
+            return;
+          }
+          if (!email) {
+            if (trackManagerLinkStatus) trackManagerLinkStatus.textContent = "Indique o email do utilizador (para a lista).";
+            return;
+          }
+          if (uid === state.user.id) {
+            if (trackManagerLinkStatus)
+              trackManagerLinkStatus.textContent = "Não pode associar a própria conta como gestor delegado.";
+            return;
+          }
+          if (trackManagerLinkStatus) trackManagerLinkStatus.textContent = "A associar…";
+
+          try {
+            const { data: dup, error: dupErr } = await supabase
+              .from("track_managers")
+              .select("user_id")
+              .eq("owner_user_id", state.user.id)
+              .eq("user_id", uid)
+              .maybeSingle();
+            if (dupErr) throw dupErr;
+            if (dup) {
+              if (trackManagerLinkStatus)
+                trackManagerLinkStatus.textContent = "Este utilizador já está associado como gestor de pista.";
+              return;
+            }
+
+            const base = { owner_user_id: state.user.id, user_id: uid, email };
+            let ins = await supabase.from("track_managers").insert({ ...base, role: "GESTOR_PISTA" });
+            let err = ins.error;
+            if (err && /role|column|PGRST204|schema cache/i.test(err.message || "")) {
+              ins = await supabase.from("track_managers").insert(base);
+              err = ins.error;
+            }
+            if (err) {
+              const hint =
+                /row-level security|RLS|42501/i.test(err.message || "")
+                  ? " Executa no Supabase o ficheiro supabase/track_managers_rls_policies.sql."
+                  : "";
+              throw new Error((err.message || "Erro ao associar.") + hint);
+            }
+
+            if (trackManagerLinkStatus)
+              trackManagerLinkStatus.textContent = "Gestor associado. O utilizador pode iniciar sessão com a palavra-passe definida no Auth.";
+            if (trackManagerLinkUid) trackManagerLinkUid.value = "";
+            if (trackManagerLinkEmail) trackManagerLinkEmail.value = "";
+            await loadTrackManagersList();
+          } catch (e) {
+            const msg = e instanceof Error ? e.message : String(e);
+            if (trackManagerLinkStatus) trackManagerLinkStatus.textContent = msg || "Erro ao associar.";
             console.error(e);
           }
         });

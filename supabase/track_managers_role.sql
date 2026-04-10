@@ -1,5 +1,6 @@
 -- Coluna role para track_managers (sempre GESTOR_PISTA na app atual).
--- Executar no SQL Editor do Supabase após já existir a tabela track_managers.
+-- Se a tabela ainda não existir, usa antes (ou só) track_managers_setup_uma_vez.sql.
+-- Caso contrário: executar no SQL Editor do Supabase após já existir a tabela track_managers.
 
 ALTER TABLE track_managers
   ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'GESTOR_PISTA';
@@ -17,3 +18,4 @@ COMMENT ON COLUMN track_managers.role IS
 -- RLS: o utilizador delegado (auth.uid() = track_managers.user_id) precisa de políticas que permitam
 -- ler/inserir veículos e parceiros do dono (owner_user_id), não só onde user_id = auth.uid().
 -- Sem isso o login do operador/gestor pode não ver dados do pátio. Ajuste no painel Supabase → Authentication → Policies.
+-- Para associar gestores a partir da app sem API, ver também track_managers_rls_policies.sql.

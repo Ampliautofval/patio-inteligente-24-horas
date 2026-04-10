@@ -1,16 +1,30 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Evita falha de build na Vercel quando não há páginas React (app usa public/app.html)
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
   },
-  // / → /app.html é tratado em pages/index.tsx (getServerSideProps). Só atalhos sem .html:
-  async redirects() {
-    return [{ source: "/app", destination: "/app.html", permanent: false }];
+  // Rewrites no Next (não só em vercel.json) para a Vercel tratar o projeto como Next.js e servir /api/*.
+  async rewrites() {
+    return [
+      { source: "/", destination: "/app.html" },
+      { source: "/app", destination: "/app.html" },
+      { source: "/amplipatio", destination: "/app.html" },
+      { source: "/patio", destination: "/app.html" },
+    ];
+  },
+  async headers() {
+    const noStore = [{ key: "Cache-Control", value: "no-store, must-revalidate" }];
+    return [
+      { source: "/app.html", headers: noStore },
+      { source: "/", headers: noStore },
+      { source: "/app", headers: noStore },
+      { source: "/amplipatio", headers: noStore },
+      { source: "/patio", headers: noStore },
+    ];
   },
 };
 

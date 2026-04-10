@@ -1,35 +1,48 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-
 type CreateTrackManagerBody = {
   email?: string;
   password?: string;
 };
 
-function extractBearerToken(authHeader: string | string[] | undefined): string | null {
-  const raw = Array.isArray(authHeader) ? authHeader[0] : authHeader;
-  if (!raw) return null;
-  if (!raw.toLowerCase().startsWith("bearer ")) return null;
-  return raw.slice(7).trim() || null;
+export type CreateTrackManagerResult = {
+  status: number;
+  body: Record<string, unknown>;
+  headers?: Record<string, string>;
+};
+
+function extractBearerToken(authHeader: string | null): string | null {
+  if (!authHeader) return null;
+  if (!authHeader.toLowerCase().startsWith("bearer ")) return null;
+  return authHeader.slice(7).trim() || null;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
-    return res.status(405).json({ error: "Method not allowed" });
+export async function runCreateTrackManager(
+  method: string,
+  authorization: string | null,
+  body: CreateTrackManagerBody
+): Promise<CreateTrackManagerResult> {
+  if (method !== "POST") {
+    return {
+      status: 405,
+      body: { error: "Method not allowed" },
+      headers: { Allow: "POST" },
+    };
   }
 
   const supabaseUrl = process.env.SUPABASE_URL || "";
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return res.status(500).json({
-      error: "Server env missing: SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY",
-    });
+    return {
+      status: 500,
+      body: {
+        error: "Server env missing: SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY",
+      },
+    };
   }
 
-  const token = extractBearerToken(req.headers.authorization);
+  const token = extractBearerToken(authorization);
   if (!token) {
-    return res.status(401).json({ error: "Missing auth token" });
+    return { status: 401, body: { error: "Missing auth token" } };
   }
 
   let requesterId: string | null = null;
@@ -41,24 +54,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
     });
     if (!userResp.ok) {
-      return res.status(401).json({ error: "Unauthorized" });
+      return { status: 401, body: { error: "Unauthorized" } };
     }
     const userJson: any = await userResp.json();
     requesterId = userJson?.id || userJson?.user?.id || null;
-    if (!requesterId) return res.status(401).json({ error: "Unauthorized" });
+    if (!requesterId) return { status: 401, body: { error: "Unauthorized" } };
   } catch {
-    return res.status(401).json({ error: "Unauthorized" });
+    return { status: 401, body: { error: "Unauthorized" } };
   }
 
-  const body: CreateTrackManagerBody = req.body || {};
   const email = (body.email || "").trim();
   const password = (body.password || "").trim();
 
   if (!email || !password) {
-    return res.status(400).json({ error: "email and password are required" });
+    return { status: 400, body: { error: "email and password are required" } };
   }
 
-  // 1) Cria usuário de Auth no Supabase (sem confirmação de email).
   let newUserId: string | null = null;
   try {
     const adminResp = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
@@ -78,18 +89,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const adminJson: any = await adminResp.json().catch(() => ({}));
     if (!adminResp.ok) {
-      return res.status(adminResp.status).json({ error: adminJson?.msg || adminJson?.error || "Failed to create user" });
+      return {
+        status: adminResp.status,
+        body: { error: adminJson?.msg || adminJson?.error || "Failed to create user" },
+      };
     }
 
     newUserId = adminJson?.user?.id || adminJson?.id || null;
     if (!newUserId) {
-      return res.status(500).json({ error: "User created but id not found" });
+      return { status: 500, body: { error: "User created but id not found" } };
     }
   } catch (e: any) {
-    return res.status(500).json({ error: e?.message || "Failed to create user" });
+    return { status: 500, body: { error: e?.message || "Failed to create user" } };
   }
 
-  // 2) Marca o novo usuário como "Gestor de Pista" na tabela track_managers.
   const baseRow = {
     owner_user_id: requesterId,
     user_id: newUserId,
@@ -134,15 +147,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!insertResp.ok) {
       const errText = insertErrorText(insertJson) || "User created but could not insert track_manager mapping";
-      return res.status(insertResp.status).json({
-        error: errText,
-        user_id: newUserId,
-      });
+      return {
+        status: insertResp.status,
+        body: { error: errText, user_id: newUserId },
+      };
     }
 
-    return res.status(200).json({ user_id: newUserId, email });
+    return { status: 200, body: { user_id: newUserId, email } };
   } catch (e: any) {
-    return res.status(500).json({ error: e?.message || "Failed to insert track_manager" });
+    return { status: 500, body: { error: e?.message || "Failed to insert track_manager" } };
   }
 }
-
