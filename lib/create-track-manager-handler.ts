@@ -52,10 +52,20 @@ export async function runCreateTrackManager(
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: "application/json",
+        apikey: serviceRoleKey,
       },
     });
     if (!userResp.ok) {
-      return { status: 401, body: { error: "Unauthorized" } };
+      const hint =
+        userResp.status === 401
+          ? " Confirma que SUPABASE_URL na Vercel é o mesmo projeto que em app.html (URL do Supabase)."
+          : "";
+      return {
+        status: 401,
+        body: {
+          error: `Não autorizado (${userResp.status}).${hint}`,
+        },
+      };
     }
     const userJson: any = await userResp.json();
     requesterId = userJson?.id || userJson?.user?.id || null;
