@@ -2071,6 +2071,22 @@
             <button type="submit">Buscar</button>
             <button type="button" class="secondary" id="clearFinancePlateFilter">Limpar</button>
           </form>
+          <div id="financeReceberFilters" class="filter-bar hidden" style="margin: 0 0 10px; flex-wrap: wrap; align-items: center">
+            <span class="notice" style="font-weight: 600">Contas a receber — filtros:</span>
+            <label for="financeReceberFilterLoc">Localizador (remoção)</label>
+            <select id="financeReceberFilterLoc" style="min-width: 10rem">
+              <option value="">Todos</option>
+            </select>
+            <label for="financeReceberFilterAss">Assessoria</label>
+            <select id="financeReceberFilterAss" style="min-width: 10rem">
+              <option value="">Todas</option>
+            </select>
+            <label for="financeReceberFilterResp">Responsável financeiro</label>
+            <select id="financeReceberFilterResp" style="min-width: 11rem">
+              <option value="">Todos</option>
+            </select>
+            <button type="button" class="secondary" id="clearFinanceReceberFilters">Limpar filtros</button>
+          </div>
           <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45">
             <strong>Fluxo:</strong> veículos que saíram (ou troca de responsável) e ainda <strong>não confirmaste pagamento</strong> aparecem aqui — o mesmo conjunto que antes entrava direto em «Contas a receber».
             O teu OK: <strong>Ir para contas a receber</strong> (cobrança) ou <strong>Baixar como pago</strong> (entrada em caixa).
@@ -2105,6 +2121,30 @@
                   <div class="card-title">Saldo em caixa</div>
                   <div class="card-value" id="financeCaixa">R$ 0,00</div>
                   <span class="tag success" id="financeCaixaStatus">Positivo</span>
+                </div>
+              </div>
+              <div id="financeReceberResumoWrap" class="section-card hidden" style="margin-top: 18px">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px">
+                  <h3 style="margin: 0; font-size: 1.05rem">Lista em aberto — entrada, saída e valor por veículo</h3>
+                  <button type="button" class="secondary" id="printFinanceReceberResumoBtn">Imprimir esta lista</button>
+                </div>
+                <p id="financeReceberResumoMeta" class="notice" style="margin: 0 0 12px"></p>
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Placa</th>
+                        <th>Veículo</th>
+                        <th>Localizador</th>
+                        <th>Assessoria</th>
+                        <th>Entrada (pátio)</th>
+                        <th>Saída</th>
+                        <th>Valor em aberto</th>
+                      </tr>
+                    </thead>
+                    <tbody id="financeReceberResumoBody"></tbody>
+                    <tfoot id="financeReceberResumoFoot"></tfoot>
+                  </table>
                 </div>
               </div>
               <div class="section-card" style="margin-top: 18px;">
@@ -2540,7 +2580,7 @@
           <div class="modal-header">
             <div>
               <h3>Imprimir contas a receber em aberto</h3>
-              <p class="subtitle">Opcional: liste só um localizador, uma assessoria ou um responsável. Depois escolha como agrupar na folha. O filtro por placa do financeiro também vale aqui.</p>
+              <p class="subtitle">Opcional: liste só um localizador (empresa de remoção), uma assessoria ou um responsável. Cada tabela inclui entrada no pátio, saída e valor. Os filtros da barra «Contas a receber» são copiados aqui ao abrir. O filtro por placa do financeiro também vale.</p>
             </div>
             <button type="button" class="modal-close" id="closeFinanceOpenRecPrintModal">Fechar</button>
           </div>
@@ -3608,6 +3648,165 @@
         return plateNormMatchesQuery(normalizePlateSearch(v.placa), financePlateNorm);
       }
 
+      function formatReceberEntradaVeiculo(v, r) {
+        const raw = v?.data_entrada || r.period_start || r.created_at;
+        return raw ? formatDate(raw) : "—";
+      }
+
+      function formatReceberSaidaVeiculo(v, r) {
+        const raw = v?.data_saida || r.period_end;
+        return raw ? formatDate(raw) : "—";
+      }
+
+      function receberBarFilterMatches(r, vehicle) {
+        const locSel = document.getElementById("financeReceberFilterLoc");
+        const assSel = document.getElementById("financeReceberFilterAss");
+        const respSel = document.getElementById("financeReceberFilterResp");
+        const filterLocId = locSel?.value || "";
+        const filterAssId = assSel?.value || "";
+        const filterRespEnc = respSel?.value || "";
+        const filterResp = filterRespEnc ? decodeURIComponent(filterRespEnc) : "";
+        if (filterLocId && (vehicle?.localizador_id || "") !== filterLocId) return false;
+        if (filterAssId && (vehicle?.assessoria_id || "") !== filterAssId) return false;
+        if (filterResp && (r.responsavel_pagamento || "").trim() !== filterResp) return false;
+        return true;
+      }
+
+      function syncFinanceReceberBarOptions() {
+        const locSel = document.getElementById("financeReceberFilterLoc");
+        const assSel = document.getElementById("financeReceberFilterAss");
+        const respSel = document.getElementById("financeReceberFilterResp");
+        if (!locSel || !assSel || !respSel) return;
+        const preserveLoc = locSel.value;
+        const preserveAss = assSel.value;
+        const preserveResp = respSel.value;
+        const openList = (state.receivables || []).filter((r) => receivableIsContaReceberFinanceiro(r));
+        const partnersList = state.partners || [];
+        const parceiros = partnersList.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const assessorias = partnersList.filter((p) => p.tipo === "ASSESSORIA");
+        const optId = (id, label) => {
+          const v = String(id).replace(/"/g, "&quot;");
+          return `<option value="${v}">${escapeHtml(label)}</option>`;
+        };
+        locSel.innerHTML =
+          `<option value="">Todos os localizadores</option>` +
+          parceiros.map((p) => optId(p.id, p.nome || "-")).join("");
+        assSel.innerHTML =
+          `<option value="">Todas as assessorias</option>` +
+          assessorias.map((p) => optId(p.id, p.nome || "-")).join("");
+        const names = [
+          ...new Set(openList.map((r) => (r.responsavel_pagamento || "").trim()).filter(Boolean)),
+        ].sort((a, b) => a.localeCompare(b, "pt-BR"));
+        respSel.innerHTML =
+          `<option value="">Todos os responsáveis</option>` +
+          names.map((n) => `<option value="${encodeURIComponent(n)}">${escapeHtml(n)}</option>`).join("");
+        if (parceiros.some((p) => p.id === preserveLoc)) locSel.value = preserveLoc;
+        else locSel.value = "";
+        if (assessorias.some((p) => p.id === preserveAss)) assSel.value = preserveAss;
+        else assSel.value = "";
+        if (preserveResp) {
+          try {
+            const dec = decodeURIComponent(preserveResp);
+            if (names.includes(dec)) respSel.value = encodeURIComponent(dec);
+            else respSel.value = "";
+          } catch (e) {
+            respSel.value = "";
+          }
+        } else respSel.value = "";
+      }
+
+      function collectFinanceReceberFilteredList({ alertaOnly = false } = {}) {
+        const vehicleById = new Map(state.vehicles.map((v) => [v.id, v]));
+        const financePlateNorm = normalizePlateSearch(financePlateQuery);
+        let list = (state.receivables || [])
+          .filter((r) => receivableIsContaReceberFinanceiro(r))
+          .filter((r) => financeReceivableMatchesPlateQuery(r, vehicleById, financePlateNorm))
+          .filter((r) => receberBarFilterMatches(r, vehicleById.get(r.vehicle_id)));
+        if (alertaOnly) {
+          const now = Date.now();
+          list = list.filter((r) => {
+            if (!r.created_at) return false;
+            return Math.floor((now - new Date(r.created_at).getTime()) / 86400000) > 10;
+          });
+        }
+        return { list, vehicleById };
+      }
+
+      function runFinanceReceberResumoPrint() {
+        const alertaOnly = currentFinanceView === "receber_alerta";
+        const { list, vehicleById } = collectFinanceReceberFilteredList({ alertaOnly });
+        if (!list.length) {
+          alert("Nenhuma conta em aberto com os filtros atuais.");
+          return;
+        }
+        const partnerById = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
+        const nomePatio = state.settings?.nome_patio || "Pátio";
+        const total = list.reduce((s, r) => s + Number(r.valor || 0), 0);
+        const rowHtml = list
+          .map((r) => {
+            const v = vehicleById.get(r.vehicle_id);
+            const placa = v?.placa || "—";
+            const vm = [v?.marca, v?.modelo].filter(Boolean).join(" ") || "—";
+            const loc = v?.localizador_id ? partnerById.get(v.localizador_id) || "—" : "—";
+            const ass = v?.assessoria_id ? partnerById.get(v.assessoria_id) || "—" : "—";
+            return `<tr>
+            <td>${escapeHtml(placa)}</td>
+            <td>${escapeHtml(vm)}</td>
+            <td>${escapeHtml(loc)}</td>
+            <td>${escapeHtml(ass)}</td>
+            <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
+            <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
+            <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
+          </tr>`;
+          })
+          .join("");
+        const metaParts = [
+          `${list.length} conta(s) em aberto`,
+          `Total: ${formatCurrency(total)}`,
+          `Emitido: ${formatDateTime(new Date().toISOString())}`,
+        ];
+        if (alertaOnly) metaParts.unshift("Só recebimentos em alerta (>10 dias)");
+        if (financePlateQuery.trim()) metaParts.unshift(`Placa: ${financePlateQuery.trim()}`);
+        const locSel = document.getElementById("financeReceberFilterLoc");
+        const assSel = document.getElementById("financeReceberFilterAss");
+        const respSel = document.getElementById("financeReceberFilterResp");
+        if (locSel?.value) {
+          metaParts.unshift(`Localizador: ${partnerById.get(locSel.value) || "-"}`);
+        }
+        if (assSel?.value) {
+          metaParts.unshift(`Assessoria: ${partnerById.get(assSel.value) || "-"}`);
+        }
+        if (respSel?.value) {
+          try {
+            metaParts.unshift(`Responsável: ${decodeURIComponent(respSel.value)}`);
+          } catch (e) {
+            /* ignore */
+          }
+        }
+        const printCss = `
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
+  h1 { font-size: 1.2rem; margin: 0 0 8px; }
+  .meta { font-size: 0.82rem; color: #444; margin-bottom: 14px; line-height: 1.45; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
+  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  tfoot td { font-weight: 700; background: #f7f7f7; }
+  @page { margin: 12mm; }
+  @media print { body { margin: 0; } }`;
+        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>Contas a receber — lista</title>
+<style>${printCss}</style></head><body>
+  <h1>${escapeHtml(nomePatio)} — Contas a receber em aberto</h1>
+  <div class="meta">${escapeHtml(metaParts.join(" · "))}</div>
+  <table><thead><tr>
+    <th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th>
+    <th>Entrada (pátio)</th><th>Saída</th><th>Valor em aberto</th>
+  </tr></thead><tbody>${rowHtml}</tbody>
+  <tfoot><tr><td colspan="6" style="text-align:right">Total em aberto</td><td>${escapeHtml(formatCurrency(total))}</td></tr></tfoot>
+  </table>
+</body></html>`;
+        printHtmlInHiddenIframe(html, { iframeTitle: "Lista contas a receber em aberto" });
+      }
+
       function syncFinanceOpenRecPrintFilterOptions() {
         const locSel = document.getElementById("financePrintFilterLocator");
         const assSel = document.getElementById("financePrintFilterAssessoria");
@@ -3665,6 +3864,15 @@
 
       function openFinanceOpenRecPrintModal() {
         syncFinanceOpenRecPrintFilterOptions();
+        const bl = document.getElementById("financeReceberFilterLoc");
+        const ba = document.getElementById("financeReceberFilterAss");
+        const br = document.getElementById("financeReceberFilterResp");
+        const pl = document.getElementById("financePrintFilterLocator");
+        const pa = document.getElementById("financePrintFilterAssessoria");
+        const pr = document.getElementById("financePrintFilterResponsavel");
+        if (bl && pl && bl.value) pl.value = bl.value;
+        if (ba && pa && ba.value) pa.value = ba.value;
+        if (br && pr && br.value) pr.value = br.value;
         document.getElementById("financeOpenRecPrintModal")?.classList.remove("hidden");
       }
 
@@ -3763,11 +3971,11 @@
         const metaLine = metaParts.join(" · ");
 
         const theadLoc =
-          "<th>Veículo</th><th>Responsável financeiro</th><th>Assessoria</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
+          "<th>Veículo</th><th>Responsável financeiro</th><th>Assessoria</th><th>Entrada (pátio)</th><th>Saída</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
         const theadResp =
-          "<th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
+          "<th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada (pátio)</th><th>Saída</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
         const theadAss =
-          "<th>Veículo</th><th>Responsável financeiro</th><th>Localizador</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
+          "<th>Veículo</th><th>Responsável financeiro</th><th>Localizador</th><th>Entrada (pátio)</th><th>Saída</th><th>Valor</th><th>Diárias no pátio</th><th>Dias em aberto</th>";
 
         const rowLoc = (r) => {
           const v = vehicleById.get(r.vehicle_id);
@@ -3775,6 +3983,8 @@
             <td>${veiculoCell(v)}</td>
             <td>${escapeHtml(r.responsavel_pagamento || "—")}</td>
             <td>${escapeHtml(assNome(v))}</td>
+            <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
+            <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
             <td>${escapeHtml(formatCurrency(receivableValor(r)))}</td>
             <td>${escapeHtml(diariasPatioCell(v))}</td>
             <td>${escapeHtml(diasAberto(r))}</td>
@@ -3786,6 +3996,8 @@
             <td>${veiculoCell(v)}</td>
             <td>${escapeHtml(locNome(v))}</td>
             <td>${escapeHtml(assNome(v))}</td>
+            <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
+            <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
             <td>${escapeHtml(formatCurrency(receivableValor(r)))}</td>
             <td>${escapeHtml(diariasPatioCell(v))}</td>
             <td>${escapeHtml(diasAberto(r))}</td>
@@ -3797,6 +4009,8 @@
             <td>${veiculoCell(v)}</td>
             <td>${escapeHtml(r.responsavel_pagamento || "—")}</td>
             <td>${escapeHtml(locNome(v))}</td>
+            <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
+            <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
             <td>${escapeHtml(formatCurrency(receivableValor(r)))}</td>
             <td>${escapeHtml(diariasPatioCell(v))}</td>
             <td>${escapeHtml(diasAberto(r))}</td>
@@ -5802,26 +6016,57 @@
         }
 
         if (currentFinanceView === "receber" || currentFinanceView === "receber_alerta") {
-          state.receivables
-            .filter((r) => receivableIsContaReceberFinanceiro(r))
-            .filter((r) => matchesVehicleId(r.vehicle_id))
-            .filter((r) => {
-              if (currentFinanceView !== "receber_alerta") return true;
-              if (!r.created_at) return false;
-              const created = new Date(r.created_at).getTime();
-              const days = Math.floor((now - created) / 86400000);
-              return days > 10;
-            })
-            .forEach((r) => {
-              const created = r.created_at ? new Date(r.created_at).getTime() : 0;
-              const daysOpen = created ? Math.floor((now - created) / 86400000) : 0;
-              const isOverdue = created ? daysOpen > 10 : false;
-              const vehicle = state.vehicles.find((v) => v.id === r.vehicle_id);
-              const valorCobranca = Number(r.valor || 0);
-              const vehicleInfo = vehicle
-                ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
-                : "-";
-              rows.push(`
+          syncFinanceReceberBarOptions();
+          const alertaOnly = currentFinanceView === "receber_alerta";
+          const { list: recvFiltered } = collectFinanceReceberFilteredList({ alertaOnly });
+          const partnerByIdResumo = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
+          const totalResumo = recvFiltered.reduce((s, r) => s + Number(r.valor || 0), 0);
+          const metaEl = document.getElementById("financeReceberResumoMeta");
+          const bodyEl = document.getElementById("financeReceberResumoBody");
+          const footEl = document.getElementById("financeReceberResumoFoot");
+          if (metaEl) {
+            const parts = [`${recvFiltered.length} conta(s) em aberto`, `Total: ${formatCurrency(totalResumo)}`];
+            if (financePlateQuery.trim()) parts.unshift(`Placa: ${financePlateQuery.trim()}`);
+            if (alertaOnly) parts.push("filtro: só alerta (>10 dias)");
+            metaEl.textContent = parts.join(" · ");
+          }
+          if (bodyEl) {
+            bodyEl.innerHTML =
+              recvFiltered.length === 0
+                ? `<tr><td colspan="7"><em>Nenhum registo com os filtros atuais.</em></td></tr>`
+                : recvFiltered
+                    .map((r) => {
+                      const v = vehicleById.get(r.vehicle_id);
+                      const placa = v?.placa || "—";
+                      const vm = [v?.marca, v?.modelo].filter(Boolean).join(" ") || "—";
+                      const loc = v?.localizador_id ? partnerByIdResumo.get(v.localizador_id) || "—" : "—";
+                      const ass = v?.assessoria_id ? partnerByIdResumo.get(v.assessoria_id) || "—" : "—";
+                      return `<tr>
+                <td>${escapeHtml(placa)}</td>
+                <td>${escapeHtml(vm)}</td>
+                <td>${escapeHtml(loc)}</td>
+                <td>${escapeHtml(ass)}</td>
+                <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
+                <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
+                <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
+              </tr>`;
+                    })
+                    .join("");
+          }
+          if (footEl) {
+            footEl.innerHTML = `<tr><td colspan="6" style="text-align:right;font-weight:700">Total em aberto</td><td style="font-weight:700">${escapeHtml(formatCurrency(totalResumo))}</td></tr>`;
+          }
+
+          recvFiltered.forEach((r) => {
+            const created = r.created_at ? new Date(r.created_at).getTime() : 0;
+            const daysOpen = created ? Math.floor((now - created) / 86400000) : 0;
+            const isOverdue = created ? daysOpen > 10 : false;
+            const vehicle = vehicleById.get(r.vehicle_id);
+            const valorCobranca = Number(r.valor || 0);
+            const vehicleInfo = vehicle
+              ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+              : "-";
+            rows.push(`
                 <tr>
                   <td>Receber</td>
                   <td>
@@ -5841,7 +6086,7 @@
                   </td>
                 </tr>
               `);
-            });
+          });
         }
 
         if (currentFinanceView === "pagar") {
@@ -5952,7 +6197,11 @@
         }
 
         if (!rows.length) {
-          setEmptyRow(tableFinance, "Nenhum registro financeiro.", 6);
+          const emptyMsg =
+            currentFinanceView === "receber" || currentFinanceView === "receber_alerta"
+              ? "Nenhuma conta a receber com os filtros atuais (placa, localizador, assessoria ou responsável)."
+              : "Nenhum registro financeiro.";
+          setEmptyRow(tableFinance, emptyMsg, 6);
         } else {
           tableFinance.innerHTML = rows.join("");
         }
@@ -5969,6 +6218,8 @@
           receivableAlert.classList.add("hidden");
           if (financeContent) financeContent.classList.add("hidden");
           document.getElementById("financeAguardandoIntro")?.classList.add("hidden");
+          document.getElementById("financeReceberFilters")?.classList.add("hidden");
+          document.getElementById("financeReceberResumoWrap")?.classList.add("hidden");
           return;
         }
         if (financeContent) {
@@ -5979,6 +6230,9 @@
         }
         financeFilters.classList.toggle("hidden", !["historico_receber", "historico_pagar", "relatorios"].includes(view));
         document.getElementById("financeAguardandoIntro")?.classList.toggle("hidden", view !== "aguardando_lancamento");
+        const receberExtras = view === "receber" || view === "receber_alerta";
+        document.getElementById("financeReceberFilters")?.classList.toggle("hidden", !receberExtras);
+        document.getElementById("financeReceberResumoWrap")?.classList.toggle("hidden", !receberExtras);
         renderFinance();
       }
 
@@ -6252,6 +6506,20 @@
       });
       document.getElementById("financeOpenRecPrintModal")?.addEventListener("click", (e) => {
         if (e.target === e.currentTarget) e.currentTarget.classList.add("hidden");
+      });
+
+      ["financeReceberFilterLoc", "financeReceberFilterAss", "financeReceberFilterResp"].forEach((id) => {
+        document.getElementById(id)?.addEventListener("change", () => renderFinance());
+      });
+      document.getElementById("clearFinanceReceberFilters")?.addEventListener("click", () => {
+        ["financeReceberFilterLoc", "financeReceberFilterAss", "financeReceberFilterResp"].forEach((sid) => {
+          const el = document.getElementById(sid);
+          if (el) el.value = "";
+        });
+        renderFinance();
+      });
+      document.getElementById("printFinanceReceberResumoBtn")?.addEventListener("click", () => {
+        runFinanceReceberResumoPrint();
       });
 
       reloadFinanceiro.addEventListener("click", () => {
