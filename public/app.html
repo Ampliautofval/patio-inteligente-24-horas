@@ -1065,7 +1065,7 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        min-width: 240px;
+        min-width: min(100%, 320px);
       }
       .table td.actions button {
         padding: 6px 10px;
@@ -3028,17 +3028,23 @@
        */
       function receivableNaFilaAguardandoTriagem(r) {
         if (!r) return false;
+        if (receivableAprovadoParaContasReceber(r)) return false;
         if (r.status === RECEIVABLE_AGUARDANDO_LANCAMENTO) return true;
         if (r.status !== "EM_ABERTO") return false;
         if (!receivableCicloEncerradoParaFinanceiro(r)) return false;
         return !receivableAprovadoParaContasReceber(r);
       }
 
-      /** Só após «Ir para contas a receber» (Supabase ou marca local). */
+      /**
+       * Após «Ir para contas a receber» (Supabase ou marca local).
+       * Inclui `AGUARDANDO_LANCAMENTO` aprovado quando o status ainda não foi migrado para `EM_ABERTO` no servidor.
+       */
       function receivableIsContaReceberFinanceiro(r) {
-        if (!r || r.status !== "EM_ABERTO") return false;
-        if (!receivableCicloEncerradoParaFinanceiro(r)) return false;
-        return receivableAprovadoParaContasReceber(r);
+        if (!r || r.status === "PAGO") return false;
+        if (!receivableAprovadoParaContasReceber(r)) return false;
+        if (r.status === RECEIVABLE_AGUARDANDO_LANCAMENTO) return true;
+        if (r.status !== "EM_ABERTO") return false;
+        return receivableCicloEncerradoParaFinanceiro(r);
       }
 
       function formatReceivableStatusLabel(c) {
@@ -5494,6 +5500,7 @@
                   <td>${formatCurrency(valor)}</td>
                   <td><span class="tag warning">Decidir: a receber ou pago</span></td>
                   <td class="actions">
+                    <button class="secondary" type="button" data-action="editar-conta-receber" data-id="${r.id}" title="Ajustar responsável, valor, categoria ou período antes de lançar">Editar</button>
                     <button class="secondary" type="button" data-action="lancar_conta" data-id="${r.id}" title="Envia para a aba Contas a receber (valor em aberto)">Ir para contas a receber</button>
                     <button class="secondary" type="button" data-action="receber_aguardando" data-id="${r.id}" title="Quita o ciclo e lança entrada em caixa">Baixar como pago</button>
                   </td>
@@ -5827,6 +5834,7 @@
                   <td>${daysOpen} dia(s)</td>
                   <td><span class="tag ${isOverdue ? "danger" : "warning"}">${isOverdue ? "Atrasada" : "Em aberto"}</span></td>
                   <td class="actions">
+                    <button class="secondary" data-action="editar-conta-receber" data-id="${r.id}" title="Editar responsável, categoria, período e valor">Editar</button>
                     <button class="secondary" data-action="cobranca" data-id="${r.id}">Cobrança</button>
                     <button class="secondary" data-action="nota" data-id="${r.id}">Nota fiscal</button>
                     <button class="secondary" data-action="receber" data-id="${r.id}">Pagamento</button>
@@ -7643,6 +7651,103 @@
           if (error) alert(error.message);
           await loadPayables();
           renderFinance();
+        }
+
+        if (action === "editar-conta-receber") {
+          const receivable = state.receivables.find((r) => r.id === id);
+          if (!receivable) {
+            alert("Registo não encontrado. Atualize o financeiro.");
+            return;
+          }
+          if (receivable.status === "PAGO") {
+            alert("Este recebimento já está quitado. Use «Histórico a receber» para ajustar.");
+            return;
+          }
+          const emContaReceber = receivableIsContaReceberFinanceiro(receivable);
+          const naFilaAguardando = receivableNaFilaAguardandoTriagem(receivable);
+          if (!emContaReceber && !naFilaAguardando) {
+            alert(
+              "Só é possível editar ciclos em «Aguardando lançamento» ou «Contas a receber» (ainda não pagos). Atualize o financeiro."
+            );
+            return;
+          }
+          const vehicle = receivable.vehicle_id
+            ? state.vehicles.find((v) => v.id === receivable.vehicle_id)
+            : null;
+
+          const responsavel = prompt("Responsável pelo pagamento:", receivable.responsavel_pagamento || "");
+          if (responsavel === null) return;
+
+          const catRaw = prompt("Categoria:", receivable.receivable_category || "GUARDA_PATIO");
+          if (catRaw === null) return;
+          const receivable_category = catRaw.trim() || "GUARDA_PATIO";
+
+          const inicioInput = await openDateModal({
+            title: "Início do período de cobrança",
+            label: "Data e hora inicial",
+            type: "datetime-local",
+            value: toLocalInput(receivable.period_start || receivable.created_at),
+          });
+          if (!inicioInput) return;
+          const inicioMs = new Date(inicioInput).getTime();
+          if (Number.isNaN(inicioMs)) {
+            alert("Data/hora inicial inválida.");
+            return;
+          }
+          const period_start = new Date(inicioInput).toISOString();
+
+          const fimDefault = receivable.period_end || vehicle?.data_saida || "";
+          const fimInput = await openDateModal({
+            title: "Fim do período de cobrança",
+            label: "Data e hora final",
+            type: "datetime-local",
+            value: fimDefault ? toLocalInput(fimDefault) : "",
+          });
+          if (!fimInput) return;
+          const fimMs = new Date(fimInput).getTime();
+          if (Number.isNaN(fimMs)) {
+            alert("Data/hora final inválida.");
+            return;
+          }
+          const period_end = new Date(fimInput).toISOString();
+          if (fimMs < inicioMs) {
+            alert("A data final deve ser posterior ou igual à inicial.");
+            return;
+          }
+
+          const podeRecalc = !!(vehicle && vehicle.valor_diaria);
+          let numValor;
+          if (podeRecalc && confirm("Recalcular o valor com base nas datas acima e na diária do veículo?")) {
+            numValor = calcPeriodTotal(vehicle, period_start, period_end);
+          } else {
+            const valorStr = prompt("Valor (R$):", String(receivable.valor ?? ""));
+            if (valorStr === null) return;
+            numValor = Number(String(valorStr).trim().replace(",", "."));
+            if (!Number.isFinite(numValor) || numValor < 0) {
+              alert("Valor inválido.");
+              return;
+            }
+          }
+
+          const { error } = await supabase
+            .from("receivables")
+            .update({
+              responsavel_pagamento: responsavel.trim() || null,
+              receivable_category,
+              period_start,
+              period_end,
+              valor: numValor,
+            })
+            .eq("id", id)
+            .eq("user_id", effectiveUserId());
+          if (error) {
+            alert(error.message);
+            return;
+          }
+          await loadReceivables();
+          renderFinance();
+          updateDashboard();
+          return;
         }
 
         if (action === "editar-recebido") {
