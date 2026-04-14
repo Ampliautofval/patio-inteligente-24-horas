@@ -7182,6 +7182,42 @@
         return norm.length >= 3 && norm.length <= 48;
       }
 
+      async function createTrackManagerViaClientFlow(email, password) {
+        const signupResp = await fetch(`${supabaseUrl}/auth/v1/signup`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: supabaseKey,
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            options: { emailRedirectTo: window.location.origin },
+          }),
+        });
+        const signupJson = await signupResp.json().catch(() => ({}));
+        if (!signupResp.ok) {
+          throw new Error(signupJson?.msg || signupJson?.error_description || signupJson?.error || "Falha ao criar utilizador.");
+        }
+        const newUserId = signupJson?.user?.id || "";
+        if (!newUserId) {
+          throw new Error("Utilizador criado sem UID retornado pelo Auth.");
+        }
+
+        const base = { owner_user_id: state.user.id, user_id: newUserId, email };
+        let ins = await supabase.from("track_managers").insert({ ...base, role: "GESTOR_PISTA" });
+        if (ins.error && /role|column|PGRST204|schema cache/i.test(ins.error.message || "")) {
+          ins = await supabase.from("track_managers").insert(base);
+        }
+        if (ins.error) {
+          const hint = /row-level security|RLS|42501/i.test(ins.error.message || "")
+            ? " Execute no Supabase o SQL supabase/track_managers_rls_policies.sql."
+            : "";
+          throw new Error((ins.error.message || "Falha ao associar gestor na tabela track_managers.") + hint);
+        }
+        return newUserId;
+      }
+
       if (addTrackManager) {
         addTrackManager.addEventListener("click", async () => {
           if (!supabase || !state?.user?.id) return;
@@ -7253,8 +7289,31 @@
             await loadTrackManagersList();
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
-            if (trackManagerStatus) trackManagerStatus.textContent = msg || "Erro ao criar utilizador.";
-            console.error(e);
+            const shouldFallback =
+              /This endpoint requires a valid Bearer token|Não autorizado|401|403|404|500|API não encontrada|SUPABASE_SERVICE_ROLE_KEY/i.test(
+                msg || ""
+              );
+            if (!shouldFallback) {
+              if (trackManagerStatus) trackManagerStatus.textContent = msg || "Erro ao criar utilizador.";
+              console.error(e);
+              return;
+            }
+            try {
+              if (trackManagerStatus)
+                trackManagerStatus.textContent =
+                  "API indisponível. Tentando criação direta pelo Supabase (modo único)...";
+              const newUserId = await createTrackManagerViaClientFlow(email, password);
+              if (trackManagerStatus) {
+                trackManagerStatus.textContent = `Gestor de pista criado. Login: ${displayManagerIdentity(email)} | User ID: ${newUserId}`;
+              }
+              if (trackManagerEmail) trackManagerEmail.value = "";
+              if (trackManagerPassword) trackManagerPassword.value = "";
+              await loadTrackManagersList();
+            } catch (e2) {
+              const msg2 = e2 instanceof Error ? e2.message : String(e2);
+              if (trackManagerStatus) trackManagerStatus.textContent = msg2 || "Erro ao criar utilizador.";
+              console.error(e2);
+            }
           }
         });
       }
