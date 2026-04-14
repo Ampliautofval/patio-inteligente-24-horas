@@ -2301,7 +2301,7 @@
             <div class="section-card" style="margin-top: 18px">
               <h3 style="margin: 0 0 10px; font-size: 1.1rem">Gestor de pista</h3>
               <p class="notice" style="margin: 0 0 14px">
-                Utilizador delegado: regista <strong>placa, modelo, localizador e entrada</strong> (sem valores), consulta tempo no pátio e <strong>não</strong> edita, apaga nem libera veículos.
+                Utilizador delegado: regista <strong>placa, modelo, localizador e entrada</strong> (sem valores), pode <strong>confirmar liberação já solicitada</strong> e <strong>não</strong> edita, apaga nem solicita liberação.
               </p>
               <div class="form-grid">
                 <div class="full">
@@ -2318,39 +2318,17 @@
               </div>
               <p class="notice" id="trackManagerStatus" style="margin-top: 12px"></p>
             </div>
-            <div class="section-card" style="margin-top: 18px">
-              <h3 style="margin: 0 0 10px; font-size: 1.1rem">Associar gestor (sem API na Vercel)</h3>
-              <p class="notice" style="margin: 0 0 14px">
-                Se <strong>Criar gestor de pista</strong> falhar (404 ou variáveis em falta), cria o utilizador em
-                <strong>Supabase → Authentication → Users → Add user</strong>, copia o <strong>User UID</strong> (UUID) e cola abaixo.
-                Depois corre o SQL <code>supabase/track_managers_rls_policies.sql</code> no editor SQL do Supabase para permitir esta ligação.
-              </p>
-              <div class="form-grid">
-                <div class="full">
-                  <label>User UID (UUID do Auth)</label>
-                  <input id="trackManagerLinkUid" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
-                </div>
-                <div class="full">
-                  <label>E-mail ou nome de acesso (para exibir na lista)</label>
-                  <input id="trackManagerLinkEmail" type="text" placeholder="email@dominio.com ou leonardo" />
-                </div>
-              </div>
-              <div class="form-actions" style="margin-top: 10px">
-                <button type="button" id="linkTrackManager">Associar como gestor de pista</button>
-              </div>
-              <p class="notice" id="trackManagerLinkStatus" style="margin-top: 12px"></p>
-              <div class="section-card" style="margin-top: 18px; box-shadow: none; border: 1px dashed var(--border, #ccc); padding: 14px">
-                <p class="notice" style="margin: 0 0 8px">Gestores de pista ligados a esta conta</p>
-                <table class="table stacked">
-                  <thead>
-                    <tr>
-                      <th>Email</th>
-                      <th>Perfil</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tableTrackManagersBody"></tbody>
-                </table>
-              </div>
+            <div class="section-card" style="margin-top: 18px; box-shadow: none; border: 1px dashed var(--border, #ccc); padding: 14px">
+              <p class="notice" style="margin: 0 0 8px">Gestores de pista ligados a esta conta</p>
+              <table class="table stacked">
+                <thead>
+                  <tr>
+                    <th>Login</th>
+                    <th>Perfil</th>
+                  </tr>
+                </thead>
+                <tbody id="tableTrackManagersBody"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -5143,7 +5121,11 @@
 
             let actionsCell = "";
             if (isGestorPista) {
-              actionsCell = `<span class="notice">Sem permissão de ação</span>`;
+              if (["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMocao_CONFIRMADA"].includes(v.status)) {
+                actionsCell = `<button class="secondary" data-action="confirmar" data-id="${v.id}">Confirmar liberação</button>`;
+              } else {
+                actionsCell = `<span class="notice">Sem permissão de ação</span>`;
+              }
             } else {
               actionsCell = `
                   <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
@@ -5233,7 +5215,11 @@
 
             let actionsCell = "";
             if (isGestorPista) {
-              actionsCell = `<span class="notice">Sem permissão de ação</span>`;
+              if (actionType === "confirmar") {
+                actionsCell = `<button class="secondary" data-action="confirmar" data-id="${v.id}">Confirmar liberação</button>`;
+              } else {
+                actionsCell = `<span class="notice">Sem permissão de ação</span>`;
+              }
             } else {
               actionsCell = `
                   <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
@@ -6743,7 +6729,7 @@
         tableTrackManagersBody.innerHTML = rows
           .map((r) => {
             const perfil = "Gestor de pista";
-            return `<tr><td data-label="Email">${escapeHtml(displayManagerIdentity(r.email || "—"))}</td><td data-label="Perfil">${escapeHtml(perfil)}</td></tr>`;
+            return `<tr><td data-label="Login">${escapeHtml(displayManagerIdentity(r.email || "—"))}</td><td data-label="Perfil">${escapeHtml(perfil)}</td></tr>`;
           })
           .join("");
       }
@@ -7371,7 +7357,7 @@
         const vehicle = state.vehicles.find((v) => v.id === id);
         if (!vehicle) return;
 
-        if (isGestorPista) {
+        if (isGestorPista && action !== "confirmar") {
           return;
         }
 
