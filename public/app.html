@@ -5109,8 +5109,12 @@
                 actionsCell = `<span class="notice">Sem permissão de ação</span>`;
               }
             } else {
+              const voltarBtn = emPipeline
+                ? `<button class="secondary" data-action="voltar" data-id="${v.id}" title="Volta um passo no fluxo de liberação">Voltar</button>`
+                : "";
               actionsCell = `
                   <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
+                  ${voltarBtn}
                   <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
                   <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
                 `;
@@ -5203,6 +5207,9 @@
                 actionsCell = `<span class="notice">Sem permissão de ação</span>`;
               }
             } else {
+              const voltarBtn = ["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMocao_CONFIRMADA"].includes(v.status)
+                ? `<button class="secondary" data-action="voltar" data-id="${v.id}" title="Volta um passo no fluxo de liberação">Voltar</button>`
+                : "";
               actionsCell = `
                   <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
                   ${
@@ -5211,6 +5218,7 @@
                       : `<button class="secondary" data-action="nfse" data-id="${v.id}">NFSe solicitada</button>
                          <button class="secondary" data-action="${actionType}" data-id="${v.id}">${actionLabels[actionType]}</button>`
                   }
+                  ${voltarBtn}
                   <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
                   <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
                 `;
@@ -7428,11 +7436,43 @@
         }
 
         if (action === "voltar") {
-          if (vehicle.status !== "REMOVIDO") {
-            alert("A ação Voltar só está disponível para veículos no VRP (removidos).");
+          const canBackVnp = ["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMocao_CONFIRMADA"].includes(vehicle.status);
+          const canBackVrp = vehicle.status === "REMOVIDO";
+          if (!canBackVnp && !canBackVrp) {
+            alert("A ação Voltar só está disponível para veículos em fluxo de liberação ou no VRP.");
             return;
           }
-          if (!confirm("Desfazer esta remoção e voltar o veículo para o passo anterior?")) return;
+          if (canBackVnp && !confirm("Voltar este veículo para o passo anterior no VNP?")) return;
+          if (canBackVrp && !confirm("Desfazer esta remoção e voltar o veículo para o passo anterior?")) return;
+
+          if (canBackVnp) {
+            const prevMap = {
+              LIBERACAO_SOLICITADA: "NO_PATIO",
+              LIBERACAO_CONFIRMADA: "LIBERACAO_SOLICITADA",
+              REMocao_CONFIRMADA: "LIBERACAO_CONFIRMADA",
+            };
+            const previousStatus = prevMap[vehicle.status] || "NO_PATIO";
+            const { error: backErr } = await supabase
+              .from("vehicles")
+              .update({ status: previousStatus, data_saida: null })
+              .eq("id", id)
+              .eq("user_id", effectiveUserId());
+            if (backErr) {
+              alert(backErr.message);
+              return;
+            }
+            await supabase.from("vehicle_events").insert({
+              vehicle_id: id,
+              tipo: "STATUS_REVERTIDO_VNP",
+              responsavel: state.user?.email || "Administrador",
+              descricao: `Fluxo revertido manualmente: ${VLS_STATUS_LABELS[vehicle.status] || vehicle.status} → ${VLS_STATUS_LABELS[previousStatus] || previousStatus}.`,
+            });
+            await loadVehicles();
+            renderVehicles();
+            updateDashboard();
+            await refreshFichaIfOpen(id);
+            return;
+          }
 
           let previousStatus = "LIBERACAO_CONFIRMADA";
           try {
