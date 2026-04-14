@@ -1693,6 +1693,9 @@
             <input id="registerPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required />
           </div>
           <button type="submit">Criar conta</button>
+          <p class="notice" style="margin-top: 12px; font-size: 0.9rem">
+            O registo passa pelo servidor quando possível (sem enviar e-mail de confirmação), para evitar o limite de e-mails do Supabase.
+          </p>
         </form>
 
         <div id="authStatus" class="status"></div>
@@ -4516,9 +4519,56 @@
           return;
         }
 
+        function formatRegisterError(msg) {
+          const m = (msg || "").toLowerCase();
+          if (/rate limit|429|email rate limit|too many requests|over_email_send_rate|exceeded/i.test(m)) {
+            return (
+              "Limite de e-mails do Supabase (muitas confirmações enviadas). " +
+              "No painel: Authentication → Providers → Email → desative «Confirm email» para contas de teste, " +
+              "ou aguarde ~1 hora. Com o deploy atual, o registo normal usa o servidor e não depende desse e-mail."
+            );
+          }
+          return msg || "Erro ao registar.";
+        }
+
+        const registerApiUrl = new URL("/api/register", window.location.origin).href;
+        try {
+          const regResp = await fetch(registerApiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ loginRaw, password }),
+          });
+          const regJson = await regResp.json().catch(() => ({}));
+          if (regResp.ok) {
+            const { error: signErr } = await supabase.auth.signInWithPassword({ email, password });
+            if (signErr) {
+              setStatus(
+                `Conta criada, mas o login automático falhou: ${signErr.message}. Use a aba «Entrar» com o mesmo utilizador e senha.`,
+                "error"
+              );
+              return;
+            }
+            setStatus("Conta criada e sessão iniciada.", "success");
+            return;
+          }
+          if (regResp.status !== 404) {
+            if (regResp.status === 422 || regResp.status === 409) {
+              const signTry = await supabase.auth.signInWithPassword({ email, password });
+              if (!signTry.error) {
+                setStatus("Este utilizador já estava registado. Sessão iniciada.", "success");
+                return;
+              }
+            }
+            setStatus(formatRegisterError(regJson?.error || `Erro ${regResp.status}`), "error");
+            return;
+          }
+        } catch (e) {
+          console.warn("register_api", e);
+        }
+
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
-          setStatus(error.message, "error");
+          setStatus(formatRegisterError(error.message), "error");
           return;
         }
         setStatus("Conta criada. Entre na aba «Entrar» com o mesmo utilizador e senha.", "success");
