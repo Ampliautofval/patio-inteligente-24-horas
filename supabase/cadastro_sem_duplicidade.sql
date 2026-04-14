@@ -16,7 +16,7 @@ WHERE status IS DISTINCT FROM 'REMOVIDO'
 CREATE UNIQUE INDEX IF NOT EXISTS partners_user_tipo_nome_norm_uidx
 ON partners (
   user_id,
-  COALESCE(tipo, 'PARCEIRO')::text,
+  CAST(COALESCE(tipo, 'PARCEIRO') AS text),
   lower(regexp_replace(btrim(COALESCE(nome, '')), '[[:space:]]+', ' ', 'g'))
 )
 WHERE length(btrim(COALESCE(nome, ''))) > 0;
