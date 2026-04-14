@@ -1,6 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
+/** Só para diagnóstico: lê `role` do JWT sem verificar assinatura. */
+function jwtRoleClaimUnsafe(jwt: string): string | null {
+  const t = (jwt || "").trim();
+  if (!t.startsWith("eyJ")) return null;
+  try {
+    const parts = t.split(".");
+    if (parts.length < 2) return null;
+    const json = Buffer.from(parts[1], "base64url").toString("utf8");
+    const payload = JSON.parse(json) as { role?: string };
+    return payload?.role || null;
+  } catch {
+    return null;
+  }
+}
+
 type CreateTrackManagerBody = {
   email?: string;
   password?: string;
@@ -117,6 +132,17 @@ export async function runCreateTrackManager(
     };
   }
 
+  const keyRole = jwtRoleClaimUnsafe(serviceRoleKey);
+  if (keyRole === "anon") {
+    return {
+      status: 500,
+      body: {
+        error:
+          "A variável SUPABASE_SERVICE_ROLE_KEY na Vercel está com a chave «anon» (pública). Tem de ser a chave «service_role» (secret) — Supabase → Project Settings → API → copie «service_role». Depois Redeploy.",
+      },
+    };
+  }
+
   const token =
     (body.access_token || "").trim() ||
     (body.accessToken || "").trim() ||
@@ -222,19 +248,20 @@ export async function runCreateTrackManager(
       }
     } else {
       const d = adminJson?.msg || adminJson?.message || adminJson?.error || adminJson?.error_description;
-      const detailStr =
-        typeof d === "string"
-          ? d
-          : [adminJson?.error_code, adminJson?.code].filter(Boolean).join(" ") || JSON.stringify(adminJson).slice(0, 400);
+      const technical =
+        (typeof d === "string" ? d : null) ||
+        adminJson?.error ||
+        adminJson?.error_description ||
+        "Falha ao criar utilizador (Auth). Verifique palavra-passe (mín. 6 caracteres) e políticas de e-mail no Supabase.";
+      const bearerMsg = /bearer|valid bearer/i.test(String(technical));
+      const hint401 =
+        adminResp.status === 401 && bearerMsg
+          ? " Isto costuma acontecer quando SUPABASE_SERVICE_ROLE_KEY na Vercel não é a chave «service_role» (secret) do mesmo projecto, ou tem um espaço a mais ao colar. Supabase → Settings → API."
+          : "";
       return {
         status: adminResp.status,
         body: {
-          error:
-            (typeof d === "string" ? d : null) ||
-            adminJson?.error ||
-            adminJson?.error_description ||
-            "Falha ao criar utilizador (Auth). Verifique palavra-passe (mín. 6 caracteres) e políticas de e-mail no Supabase.",
-          details: detailStr,
+          error: `${technical}${hint401}`,
         },
       };
     }
