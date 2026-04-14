@@ -1673,8 +1673,8 @@
 
         <form id="loginForm">
           <div>
-            <label for="loginEmail">E-mail</label>
-            <input id="loginEmail" type="email" placeholder="seu@email.com" required />
+            <label for="loginEmail">E-mail ou nome de acesso</label>
+            <input id="loginEmail" type="text" placeholder="seu@email.com ou leonardo" required />
           </div>
           <div>
             <label for="loginPassword">Senha</label>
@@ -2305,8 +2305,8 @@
               </p>
               <div class="form-grid">
                 <div class="full">
-                  <label>Email do gestor de pista</label>
-                  <input id="trackManagerEmail" type="text" placeholder="email@dominio.com" />
+                  <label>Nome de acesso do gestor de pista</label>
+                  <input id="trackManagerEmail" type="text" placeholder="ex.: leonardo" />
                 </div>
                 <div class="full">
                   <label>Senha inicial</label>
@@ -2331,8 +2331,8 @@
                   <input id="trackManagerLinkUid" type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
                 </div>
                 <div class="full">
-                  <label>Email (igual ao do utilizador no Auth)</label>
-                  <input id="trackManagerLinkEmail" type="text" placeholder="email@dominio.com" />
+                  <label>E-mail ou nome de acesso (para exibir na lista)</label>
+                  <input id="trackManagerLinkEmail" type="text" placeholder="email@dominio.com ou leonardo" />
                 </div>
               </div>
               <div class="form-actions" style="margin-top: 10px">
@@ -4442,6 +4442,39 @@
 
       stylizeLogo();
 
+      function normalizeManagerLogin(raw) {
+        return (raw || "")
+          .toString()
+          .trim()
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9._-]/g, ".")
+          .replace(/\.+/g, ".")
+          .replace(/^\.|\.$/g, "");
+      }
+
+      function managerLoginToEmail(loginRaw) {
+        const norm = normalizeManagerLogin(loginRaw);
+        if (!norm) return "";
+        return `${norm}@gestor.local`;
+      }
+
+      function resolveManagerIdentityToEmail(inputRaw) {
+        const raw = (inputRaw || "").trim();
+        if (!raw) return "";
+        if (raw.includes("@")) return raw.toLowerCase();
+        return managerLoginToEmail(raw);
+      }
+
+      function displayManagerIdentity(emailOrLogin) {
+        const s = (emailOrLogin || "").trim();
+        if (!s) return "—";
+        const m = s.match(/^([a-z0-9._-]+)@gestor\.local$/i);
+        if (m) return m[1];
+        return s;
+      }
+
       loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         if (!supabase) {
@@ -4452,8 +4485,13 @@
           return;
         }
         setStatus("Entrando...", "");
-        const email = document.getElementById("loginEmail").value.trim();
+        const loginInput = document.getElementById("loginEmail").value.trim();
+        const email = resolveManagerIdentityToEmail(loginInput);
         const password = document.getElementById("loginPassword").value;
+        if (!email) {
+          setStatus("Informe e-mail ou nome de acesso.", "error");
+          return;
+        }
 
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
@@ -6705,7 +6743,7 @@
         tableTrackManagersBody.innerHTML = rows
           .map((r) => {
             const perfil = "Gestor de pista";
-            return `<tr><td data-label="Email">${escapeHtml(r.email || "—")}</td><td data-label="Perfil">${escapeHtml(perfil)}</td></tr>`;
+            return `<tr><td data-label="Email">${escapeHtml(displayManagerIdentity(r.email || "—"))}</td><td data-label="Perfil">${escapeHtml(perfil)}</td></tr>`;
           })
           .join("");
       }
@@ -7171,25 +7209,31 @@
         loadSettings();
       });
 
+      function isValidManagerLogin(s) {
+        const norm = normalizeManagerLogin(s);
+        return norm.length >= 3 && norm.length <= 48;
+      }
+
       if (addTrackManager) {
         addTrackManager.addEventListener("click", async () => {
           if (!supabase || !state?.user?.id) return;
-          const email = (trackManagerEmail?.value || "").trim();
+          const loginNameRaw = (trackManagerEmail?.value || "").trim();
           const password = (trackManagerPassword?.value || "").trim();
-          if (!email) {
-            if (trackManagerStatus) trackManagerStatus.textContent = "Informe o email do utilizador delegado.";
+          if (!loginNameRaw) {
+            if (trackManagerStatus) trackManagerStatus.textContent = "Informe o nome de acesso do gestor delegado.";
             return;
           }
           if (!password) {
             if (trackManagerStatus) trackManagerStatus.textContent = "Defina uma senha inicial.";
             return;
           }
-          if (!isValidManagerEmail(email)) {
+          if (!isValidManagerLogin(loginNameRaw)) {
             if (trackManagerStatus)
               trackManagerStatus.textContent =
-                "Use um email completo (ex.: nome@ampliauto.com.br), com @ e domínio.";
+                "Nome inválido. Use 3 a 48 caracteres (letras, números, ponto, hífen ou underscore).";
             return;
           }
+          const email = resolveManagerIdentityToEmail(loginNameRaw);
           if (trackManagerStatus) trackManagerStatus.textContent = "A criar utilizador...";
 
           try {
@@ -7232,8 +7276,8 @@
             const newUserId = json?.user_id || "";
             if (trackManagerStatus) {
               trackManagerStatus.textContent = newUserId
-                ? `Gestor de pista criado. User ID: ${newUserId}`
-                : "Gestor de pista criado.";
+                ? `Gestor de pista criado. Login: ${displayManagerIdentity(email)} | User ID: ${newUserId}`
+                : `Gestor de pista criado. Login: ${displayManagerIdentity(email)}`;
             }
             if (trackManagerEmail) trackManagerEmail.value = "";
             if (trackManagerPassword) trackManagerPassword.value = "";
@@ -7246,14 +7290,6 @@
         });
       }
 
-      function isValidManagerEmail(s) {
-        const t = (s || "").trim();
-        if (t.length < 5 || !t.includes("@")) return false;
-        const parts = t.split("@");
-        if (parts.length !== 2 || !parts[0] || !parts[1] || !parts[1].includes(".")) return false;
-        return true;
-      }
-
       function isTrackManagerUuid(s) {
         return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test((s || "").trim());
       }
@@ -7262,7 +7298,7 @@
         linkTrackManager.addEventListener("click", async () => {
           if (!supabase || !state?.user?.id) return;
           const uid = (trackManagerLinkUid?.value || "").trim();
-          const email = (trackManagerLinkEmail?.value || "").trim();
+          const identityRaw = (trackManagerLinkEmail?.value || "").trim();
           if (uid.includes("@")) {
             if (trackManagerLinkStatus)
               trackManagerLinkStatus.textContent =
@@ -7274,10 +7310,12 @@
               trackManagerLinkStatus.textContent = "Cole um User UID válido (formato UUID).";
             return;
           }
-          if (!email) {
-            if (trackManagerLinkStatus) trackManagerLinkStatus.textContent = "Indique o email do utilizador (para a lista).";
+          if (!identityRaw) {
+            if (trackManagerLinkStatus)
+              trackManagerLinkStatus.textContent = "Indique e-mail ou nome de acesso do utilizador (para a lista).";
             return;
           }
+          const email = resolveManagerIdentityToEmail(identityRaw);
           if (uid === state.user.id) {
             if (trackManagerLinkStatus)
               trackManagerLinkStatus.textContent = "Não pode associar a própria conta como gestor delegado.";
