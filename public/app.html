@@ -5001,6 +5001,50 @@
         return storedNorm.includes(queryNorm) || queryNorm.includes(storedNorm);
       }
 
+      /** Outro veículo «ativo» (não removido) com a mesma placa normalizada, opcionalmente excluindo um id (edição). */
+      function findActiveVehicleDuplicatePlaca(placaInput, excludeVehicleId) {
+        const norm = normalizePlateSearch(placaInput);
+        if (!norm) return null;
+        const list = state.vehicles || [];
+        return (
+          list.find(
+            (v) =>
+              v.status !== "REMOVIDO" &&
+              (!excludeVehicleId || v.id !== excludeVehicleId) &&
+              normalizePlateSearch(v.placa) === norm
+          ) || null
+        );
+      }
+
+      function partnerNomeNorm(nome) {
+        return (nome || "")
+          .toString()
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ");
+      }
+
+      function partnerDocDigits(cpf) {
+        return (cpf || "").toString().replace(/\D/g, "");
+      }
+
+      /** Parceiro/assessoria com mesmo nome (no mesmo tipo) ou mesmo documento (11+ dígitos). */
+      function findDuplicatePartner({ nome, cpf, tipo, excludePartnerId }) {
+        const t = tipo || "PARCEIRO";
+        const nameKey = partnerNomeNorm(nome);
+        const doc = partnerDocDigits(cpf);
+        const list = state.partners || [];
+        return (
+          list.find((p) => {
+            if (excludePartnerId && p.id === excludePartnerId) return false;
+            if ((p.tipo || "PARCEIRO") !== t) return false;
+            if (nameKey && partnerNomeNorm(p.nome) === nameKey) return true;
+            if (doc.length >= 11 && partnerDocDigits(p.cpf) === doc) return true;
+            return false;
+          }) || null
+        );
+      }
+
       function applyPlateSearchFromDashboard() {
         const raw = plateFilter.value.trim().toLowerCase();
         const norm = normalizePlateSearch(raw);
@@ -7183,12 +7227,32 @@
           nfse_requested_at: editingVehicleData?.nfse_requested_at || null,
           nfse_issued_at: editingVehicleData?.nfse_issued_at || null,
         };
+        if (!normalizePlateSearch(payload.placa)) {
+          alert("Informe uma placa válida.");
+          return;
+        }
+        const dupV = findActiveVehicleDuplicatePlaca(payload.placa, editingVehicleId || null);
+        if (dupV) {
+          alert(
+            `Já existe um cadastro ativo com a placa equivalente a «${dupV.placa || payload.placa}» (veículo não removido). ` +
+              "Altere a placa ou encerre o registo anterior no VRP antes de criar outro."
+          );
+          return;
+        }
         const vehicleOp = editingVehicleId
           ? supabase.from("vehicles").update(payload).eq("id", editingVehicleId).eq("user_id", effectiveUserId())
           : supabase.from("vehicles").insert(payload);
         const { error } = await vehicleOp;
         if (error) {
-          alert(error.message);
+          const msg = error.message || "";
+          if (/duplicate key|unique constraint|23505/i.test(msg)) {
+            alert(
+              "Não foi possível gravar: já existe outro veículo ativo com esta placa (regra na base de dados). " +
+                "Se acabou de alterar dados noutro separador, atualize a página."
+            );
+          } else {
+            alert(msg);
+          }
           return;
         }
         const savedEditId = editingVehicleId;
@@ -7229,9 +7293,28 @@
           contato: document.getElementById("partnerContact").value.trim(),
           tipo: currentPartnerView === "assessorias" ? "ASSESSORIA" : "PARCEIRO",
         };
+        const dupP = findDuplicatePartner({
+          nome: payload.nome,
+          cpf: payload.cpf,
+          tipo: payload.tipo,
+          excludePartnerId: null,
+        });
+        if (dupP) {
+          alert(
+            "Já existe um cadastro nesta lista com o mesmo nome ou com o mesmo CPF/CNPJ (só dígitos). Use outro nome ou corrija o documento."
+          );
+          return;
+        }
         const { error } = await supabase.from("partners").insert(payload);
         if (error) {
-          alert(error.message);
+          const msg = error.message || "";
+          if (/duplicate key|unique constraint|23505/i.test(msg)) {
+            alert(
+              "Não foi possível gravar: duplicidade de nome ou documento (índice na base de dados). Corrija ou atualize a página."
+            );
+          } else {
+            alert(msg);
+          }
           return;
         }
         partnerForm.reset();
@@ -8170,12 +8253,30 @@
           const nome = prompt("Nome:", partner.nome || "");
           const contato = prompt("Contato:", partner.contato || "");
           const email = prompt("E-mail:", partner.email || "");
+          const nomeFinal = nome != null ? String(nome).trim() : "";
+          const dupE = findDuplicatePartner({
+            nome: nomeFinal,
+            cpf: partner.cpf,
+            tipo: partner.tipo,
+            excludePartnerId: id,
+          });
+          if (dupE) {
+            alert("Já existe outro cadastro com o mesmo nome ou documento nesta categoria.");
+            return;
+          }
           const { error } = await supabase
             .from("partners")
             .update({ nome: nome || null, contato: contato || null, email: email || null })
             .eq("id", id)
             .eq("user_id", effectiveUserId());
-          if (error) alert(error.message);
+          if (error) {
+            const msg = error.message || "";
+            if (/duplicate key|unique constraint|23505/i.test(msg)) {
+              alert("Não foi possível gravar: nome ou documento duplicado.");
+            } else {
+              alert(msg);
+            }
+          }
           loadPartners();
         }
       });
