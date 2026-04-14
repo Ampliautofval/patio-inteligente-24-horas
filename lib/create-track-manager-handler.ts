@@ -16,6 +16,54 @@ function extractBearerToken(authHeader: string | null): string | null {
   return authHeader.slice(7).trim() || null;
 }
 
+/** Procura utilizador Auth pelo e-mail (várias páginas) — só com service role. */
+async function findAuthUserIdByEmail(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  email: string
+): Promise<string | null> {
+  const want = email.trim().toLowerCase();
+  if (!want) return null;
+  let page = 1;
+  const perPage = 200;
+  for (let guard = 0; guard < 60; guard++) {
+    const r = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=${page}&per_page=${perPage}`, {
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        Accept: "application/json",
+      },
+    });
+    if (!r.ok) return null;
+    const j: any = await r.json().catch(() => ({}));
+    const users = Array.isArray(j?.users) ? j.users : [];
+    const found = users.find((u: any) => String(u?.email || "").toLowerCase() === want);
+    if (found?.id) return String(found.id);
+    if (users.length < perPage) break;
+    page += 1;
+  }
+  return null;
+}
+
+function looksLikeUserAlreadyExists(adminStatus: number, adminJson: any): boolean {
+  const msg = [adminJson?.msg, adminJson?.message, adminJson?.error, adminJson?.error_description]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (/password|weak|too short|at least|mínimo|mínima|invalid.*password/i.test(msg)) return false;
+
+  const errCode = String(adminJson?.error_code || adminJson?.code || "");
+  if (/user_already_exists|email_exists|already_registered/i.test(errCode)) return true;
+  if (adminStatus === 409) return true;
+  if (
+    adminStatus === 422 &&
+    /already\s*(been\s*)?registered|user\s*already|exists|duplicate|email.*already|been\s*taken/i.test(msg)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export async function runCreateTrackManager(
   method: string,
   authorization: string | null,
@@ -101,6 +149,8 @@ export async function runCreateTrackManager(
   }
 
   let newUserId: string | null = null;
+  /** True quando o Auth já tinha este e-mail e só ligámos em track_managers (a senha enviada não altera a conta). */
+  let reusedExistingAuthUser = false;
   try {
     const adminResp = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
       method: "POST",
@@ -118,16 +168,37 @@ export async function runCreateTrackManager(
     });
 
     const adminJson: any = await adminResp.json().catch(() => ({}));
-    if (!adminResp.ok) {
+    if (adminResp.ok) {
+      newUserId = adminJson?.user?.id || adminJson?.id || null;
+      if (!newUserId) {
+        return { status: 500, body: { error: "User created but id not found" } };
+      }
+    } else if (looksLikeUserAlreadyExists(adminResp.status, adminJson)) {
+      reusedExistingAuthUser = true;
+      newUserId = await findAuthUserIdByEmail(supabaseUrl, serviceRoleKey, email);
+      if (!newUserId) {
+        return {
+          status: adminResp.status,
+          body: {
+            error:
+              "Este e-mail / nome de acesso já está registado no Auth, mas não foi possível localizar o UID. Confirme no Supabase → Authentication → Users ou use «Associar gestor» com o UUID.",
+            details: adminJson?.msg || adminJson?.message || adminJson?.error,
+          },
+        };
+      }
+    } else {
       return {
         status: adminResp.status,
-        body: { error: adminJson?.msg || adminJson?.error || "Failed to create user" },
+        body: {
+          error:
+            adminJson?.msg ||
+            adminJson?.message ||
+            adminJson?.error ||
+            adminJson?.error_description ||
+            "Falha ao criar utilizador (Auth). Verifique palavra-passe (mín. 6 caracteres) e políticas de e-mail no Supabase.",
+          details: adminJson,
+        },
       };
-    }
-
-    newUserId = adminJson?.user?.id || adminJson?.id || null;
-    if (!newUserId) {
-      return { status: 500, body: { error: "User created but id not found" } };
     }
   } catch (e: any) {
     return { status: 500, body: { error: e?.message || "Failed to create user" } };
@@ -177,13 +248,37 @@ export async function runCreateTrackManager(
 
     if (!insertResp.ok) {
       const errText = insertErrorText(insertJson) || "User created but could not insert track_manager mapping";
+      if (/duplicate key|unique constraint|23505|already exists/i.test(errText)) {
+        return {
+          status: 200,
+          body: {
+            user_id: newUserId,
+            email,
+            already_linked: true,
+            message: "Este gestor já estava associado à sua conta.",
+          },
+        };
+      }
       return {
         status: insertResp.status,
         body: { error: errText, user_id: newUserId },
       };
     }
 
-    return { status: 200, body: { user_id: newUserId, email } };
+    return {
+      status: 200,
+      body: {
+        user_id: newUserId,
+        email,
+        ...(reusedExistingAuthUser
+          ? {
+              existing_auth_user: true,
+              message:
+                "Este login já existia no Auth; foi só criada a ligação de gestor. A senha que indicou não altera a conta — redefina a palavra-passe no Supabase (Authentication) se precisar.",
+            }
+          : {}),
+      },
+    };
   } catch (e: any) {
     return { status: 500, body: { error: e?.message || "Failed to insert track_manager" } };
   }

@@ -7419,7 +7419,16 @@
 
       if (addTrackManager) {
         addTrackManager.addEventListener("click", async () => {
-          if (!supabase || !state?.user?.id) return;
+          if (!supabase) {
+            if (trackManagerStatus) trackManagerStatus.textContent = "Sistema indisponível. Recarregue a página.";
+            return;
+          }
+          if (!state?.user?.id) {
+            if (trackManagerStatus)
+              trackManagerStatus.textContent =
+                "Inicie sessão com a conta principal (dono do pátio) antes de criar gestores de pista.";
+            return;
+          }
           const loginNameRaw = (trackManagerEmail?.value || "").trim();
           const password = (trackManagerPassword?.value || "").trim();
           if (!loginNameRaw) {
@@ -7428,6 +7437,10 @@
           }
           if (!password) {
             if (trackManagerStatus) trackManagerStatus.textContent = "Defina uma senha inicial.";
+            return;
+          }
+          if (password.length < 6) {
+            if (trackManagerStatus) trackManagerStatus.textContent = "A senha deve ter pelo menos 6 caracteres (regra do Supabase).";
             return;
           }
           if (!isValidManagerLogin(loginNameRaw)) {
@@ -7448,7 +7461,8 @@
             }
             if (!accessToken) throw new Error("Sessão expirada ou inexistente. Sai e volta a entrar na conta.");
 
-            const resp = await fetch("/api/create-track-manager", {
+            const createTrackManagerApiUrl = new URL("/api/create-track-manager", window.location.origin).href;
+            const resp = await fetch(createTrackManagerApiUrl, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -7479,9 +7493,17 @@
 
             const newUserId = json?.user_id || "";
             if (trackManagerStatus) {
-              trackManagerStatus.textContent = newUserId
-                ? `Gestor de pista criado. Login: ${displayManagerIdentity(email)} | User ID: ${newUserId}`
-                : `Gestor de pista criado. Login: ${displayManagerIdentity(email)}`;
+              if (json?.already_linked) {
+                trackManagerStatus.textContent =
+                  json?.message ||
+                  `Este gestor já estava associado. Login: ${displayManagerIdentity(email)} | User ID: ${newUserId || "—"}`;
+              } else if (json?.existing_auth_user && json?.message) {
+                trackManagerStatus.textContent = `${json.message} Login: ${displayManagerIdentity(email)} | User ID: ${newUserId}`;
+              } else {
+                trackManagerStatus.textContent = newUserId
+                  ? `Gestor de pista criado. Login: ${displayManagerIdentity(email)} | User ID: ${newUserId}`
+                  : `Gestor de pista criado. Login: ${displayManagerIdentity(email)}`;
+              }
             }
             if (trackManagerEmail) trackManagerEmail.value = "";
             if (trackManagerPassword) trackManagerPassword.value = "";
