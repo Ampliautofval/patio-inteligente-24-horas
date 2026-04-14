@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
 
 type CreateTrackManagerBody = {
@@ -5,6 +6,7 @@ type CreateTrackManagerBody = {
   password?: string;
   /** JWT da sessão do dono (preferir enviar no corpo — não depender do header Authorization na Vercel). */
   access_token?: string;
+  accessToken?: string;
   anon_key?: string;
 };
 
@@ -117,6 +119,7 @@ export async function runCreateTrackManager(
 
   const token =
     (body.access_token || "").trim() ||
+    (body.accessToken || "").trim() ||
     extractBearerToken(authorization) ||
     null;
   if (!token) {
@@ -129,51 +132,29 @@ export async function runCreateTrackManager(
     };
   }
 
-  /**
-   * Validar o JWT do dono com GET /auth/v1/user.
-   * 1) `apikey: service_role` no servidor (não depende de ANON na Vercel).
-   * 2) Se 401, tenta com anon (env ou corpo) por compatibilidade com versões do GoTrue.
-   */
-  const anonFallback = (process.env.SUPABASE_ANON_KEY || "").trim() || (body.anon_key || "").trim() || "";
+  /** Validação oficial do JWT com a biblioteca Supabase (evita falhas do fetch manual a /auth/v1/user). */
   let requesterId: string | null = null;
   try {
-    let userResp = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: "application/json",
-        apikey: serviceRoleKey,
-      },
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
-    if (!userResp.ok && userResp.status === 401 && anonFallback) {
-      userResp = await fetch(`${supabaseUrl}/auth/v1/user`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-          apikey: anonFallback,
-        },
-      });
-    }
-    if (!userResp.ok) {
-      const userErr: any = await userResp.json().catch(() => ({}));
-      const supMsg = [userErr?.message, userErr?.msg, userErr?.error_description, userErr?.error]
-        .filter(Boolean)
-        .join(" ");
-      const hint401 =
-        userResp.status === 401
-          ? " Confirme que SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY na Vercel são do mesmo projeto que em app.html, que o campo access_token chega no pedido e que a sessão não expirou (saia e entre de novo)."
-          : "";
+    const { data, error } = await admin.auth.getUser(token);
+    if (error || !data?.user?.id) {
       return {
         status: 401,
         body: {
-          error: `Não autorizado (${userResp.status}).${hint401}${supMsg ? ` ${supMsg}` : ""}`,
+          error: `Não foi possível confirmar a sua sessão. ${error?.message || "Token inválido ou expirado."} Saia da conta, volte a entrar na conta principal e tente de novo. Se a mensagem falar de Bearer, confirme que SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY na Vercel são do mesmo projeto que em app.html.`,
         },
       };
     }
-    const userJson: any = await userResp.json();
-    requesterId = userJson?.id || userJson?.user?.id || null;
-    if (!requesterId) return { status: 401, body: { error: "Unauthorized" } };
-  } catch {
-    return { status: 401, body: { error: "Unauthorized" } };
+    requesterId = data.user.id;
+  } catch (e: any) {
+    return {
+      status: 401,
+      body: {
+        error: `Erro ao validar sessão: ${e?.message || "desconhecido"}. Recarregue a página e entre de novo.`,
+      },
+    };
   }
 
   let email = (body.email || "").trim().toLowerCase();

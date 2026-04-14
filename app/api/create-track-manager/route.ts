@@ -19,7 +19,13 @@ function getAuthorizationFromRequest(request: NextRequest): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  let body: { email?: string; password?: string; access_token?: string; anon_key?: string } = {};
+  let body: {
+    email?: string;
+    password?: string;
+    access_token?: string;
+    accessToken?: string;
+    anon_key?: string;
+  } = {};
   try {
     body = await request.json();
   } catch {

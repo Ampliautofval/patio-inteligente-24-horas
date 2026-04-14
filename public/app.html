@@ -7679,7 +7679,7 @@
                   "Erro no servidor (500). Na Vercel confirme SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY e SUPABASE_ANON_KEY em Production e faça Redeploy.";
               }
               if (trackManagerStatus) trackManagerStatus.textContent = msg;
-              console.warn("create-track-manager", resp.status, json);
+              console.warn("create-track-manager", resp.status, json, "raw:", trimmed.slice(0, 400));
               return;
             }
 
