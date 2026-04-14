@@ -1,6 +1,9 @@
 -- Executar no SQL Editor do Supabase (projeto correto).
--- Impede duplicidade na base de dados. Se o CREATE INDEX falhar por «duplicate key»,
--- corrija primeiro os registos duplicados existentes e volte a executar.
+-- Impede duplicidade na base de dados.
+--
+-- Se o CREATE INDEX falhar com ERRO 23505 em «partners»:
+--   1) Execute primeiro: supabase/cadastro_sem_duplicidade_dedupe_parceiros.sql
+--   2) Volte a executar este ficheiro.
 
 -- Veículos: mesma placa normalizada (só letras/números, maiúsculas) não pode repetir
 -- para o mesmo utilizador enquanto o veículo não estiver REMOVIDO (pode voltar a cadastrar após VRP).
