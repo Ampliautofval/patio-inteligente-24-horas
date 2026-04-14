@@ -7472,7 +7472,7 @@
         const a = new Uint8Array(16);
         crypto.getRandomValues(a);
         const h = [...a].map((b) => b.toString(16).padStart(2, "0")).join("");
-        return `gm_${h}@gestor.local`;
+        return `gm_${h}@gestor.invalid`;
       }
 
       function randomGestorInitialPassword() {
@@ -7571,14 +7571,19 @@
           }
           if (trackManagerStatus) trackManagerStatus.textContent = "A gerar acesso…";
 
+          let accessToken = "";
           try {
             let sessionRes = await supabase.auth.getSession();
-            let accessToken = sessionRes?.data?.session?.access_token;
+            accessToken = sessionRes?.data?.session?.access_token || "";
             if (!accessToken) {
               const { data: ref } = await supabase.auth.refreshSession();
-              accessToken = ref?.session?.access_token;
+              accessToken = ref?.session?.access_token || "";
             }
-            if (!accessToken) throw new Error("Sessão expirada ou inexistente. Sai e volta a entrar na conta.");
+            if (!accessToken) {
+              if (trackManagerStatus)
+                trackManagerStatus.textContent = "Sessão expirada ou inexistente. Saia e volte a entrar na conta principal.";
+              return;
+            }
 
             const createTrackManagerApiUrl = new URL("/api/create-track-manager", window.location.origin).href;
             const resp = await fetch(createTrackManagerApiUrl, {
@@ -7594,19 +7599,78 @@
               }),
             });
 
-            const json = await resp.json().catch(() => ({}));
-            if (!resp.ok) {
-              if (resp.status === 404) {
-                throw new Error(
-                  "API não encontrada (404). O deploy precisa de Next.js com /api/create-track-manager e variáveis SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY na Vercel."
-                );
+            const raw = await resp.text();
+            const trimmed = raw.trim();
+            if (resp.ok && trimmed.startsWith("<")) {
+              if (trackManagerStatus)
+                trackManagerStatus.textContent =
+                  "O servidor devolveu HTML em vez da API JSON. Confirme que o site está no deploy Next.js na Vercel (rota /api/create-track-manager) e que não está a abrir só um ficheiro estático antigo.";
+              return;
+            }
+
+            let json = {};
+            try {
+              json = trimmed ? JSON.parse(trimmed) : {};
+            } catch {
+              json = {};
+            }
+
+            const runSignupFallback = async () => {
+              if (trackManagerStatus)
+                trackManagerStatus.textContent =
+                  "A API não existe neste URL (404). A tentar criar pelo Auth público (requer «Signups» ativas no Supabase)…";
+              const fbEmail = randomGestorLoginEmail();
+              const fbPwd = ownerChosenPassword || randomGestorInitialPassword();
+              const newUserId = await createTrackManagerViaClientFlow(fbEmail, fbPwd);
+              if (trackManagerStatus) {
+                trackManagerStatus.textContent =
+                  "Gestor criado em modo alternativo. Corrija o deploy (Next + /api/create-track-manager) para o fluxo estável sem e-mails automáticos.";
               }
-              throw new Error(
-                json?.error ||
-                  (resp.status === 500 && !json?.error
-                    ? "Erro no servidor (500). Confirme SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY em Vercel → Settings → Environment Variables."
-                    : `Erro (${resp.status}) ao criar utilizador.`)
-              );
+              showTrackManagerAccessBox(fbEmail, fbPwd);
+              if (trackManagerPassword) trackManagerPassword.value = "";
+              await loadTrackManagersList();
+              return newUserId;
+            };
+
+            if (resp.status === 404) {
+              try {
+                await runSignupFallback();
+              } catch (e2) {
+                const msg2 = e2 instanceof Error ? e2.message : String(e2);
+                if (trackManagerStatus)
+                  trackManagerStatus.textContent =
+                    msg2 ||
+                    "Não foi possível criar gestor. Instale o projeto Next na Vercel com variáveis SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY.";
+                console.error(e2);
+              }
+              return;
+            }
+
+            if (!resp.ok) {
+              const parts = [json?.error, json?.details]
+                .filter((x) => typeof x === "string" && String(x).trim())
+                .map((x) => String(x).trim());
+              let msg = parts.join(" — ") || `Erro HTTP ${resp.status} ao criar gestor.`;
+              const mlow = msg.toLowerCase();
+              if (/rate limit|429|over_email_send_rate|email rate limit|exceeded/i.test(mlow)) {
+                msg =
+                  "Limite de e-mails do Supabase. Desative confirmações por e-mail (Authentication → Providers → Email) ou aguarde. A criação pelo painel Admin não deve enviar e-mail se o projeto estiver atualizado.";
+              }
+              if (resp.status === 500 && !json?.error) {
+                msg =
+                  "Erro no servidor (500). Na Vercel confirme SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY e SUPABASE_ANON_KEY em Production e faça Redeploy.";
+              }
+              if (trackManagerStatus) trackManagerStatus.textContent = msg;
+              console.warn("create-track-manager", resp.status, json);
+              return;
+            }
+
+            if (!json.user_id && !json.already_linked) {
+              if (trackManagerStatus)
+                trackManagerStatus.textContent =
+                  json?.error ||
+                  "Resposta inválida da API (sem utilizador criado). Verifique os logs do deploy na Vercel.";
+              return;
             }
 
             const newUserId = json?.user_id || "";
@@ -7636,42 +7700,10 @@
             await loadTrackManagersList();
           } catch (e) {
             const msg = e instanceof Error ? e.message : String(e);
-            const shouldFallback =
-              /This endpoint requires a valid Bearer token|Não autorizado|401|403|404|500|API não encontrada|SUPABASE_SERVICE_ROLE_KEY/i.test(
-                msg || ""
-              );
-            if (!shouldFallback) {
-              if (trackManagerStatus) {
-                const m = (msg || "").toLowerCase();
-                if (/rate limit|429|email rate limit|over_email_send_rate|exceeded/i.test(m)) {
-                  trackManagerStatus.textContent =
-                    "Limite de e-mails do Supabase. Com o último deploy, criar gestor já não deve enviar e-mail — atualize a página e tente de novo. Se persistir, aguarde ~1 h. ou desative confirmações em Authentication → Providers → Email.";
-                } else {
-                  trackManagerStatus.textContent = msg || "Erro ao criar utilizador.";
-                }
-              }
-              console.error(e);
-              return;
-            }
-            try {
-              if (trackManagerStatus)
-                trackManagerStatus.textContent =
-                  "API indisponível. Tentando criação direta pelo Supabase (modo único)...";
-              const fbEmail = randomGestorLoginEmail();
-              const fbPwd = ownerChosenPassword || randomGestorInitialPassword();
-              const newUserId = await createTrackManagerViaClientFlow(fbEmail, fbPwd);
-              if (trackManagerStatus) {
-                trackManagerStatus.textContent =
-                  "Gestor criado (modo direto). Copie login e senha em baixo — confirme depois o deploy da API para o fluxo normal.";
-              }
-              showTrackManagerAccessBox(fbEmail, fbPwd);
-              if (trackManagerPassword) trackManagerPassword.value = "";
-              await loadTrackManagersList();
-            } catch (e2) {
-              const msg2 = e2 instanceof Error ? e2.message : String(e2);
-              if (trackManagerStatus) trackManagerStatus.textContent = msg2 || "Erro ao criar utilizador.";
-              console.error(e2);
-            }
+            if (trackManagerStatus)
+              trackManagerStatus.textContent =
+                msg || "Falha de rede ao contactar a API. Verifique a ligação e o domínio da app.";
+            console.error(e);
           }
         });
       }

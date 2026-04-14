@@ -6,9 +6,12 @@ type CreateTrackManagerBody = {
   anon_key?: string;
 };
 
-/** Login técnico único (sem e-mail real). O funcionário usa isto no campo «e-mail» do login da app. */
+/**
+ * Login técnico único (sem e-mail real). O funcionário usa isto no campo «e-mail» do login da app.
+ * Usamos o domínio reservado RFC 2606 `.invalid` — alguns projetos GoTrue rejeitam `.local`.
+ */
 function generateGestorLoginEmail(): string {
-  return `gm_${randomBytes(16).toString("hex")}@gestor.local`;
+  return `gm_${randomBytes(16).toString("hex")}@gestor.invalid`;
 }
 
 /** Senha inicial segura (só devolvida uma vez na resposta HTTP quando gerada aqui). */
@@ -225,16 +228,20 @@ export async function runCreateTrackManager(
         };
       }
     } else {
+      const d = adminJson?.msg || adminJson?.message || adminJson?.error || adminJson?.error_description;
+      const detailStr =
+        typeof d === "string"
+          ? d
+          : [adminJson?.error_code, adminJson?.code].filter(Boolean).join(" ") || JSON.stringify(adminJson).slice(0, 400);
       return {
         status: adminResp.status,
         body: {
           error:
-            adminJson?.msg ||
-            adminJson?.message ||
+            (typeof d === "string" ? d : null) ||
             adminJson?.error ||
             adminJson?.error_description ||
             "Falha ao criar utilizador (Auth). Verifique palavra-passe (mín. 6 caracteres) e políticas de e-mail no Supabase.",
-          details: adminJson,
+          details: detailStr,
         },
       };
     }
