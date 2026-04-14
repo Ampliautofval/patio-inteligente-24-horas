@@ -1665,7 +1665,7 @@
     <main>
       <section id="authPanel" class="panel auth">
         <h2>Bem-vindo</h2>
-        <p class="subtitle">Acesse sua conta para gerenciar o pátio com segurança.</p>
+        <p class="subtitle">Utilizador e senha. Se quiser e-mail real para recuperação, escreva-o no campo de utilizador (com @).</p>
         <div class="auth-tabs">
           <button class="auth-tab active" id="tabLogin">Entrar</button>
           <button class="auth-tab" id="tabRegister">Criar conta</button>
@@ -1673,8 +1673,8 @@
 
         <form id="loginForm">
           <div>
-            <label for="loginEmail">E-mail ou nome de acesso</label>
-            <input id="loginEmail" type="text" placeholder="seu@email.com ou leonardo" required />
+            <label for="loginEmail">Utilizador ou e-mail</label>
+            <input id="loginEmail" type="text" placeholder="ex.: maria ou nome@empresa.com" required />
           </div>
           <div>
             <label for="loginPassword">Senha</label>
@@ -1685,12 +1685,12 @@
 
         <form id="registerForm" class="hidden">
           <div>
-            <label for="registerEmail">E-mail</label>
-            <input id="registerEmail" type="email" placeholder="seu@email.com" required />
+            <label for="registerUsername">Nome de utilizador</label>
+            <input id="registerUsername" type="text" autocomplete="username" placeholder="ex.: maria (só letras, números, . - _)" required />
           </div>
           <div>
             <label for="registerPassword">Senha</label>
-            <input id="registerPassword" type="password" placeholder="Crie uma senha" required />
+            <input id="registerPassword" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" required />
           </div>
           <button type="submit">Criar conta</button>
         </form>
@@ -2296,7 +2296,7 @@
               <p class="notice" style="margin: 0 0 10px">
                 É a <strong>conta principal</strong> (tu): acesso completo — financeiro, parceiros, liberações, configurações e dados do pátio.
               </p>
-              <p style="margin: 0"><strong>Email:</strong> <span id="configGestorGeralEmail">—</span></p>
+              <p style="margin: 0"><strong>Login:</strong> <span id="configGestorGeralEmail">—</span></p>
               <p class="notice" style="margin: 10px 0 0">
                 O login e a palavra-passe são os do registo inicial (Supabase Auth). Não se cria aqui outro «gestor geral».
               </p>
@@ -2308,8 +2308,8 @@
               </p>
               <div class="form-grid">
                 <div class="full">
-                  <label>Nome de acesso do gestor de pista</label>
-                  <input id="trackManagerEmail" type="text" placeholder="ex.: leonardo" />
+                  <label>Nome de utilizador do gestor de pista</label>
+                  <input id="trackManagerLogin" type="text" autocomplete="username" placeholder="ex.: leonardo" />
                 </div>
                 <div class="full">
                   <label>Senha inicial</label>
@@ -2918,7 +2918,7 @@
       const settingsInvoice = document.getElementById("settingsInvoice");
       const saveSettings = document.getElementById("saveSettings");
 
-      const trackManagerEmail = document.getElementById("trackManagerEmail");
+      const trackManagerLogin = document.getElementById("trackManagerLogin");
       const trackManagerPassword = document.getElementById("trackManagerPassword");
       const addTrackManager = document.getElementById("addTrackManager");
       const trackManagerStatus = document.getElementById("trackManagerStatus");
@@ -4471,7 +4471,7 @@
         const email = resolveManagerIdentityToEmail(loginInput);
         const password = document.getElementById("loginPassword").value;
         if (!email) {
-          setStatus("Informe e-mail ou nome de acesso.", "error");
+          setStatus("Informe o utilizador ou o e-mail.", "error");
           return;
         }
 
@@ -4493,15 +4493,35 @@
           return;
         }
         setStatus("Criando conta...", "");
-        const email = document.getElementById("registerEmail").value.trim();
+        const loginRaw = document.getElementById("registerUsername").value.trim();
         const password = document.getElementById("registerPassword").value;
+        if (!loginRaw) {
+          setStatus("Informe o nome de utilizador.", "error");
+          return;
+        }
+        if (!password || password.length < 6) {
+          setStatus("A senha deve ter pelo menos 6 caracteres.", "error");
+          return;
+        }
+        const email = resolveManagerIdentityToEmail(loginRaw);
+        if (!email) {
+          setStatus("Nome de utilizador inválido.", "error");
+          return;
+        }
+        if (!loginRaw.includes("@") && !isValidManagerLogin(loginRaw)) {
+          setStatus(
+            "Nome de utilizador inválido: use 3 a 48 caracteres (letras, números, ponto, hífen ou underscore), ou um e-mail completo com @.",
+            "error"
+          );
+          return;
+        }
 
         const { error } = await supabase.auth.signUp({ email, password });
         if (error) {
           setStatus(error.message, "error");
           return;
         }
-        setStatus("Conta criada. Verifique seu e-mail, se o Supabase exigir confirmação.", "success");
+        setStatus("Conta criada. Entre na aba «Entrar» com o mesmo utilizador e senha.", "success");
       });
 
       logoutBtn.addEventListener("click", async () => {
@@ -4511,7 +4531,7 @@
       async function showApp(user) {
         authPanel.classList.add("hidden");
         appPanel.classList.remove("hidden");
-        userInfo.textContent = user ? `Logado como ${user.email}` : "Logado";
+        userInfo.textContent = user ? `Logado como ${displayManagerIdentity(user.email || "")}` : "Logado";
         state.user = user;
         await loadPatioDelegatedRole();
         applyRoleRestrictions();
@@ -6832,7 +6852,8 @@
       }
 
       async function refreshConfigUsuariosPanel() {
-        if (configGestorGeralEmail) configGestorGeralEmail.textContent = state.user?.email || "—";
+        if (configGestorGeralEmail)
+          configGestorGeralEmail.textContent = displayManagerIdentity(state.user?.email || "") || "—";
         await loadTrackManagersList();
       }
 
@@ -7391,7 +7412,6 @@
           body: JSON.stringify({
             email,
             password,
-            options: { emailRedirectTo: window.location.origin },
           }),
         });
         const signupJson = await signupResp.json().catch(() => ({}));
@@ -7429,10 +7449,10 @@
                 "Inicie sessão com a conta principal (dono do pátio) antes de criar gestores de pista.";
             return;
           }
-          const loginNameRaw = (trackManagerEmail?.value || "").trim();
+          const loginNameRaw = (trackManagerLogin?.value || "").trim();
           const password = (trackManagerPassword?.value || "").trim();
           if (!loginNameRaw) {
-            if (trackManagerStatus) trackManagerStatus.textContent = "Informe o nome de acesso do gestor delegado.";
+            if (trackManagerStatus) trackManagerStatus.textContent = "Informe o nome de utilizador do gestor.";
             return;
           }
           if (!password) {
@@ -7505,7 +7525,7 @@
                   : `Gestor de pista criado. Login: ${displayManagerIdentity(email)}`;
               }
             }
-            if (trackManagerEmail) trackManagerEmail.value = "";
+            if (trackManagerLogin) trackManagerLogin.value = "";
             if (trackManagerPassword) trackManagerPassword.value = "";
             await loadTrackManagersList();
           } catch (e) {
@@ -7527,7 +7547,7 @@
               if (trackManagerStatus) {
                 trackManagerStatus.textContent = `Gestor de pista criado. Login: ${displayManagerIdentity(email)} | User ID: ${newUserId}`;
               }
-              if (trackManagerEmail) trackManagerEmail.value = "";
+              if (trackManagerLogin) trackManagerLogin.value = "";
               if (trackManagerPassword) trackManagerPassword.value = "";
               await loadTrackManagersList();
             } catch (e2) {
@@ -7551,7 +7571,7 @@
           if (uid.includes("@")) {
             if (trackManagerLinkStatus)
               trackManagerLinkStatus.textContent =
-                "No campo de cima cola só o UUID do Supabase (Authentication → Users). O email vai no campo de baixo.";
+                "No campo de cima cola só o UUID do Supabase (Authentication → Users). Em baixo indique o utilizador (ou e-mail) para a lista.";
             return;
           }
           if (!isTrackManagerUuid(uid)) {
@@ -7561,7 +7581,7 @@
           }
           if (!identityRaw) {
             if (trackManagerLinkStatus)
-              trackManagerLinkStatus.textContent = "Indique e-mail ou nome de acesso do utilizador (para a lista).";
+              trackManagerLinkStatus.textContent = "Indique o nome de utilizador (ou e-mail) para aparecer na lista.";
             return;
           }
           const email = resolveManagerIdentityToEmail(identityRaw);
