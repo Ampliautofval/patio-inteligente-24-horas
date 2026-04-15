@@ -2283,11 +2283,6 @@
             <div class="actions">
               <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
               <button class="secondary finance-menu-toggle" type="button" id="financeMenuToggle">Menu</button>
-              <button id="openPayableForm">Nova despesa</button>
-              <button class="secondary" type="button" id="openFinanceOpenRecPrint" title="Contas a receber em aberto agrupadas">
-                Imprimir a receber em aberto
-              </button>
-              <button class="secondary" id="reloadFinanceiro">Atualizar</button>
             </div>
           </div>
           <div id="financeMenuBackdrop" class="finance-menu-backdrop hidden"></div>
@@ -2356,6 +2351,10 @@
           </div>
           <div class="subnav finance-side-menu" id="financeSubnav">
             <button data-subview="dashboard">Dashboard</button>
+            <button type="button" id="financeMenuNewPayable">Nova despesa</button>
+            <button type="button" id="financeMenuPrintOpenRec">Imprimir a receber em aberto</button>
+            <button type="button" id="financeMenuReload">Atualizar dados</button>
+            <button type="button" id="financeMenuReceberFilters">Filtro de contas a receber</button>
             <button data-subview="aguardando_lancamento">Aguardando lançamento</button>
             <button data-subview="receber">Contas a receber</button>
             <button data-subview="receber_alerta">Recebimentos em alerta</button>
@@ -3268,6 +3267,10 @@
       const financeMenuToggle = document.getElementById("financeMenuToggle");
       const financeMenuBackdrop = document.getElementById("financeMenuBackdrop");
       const financeFlyoutBackdrop = document.getElementById("financeFlyoutBackdrop");
+      const financeMenuNewPayable = document.getElementById("financeMenuNewPayable");
+      const financeMenuPrintOpenRec = document.getElementById("financeMenuPrintOpenRec");
+      const financeMenuReload = document.getElementById("financeMenuReload");
+      const financeMenuReceberFilters = document.getElementById("financeMenuReceberFilters");
       const financeFilters = document.getElementById("financeFilters");
       const financeContent = document.getElementById("financeContent");
       const financePlateFilter = document.getElementById("financePlateFilter");
@@ -7050,6 +7053,7 @@
           document.getElementById("financeReceberResumoWrap")?.classList.add("hidden");
           return;
         }
+        document.getElementById("financeTopDashboard")?.classList.toggle("hidden", !isDashboard);
         if (financePlateSearchForm) financePlateSearchForm.classList.toggle("hidden", isDashboard);
         document.getElementById("viewFinanceiro")?.classList.toggle("finance-flyout-open", isFlyoutView);
         financeFlyoutBackdrop?.classList.toggle("hidden", !isFlyoutView);
@@ -7089,8 +7093,13 @@
         partnerModal.classList.add("hidden");
       });
 
-      openPayableForm.addEventListener("click", () => {
+      const openNewPayableModal = () => {
         payableModal.classList.remove("hidden");
+      };
+      openPayableForm?.addEventListener("click", openNewPayableModal);
+      financeMenuNewPayable?.addEventListener("click", () => {
+        closeFinanceMenu();
+        openNewPayableModal();
       });
 
       cancelPayableForm.addEventListener("click", () => {
@@ -7312,6 +7321,10 @@
       document.getElementById("openFinanceOpenRecPrint")?.addEventListener("click", () => {
         openFinanceOpenRecPrintModal();
       });
+      financeMenuPrintOpenRec?.addEventListener("click", () => {
+        closeFinanceMenu();
+        openFinanceOpenRecPrintModal();
+      });
       document.getElementById("closeFinanceOpenRecPrintModal")?.addEventListener("click", () => {
         document.getElementById("financeOpenRecPrintModal")?.classList.add("hidden");
       });
@@ -7348,7 +7361,7 @@
         runFinanceReceberResumoPrint();
       });
 
-      reloadFinanceiro.addEventListener("click", () => {
+      const triggerFinanceReload = () => {
         Promise.all([
           loadReceivables(),
           loadPayables(),
@@ -7364,6 +7377,16 @@
           }
           updateDashboard();
         });
+      };
+      reloadFinanceiro?.addEventListener("click", triggerFinanceReload);
+      financeMenuReload?.addEventListener("click", () => {
+        closeFinanceMenu();
+        triggerFinanceReload();
+      });
+      financeMenuReceberFilters?.addEventListener("click", () => {
+        closeFinanceMenu();
+        openFinanceSubview("receber");
+        setTimeout(() => document.getElementById("financeReceberFilterLoc")?.focus(), 60);
       });
 
       document.getElementById("btnCloseOperationalMonth")?.addEventListener("click", async () => {
