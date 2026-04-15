@@ -1662,6 +1662,33 @@
         background: rgba(245, 158, 11, 0.18);
         color: #fbbf24;
       }
+      .dashboard-stat--entries {
+        border-color: rgba(96, 165, 250, 0.42);
+        background: linear-gradient(155deg, rgba(59, 130, 246, 0.14), rgba(15, 19, 26, 0.52));
+      }
+      [data-theme="light"] .dashboard-stat--entries {
+        background: linear-gradient(155deg, rgba(96, 165, 250, 0.14), rgba(255, 255, 255, 0.94));
+      }
+      .dashboard-stat--entries .icon {
+        background: rgba(59, 130, 246, 0.2);
+        color: #93c5fd;
+      }
+      .dashboard-stat--exits {
+        border-color: rgba(74, 222, 128, 0.4);
+        background: linear-gradient(155deg, rgba(34, 197, 94, 0.14), rgba(15, 19, 26, 0.52));
+      }
+      [data-theme="light"] .dashboard-stat--exits {
+        background: linear-gradient(155deg, rgba(74, 222, 128, 0.14), rgba(255, 255, 255, 0.94));
+      }
+      .dashboard-stat--exits .icon {
+        background: rgba(34, 197, 94, 0.2);
+        color: #86efac;
+      }
+      .dashboard-stat-meta {
+        margin-top: 8px;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
     </style>
   </head>
   <body>
@@ -1839,6 +1866,42 @@
                 </span>
               </div>
               <div class="card-value" id="cardSolicitadas">0</div>
+            </div>
+            <div class="card clickable dashboard-stat-card dashboard-stat--entries" id="cardEntradasHojeLink">
+              <div class="card-head">
+                <span class="card-title">Entradas hoje</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 20V4M12 4l-4 4m4-4l4 4M5 20h14"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardEntradasHoje">0</div>
+              <div class="dashboard-stat-meta" id="cardEntradasHojeMeta">No mês: 0</div>
+            </div>
+            <div class="card clickable dashboard-stat-card dashboard-stat--exits" id="cardSaidasHojeLink">
+              <div class="card-head">
+                <span class="card-title">Saídas hoje</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4v16M12 20l-4-4m4 4l4-4M5 4h14"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardSaidasHoje">0</div>
+              <div class="dashboard-stat-meta" id="cardSaidasHojeMeta">No mês: 0</div>
             </div>
           </div>
         </div>
@@ -5093,10 +5156,28 @@
         const vls = state.vehicles.filter((v) =>
           ["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMocao_CONFIRMADA"].includes(v.status)
         );
+        const todayYmd = toLocalYmd(new Date().toISOString());
+        const currentYm = yearMonthFromYmd(todayYmd);
+        const entradasHoje = state.vehicles.filter((v) => toLocalYmd(v.data_entrada) === todayYmd).length;
+        const saidasHoje = state.vehicles.filter((v) => toLocalYmd(v.data_saida) === todayYmd).length;
+        const entradasMes = state.vehicles.filter(
+          (v) => yearMonthFromYmd(toLocalYmd(v.data_entrada)) === currentYm
+        ).length;
+        const saidasMes = state.vehicles.filter(
+          (v) => yearMonthFromYmd(toLocalYmd(v.data_saida)) === currentYm
+        ).length;
         const elV = document.getElementById("cardVeiculos");
         const elS = document.getElementById("cardSolicitadas");
+        const elEH = document.getElementById("cardEntradasHoje");
+        const elSH = document.getElementById("cardSaidasHoje");
+        const elEHMeta = document.getElementById("cardEntradasHojeMeta");
+        const elSHMeta = document.getElementById("cardSaidasHojeMeta");
         if (elV) elV.textContent = (noPatio.length + vls.length).toString();
         if (elS) elS.textContent = vls.length.toString();
+        if (elEH) elEH.textContent = entradasHoje.toString();
+        if (elSH) elSH.textContent = saidasHoje.toString();
+        if (elEHMeta) elEHMeta.textContent = `No mês: ${entradasMes}`;
+        if (elSHMeta) elSHMeta.textContent = `No mês: ${saidasMes}`;
       }
 
       /** Para busca: só letras/números; ignora hífen/espaço (consulta acontece apenas no OK). */
@@ -6902,6 +6983,8 @@
 
       const cardVeiculosLink = document.getElementById("cardVeiculosLink");
       const cardSolicitadasLink = document.getElementById("cardSolicitadasLink");
+      const cardEntradasHojeLink = document.getElementById("cardEntradasHojeLink");
+      const cardSaidasHojeLink = document.getElementById("cardSaidasHojeLink");
 
       function showMainView(view) {
         document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
@@ -7138,6 +7221,8 @@
       // Cards do painel: VNP e veículos em liberação abrem a lista unificada no pátio.
       cardVeiculosLink.addEventListener("click", () => openPatioSubview("no_patio"));
       cardSolicitadasLink.addEventListener("click", () => openPatioSubview("no_patio"));
+      cardEntradasHojeLink?.addEventListener("click", () => openPatioSubview("no_patio"));
+      cardSaidasHojeLink?.addEventListener("click", () => openPatioSubview("removidos"));
 
       /** Busca só no envio do formulário (OK ou Enter) — digitar não dispara nada. */
       if (plateSearchForm) {
