@@ -2063,9 +2063,6 @@
             <div>
               <p class="module-kicker module-kicker--finance">Financeiro</p>
               <h2>Gestão financeira</h2>
-              <p class="module-lede">
-                Primeiro «Aguardando lançamento» (saída do pátio), depois contas a receber ou caixa — despesas, fechamento e históricos no mesmo módulo.
-              </p>
             </div>
             <div class="actions">
               <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar módulo">X</button>
@@ -2121,11 +2118,7 @@
             </select>
             <button type="button" class="secondary" id="clearFinanceReceberFilters">Limpar filtros</button>
           </div>
-          <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45">
-            <strong>Fluxo:</strong> veículos que saíram (ou troca de responsável) e ainda <strong>não confirmaste pagamento</strong> aparecem aqui — o mesmo conjunto que antes entrava direto em «Contas a receber».
-            O teu OK: <strong>Ir para contas a receber</strong> (cobrança) ou <strong>Baixar como pago</strong> (entrada em caixa).
-            A aprovação fica na base (Supabase, coluna <code>financeiro_aprovado_contas_receber</code>) — o mesmo estado em qualquer PC após correres o script em <code>supabase/receivables_financeiro_aprovado_contas.sql</code>. Sem o script, a app ainda usa só o navegador como antes.
-          </p>
+          <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45"></p>
           <div id="financeFilters" class="filter-bar hidden">
             <label>De</label>
             <input id="filterFrom" type="date" />
@@ -2196,9 +2189,7 @@
                 <div>
                   <div class="finance-closure-hero-kicker">Mês operacional aberto</div>
                   <div id="closureOperationalTitle" class="finance-closure-operational-title">—</div>
-                  <p class="subtitle" style="margin: 0">
-                    Fecha o mês no calendário, grava os totais e avança o mês operacional. O que ficar em aberto segue adiante.
-                  </p>
+                  <p class="subtitle" style="margin: 0"></p>
                 </div>
                 <div class="finance-closure-hero-right">
                   <span class="tag warning" id="closureOperationalStatus">Aberto</span>
