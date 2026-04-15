@@ -4732,16 +4732,6 @@
         showMainView("patio");
         setPatioView("no_patio");
 
-        const vehicleDailyInput = document.getElementById("vehicleDaily");
-        const vehicleDailyContainer = vehicleDailyInput?.closest("div");
-        if (vehicleDailyInput) {
-          vehicleDailyInput.value = "";
-          vehicleDailyInput.required = false;
-        }
-        if (isGestorPista && vehicleDailyContainer) {
-          vehicleDailyContainer.style.display = "none";
-        }
-
         document.getElementById("openParceirosFromPatio")?.classList.add("hidden");
         document.getElementById("printPatioVehicleList")?.classList.add("hidden");
         document.getElementById("printPatioByPartner")?.classList.add("hidden");
@@ -5898,10 +5888,8 @@
         vehicleModalSubtitle.textContent =
           mode === "edit"
             ? "Atualize os dados do veículo"
-            : isGestorPista
-              ? "Placa, modelo, localizador e data de entrada (sem valores)"
-              : "Cadastro de entrada no pátio";
-        vehicleForm.classList.toggle("operador-simplified", isGestorPista && mode === "create");
+            : "Cadastro de entrada no pátio";
+        vehicleForm.classList.remove("operador-simplified");
         vehicleForm.reset();
         vehicleExit.value = "";
         if (mode === "edit" && vehicle) {
@@ -5921,7 +5909,7 @@
           }
         }
         const vd = document.getElementById("vehicleDaily");
-        if (vd) vd.required = !isGestorPista;
+        if (vd) vd.required = true;
         vehicleModal.classList.remove("hidden");
       }
 
@@ -7373,7 +7361,7 @@
         }
         const vehicleDailyEl = document.getElementById("vehicleDaily");
         const vehicleDailyRaw = (vehicleDailyEl?.value || "").toString().trim();
-        if (!isGestorPista && !vehicleDailyRaw) {
+        if (!vehicleDailyRaw) {
           alert("Informe o valor da diária.");
           return;
         }
@@ -7385,15 +7373,14 @@
         const payload = {
           user_id: effectiveUserId(),
           placa: document.getElementById("vehiclePlate").value.trim(),
-          marca: isGestorPista ? "" : document.getElementById("vehicleBrand").value.trim(),
+          marca: document.getElementById("vehicleBrand").value.trim(),
           modelo: document.getElementById("vehicleModel").value.trim(),
-          // Gestor de pista pode lançar sem valor; persistimos 0 para cumprir NOT NULL.
-          valor_diaria: isGestorPista ? (vehicleDailyRaw ? vehicleDailyValue : 0) : vehicleDailyValue,
+          valor_diaria: vehicleDailyValue,
           data_entrada: new Date(document.getElementById("vehicleEntry").value).toISOString(),
-          data_saida: isGestorPista ? null : vehicleExit.value ? new Date(vehicleExit.value).toISOString() : null,
+          data_saida: vehicleExit.value ? new Date(vehicleExit.value).toISOString() : null,
           localizador_id: vehicleLocator.value || null,
-          assessoria_id: isGestorPista ? null : vehicleAssessor.value || null,
-          observacoes: isGestorPista ? "" : document.getElementById("vehicleNotes").value.trim(),
+          assessoria_id: vehicleAssessor.value || null,
+          observacoes: document.getElementById("vehicleNotes").value.trim(),
           status: editingVehicleData?.status || "NO_PATIO",
           payment_status: editingVehicleData?.payment_status || "EM_ABERTO",
           nfse_status: editingVehicleData?.nfse_status || "NAO_SOLICITADA",
