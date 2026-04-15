@@ -2475,17 +2475,17 @@
               <button type="button" class="secondary finance-flyout-close" id="financeFlyoutClose">Fechar</button>
               <div id="financeFlyoutSummaryCards" class="grid">
                 <div class="card">
-                  <div class="card-title">Contas a receber</div>
+                  <div class="card-title" id="financeCardTitle1">Contas a receber</div>
                   <div class="card-value" id="financeReceber">R$ 0,00</div>
                   <span class="tag warning" id="financeReceberCount">0 em aberto</span>
                 </div>
                 <div class="card">
-                  <div class="card-title">Contas a pagar</div>
+                  <div class="card-title" id="financeCardTitle2">Contas a pagar</div>
                   <div class="card-value" id="financePagar">R$ 0,00</div>
                   <span class="tag" id="financePagarCount">0 previstas</span>
                 </div>
                 <div class="card">
-                  <div class="card-title">Saldo em caixa</div>
+                  <div class="card-title" id="financeCardTitle3">Saldo em caixa</div>
                   <div class="card-value" id="financeCaixa">R$ 0,00</div>
                   <span class="tag success" id="financeCaixaStatus">Positivo</span>
                 </div>
@@ -3275,6 +3275,9 @@
       const financePagarCount = document.getElementById("financePagarCount");
       const financeCaixa = document.getElementById("financeCaixa");
       const financeCaixaStatus = document.getElementById("financeCaixaStatus");
+      const financeCardTitle1 = document.getElementById("financeCardTitle1");
+      const financeCardTitle2 = document.getElementById("financeCardTitle2");
+      const financeCardTitle3 = document.getElementById("financeCardTitle3");
       const receivableAlert = document.getElementById("receivableAlert");
       const financeMenuToggle = document.getElementById("financeMenuToggle");
       const financeMenuBackdrop = document.getElementById("financeMenuBackdrop");
@@ -6294,13 +6297,129 @@
           return sum + Number(mov.valor || 0);
         }, 0);
 
-        financeReceber.textContent = formatCurrency(totalReceber);
-        financeReceberCount.textContent = `${openReceivablesFinanceiro.length} em aberto`;
-        financePagar.textContent = formatCurrency(totalPagar);
-        financePagarCount.textContent = `${openPayables.length} previstas`;
-        financeCaixa.textContent = formatCurrency(caixa);
-        financeCaixaStatus.textContent = caixa >= 0 ? "Positivo" : "Negativo";
-        financeCaixaStatus.className = caixa >= 0 ? "tag success" : "tag warning";
+        const overdueReceivables = openReceivablesFinanceiro.filter((r) => {
+          if (!r.created_at) return false;
+          const created = new Date(r.created_at).getTime();
+          const days = Math.floor((Date.now() - created) / 86400000);
+          return days > 10;
+        });
+        const triagemList = state.receivables
+          .filter((r) => receivableNaFilaAguardandoTriagem(r))
+          .filter((r) => matchesVehicleId(r.vehicle_id));
+        const payablesFiltered = openPayables.filter(payableDescMatchesPlate);
+        const receivablesFilteredBase = openReceivablesFinanceiro.filter((r) => matchesVehicleId(r.vehicle_id));
+        const receivablesFiltered =
+          currentFinanceView === "receber_alerta"
+            ? receivablesFilteredBase.filter((r) => overdueReceivables.some((o) => o.id === r.id))
+            : receivablesFilteredBase;
+        const sumReceivablesFiltered = receivablesFiltered.reduce((s, r) => s + Number(r.valor || 0), 0);
+        const sumPayablesFiltered = payablesFiltered.reduce((s, p) => s + Number(p.valor || 0), 0);
+        const sumTriagem = triagemList.reduce((s, r) => s + Number(r.valor || 0), 0);
+        const maxPagar = payablesFiltered.reduce((m, p) => Math.max(m, Number(p.valor || 0)), 0);
+        const entradasCaixa = state.cash
+          .filter((m) => m.tipo_conta === "RECEBER")
+          .reduce((s, m) => s + Number(m.valor || 0), 0);
+        const saidasCaixa = state.cash
+          .filter((m) => m.tipo_conta === "PAGAR")
+          .reduce((s, m) => s + Number(m.valor || 0), 0);
+        const setFinanceSummaryCards = ({ t1, v1, m1, t2, v2, m2, t3, v3, m3, c1, c2, c3 }) => {
+          if (financeCardTitle1) financeCardTitle1.textContent = t1;
+          if (financeCardTitle2) financeCardTitle2.textContent = t2;
+          if (financeCardTitle3) financeCardTitle3.textContent = t3;
+          if (financeReceber) financeReceber.textContent = v1;
+          if (financePagar) financePagar.textContent = v2;
+          if (financeCaixa) financeCaixa.textContent = v3;
+          if (financeReceberCount) {
+            financeReceberCount.textContent = m1;
+            financeReceberCount.className = c1 || "tag warning";
+          }
+          if (financePagarCount) {
+            financePagarCount.textContent = m2;
+            financePagarCount.className = c2 || "tag";
+          }
+          if (financeCaixaStatus) {
+            financeCaixaStatus.textContent = m3;
+            financeCaixaStatus.className = c3 || "tag success";
+          }
+        };
+        if (currentFinanceView === "aguardando_lancamento") {
+          setFinanceSummaryCards({
+            t1: "Na fila de triagem",
+            v1: formatCurrency(sumTriagem),
+            m1: `${triagemList.length} registro(s)`,
+            t2: "Receber em atraso",
+            v2: formatCurrency(overdueReceivables.reduce((s, r) => s + Number(r.valor || 0), 0)),
+            m2: `${overdueReceivables.length} conta(s)`,
+            t3: "Decisões pendentes",
+            v3: String(triagemList.length),
+            m3: "Ir para receber ou baixar",
+            c1: "tag warning",
+            c2: "tag danger",
+            c3: "tag warning",
+          });
+        } else if (currentFinanceView === "receber" || currentFinanceView === "receber_alerta") {
+          const ticket = receivablesFiltered.length ? sumReceivablesFiltered / receivablesFiltered.length : 0;
+          setFinanceSummaryCards({
+            t1: "Contas a receber",
+            v1: formatCurrency(sumReceivablesFiltered),
+            m1: `${receivablesFiltered.length} em aberto`,
+            t2: "Ticket médio",
+            v2: formatCurrency(ticket),
+            m2: "por conta",
+            t3: "Atrasos (>10 dias)",
+            v3: String(receivablesFiltered.filter((r) => overdueReceivables.some((o) => o.id === r.id)).length),
+            m3: "risco de recebimento",
+            c1: "tag warning",
+            c2: "tag",
+            c3: "tag danger",
+          });
+        } else if (currentFinanceView === "pagar") {
+          const media = payablesFiltered.length ? sumPayablesFiltered / payablesFiltered.length : 0;
+          setFinanceSummaryCards({
+            t1: "Contas a pagar",
+            v1: formatCurrency(sumPayablesFiltered),
+            m1: `${payablesFiltered.length} em aberto`,
+            t2: "Despesa média",
+            v2: formatCurrency(media),
+            m2: "por conta",
+            t3: "Maior despesa",
+            v3: formatCurrency(maxPagar),
+            m3: "valor unitário",
+            c1: "tag warning",
+            c2: "tag",
+            c3: "tag danger",
+          });
+        } else if (currentFinanceView === "caixa") {
+          setFinanceSummaryCards({
+            t1: "Saldo em caixa",
+            v1: formatCurrency(caixa),
+            m1: caixa >= 0 ? "posição positiva" : "posição negativa",
+            t2: "Entradas em caixa",
+            v2: formatCurrency(entradasCaixa),
+            m2: "recebimentos acumulados",
+            t3: "Saídas em caixa",
+            v3: formatCurrency(saidasCaixa),
+            m3: "pagamentos acumulados",
+            c1: caixa >= 0 ? "tag success" : "tag warning",
+            c2: "tag success",
+            c3: "tag warning",
+          });
+        } else {
+          setFinanceSummaryCards({
+            t1: "Contas a receber",
+            v1: formatCurrency(totalReceber),
+            m1: `${openReceivablesFinanceiro.length} em aberto`,
+            t2: "Contas a pagar",
+            v2: formatCurrency(totalPagar),
+            m2: `${openPayables.length} previstas`,
+            t3: "Saldo em caixa",
+            v3: formatCurrency(caixa),
+            m3: caixa >= 0 ? "Positivo" : "Negativo",
+            c1: "tag warning",
+            c2: "tag",
+            c3: caixa >= 0 ? "tag success" : "tag warning",
+          });
+        }
 
         state.receivables.forEach((r) => {
           if (!receivableIsCicloPatioAberto(r)) return;
@@ -6318,12 +6437,6 @@
         });
 
         const now = Date.now();
-        const overdueReceivables = openReceivablesFinanceiro.filter((r) => {
-          if (!r.created_at) return false;
-          const created = new Date(r.created_at).getTime();
-          const days = Math.floor((now - created) / 86400000);
-          return days > 10;
-        });
         if (overdueReceivables.length) {
           receivableAlert.textContent = `Atenção: ${overdueReceivables.length} contas a receber estão em aberto há mais de 10 dias.`;
           receivableAlert.classList.remove("hidden");
