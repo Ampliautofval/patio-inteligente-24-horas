@@ -1063,6 +1063,14 @@
         background: rgba(251, 191, 36, 0.2);
         box-shadow: inset 3px 0 0 0 rgba(217, 119, 6, 0.85);
       }
+      #viewPatio tr.vnp-row-sem-valor {
+        background: rgba(220, 38, 38, 0.12);
+        box-shadow: inset 3px 0 0 0 rgba(220, 38, 38, 0.85);
+      }
+      [data-theme="light"] #viewPatio tr.vnp-row-sem-valor {
+        background: rgba(254, 202, 202, 0.35);
+        box-shadow: inset 3px 0 0 0 rgba(185, 28, 28, 0.9);
+      }
       .actions {
         display: flex;
         gap: 8px;
@@ -5307,12 +5315,19 @@
               : `${formatCurrency(total)}<span class="notice">(${calcDays(v)} diárias • ${calcHours(v)}h)</span>`;
 
             const emPipeline = v.status !== "NO_PATIO";
-            const rowClass = emPipeline || isRemocaoSolicitada(v) ? "vnp-row-liberacao" : "";
+            const semValorDiaria = !v.valor_diaria || Number(v.valor_diaria) <= 0;
+            const rowClasses = [];
+            if (emPipeline || isRemocaoSolicitada(v)) rowClasses.push("vnp-row-liberacao");
+            if (semValorDiaria) rowClasses.push("vnp-row-sem-valor");
+            const rowClass = rowClasses.join(" ");
             const situacaoTags = [];
             if (emPipeline) {
               situacaoTags.push(
                 `<span class="tag warning">${escapeHtml(VLS_STATUS_LABELS[v.status] || v.status || "-")}</span>`
               );
+            }
+            if (semValorDiaria) {
+              situacaoTags.push(`<span class="tag danger">Sem valor</span>`);
             }
             if (v.status !== "REMocao_CONFIRMADA" && isRemocaoSolicitada(v)) {
               situacaoTags.push(`<span class="tag notice">Remoção solicitada</span>`);
@@ -7358,13 +7373,22 @@
         }
         const vehicleDailyEl = document.getElementById("vehicleDaily");
         const vehicleDailyRaw = (vehicleDailyEl?.value || "").toString().trim();
+        if (!isGestorPista && !vehicleDailyRaw) {
+          alert("Informe o valor da diária.");
+          return;
+        }
+        const vehicleDailyValue = vehicleDailyRaw ? Number(vehicleDailyRaw.replace(",", ".")) : 0;
+        if (!Number.isFinite(vehicleDailyValue) || vehicleDailyValue < 0) {
+          alert("Valor da diária inválido.");
+          return;
+        }
         const payload = {
           user_id: effectiveUserId(),
           placa: document.getElementById("vehiclePlate").value.trim(),
           marca: isGestorPista ? "" : document.getElementById("vehicleBrand").value.trim(),
           modelo: document.getElementById("vehicleModel").value.trim(),
-          // Gestor de pista nao preenche valores; deixamos como null quando vier vazio.
-          valor_diaria: vehicleDailyRaw ? Number(vehicleDailyRaw) : null,
+          // Gestor de pista pode lançar sem valor; persistimos 0 para cumprir NOT NULL.
+          valor_diaria: isGestorPista ? (vehicleDailyRaw ? vehicleDailyValue : 0) : vehicleDailyValue,
           data_entrada: new Date(document.getElementById("vehicleEntry").value).toISOString(),
           data_saida: isGestorPista ? null : vehicleExit.value ? new Date(vehicleExit.value).toISOString() : null,
           localizador_id: vehicleLocator.value || null,
