@@ -771,6 +771,17 @@
       #viewFinanceiro.finance-flyout-open #financeContent.air-open {
         animation: airIn 0.2s ease both;
       }
+      #viewFinanceiro.finance-flyout-open #financeFlyoutSummaryCards {
+        display: none;
+      }
+      .finance-flyout-close {
+        display: none;
+      }
+      #viewFinanceiro.finance-flyout-open .finance-flyout-close {
+        display: inline-flex;
+        margin-left: auto;
+        margin-bottom: 10px;
+      }
 
       header {
         padding: 6px 24px;
@@ -2461,7 +2472,8 @@
               </div>
             </div>
             <div id="financeStandardArea">
-              <div class="grid">
+              <button type="button" class="secondary finance-flyout-close" id="financeFlyoutClose">Fechar</button>
+              <div id="financeFlyoutSummaryCards" class="grid">
                 <div class="card">
                   <div class="card-title">Contas a receber</div>
                   <div class="card-value" id="financeReceber">R$ 0,00</div>
@@ -3267,6 +3279,7 @@
       const financeMenuToggle = document.getElementById("financeMenuToggle");
       const financeMenuBackdrop = document.getElementById("financeMenuBackdrop");
       const financeFlyoutBackdrop = document.getElementById("financeFlyoutBackdrop");
+      const financeFlyoutClose = document.getElementById("financeFlyoutClose");
       const financeMenuNewPayable = document.getElementById("financeMenuNewPayable");
       const financeMenuPrintOpenRec = document.getElementById("financeMenuPrintOpenRec");
       const financeMenuReload = document.getElementById("financeMenuReload");
@@ -7794,6 +7807,7 @@
       });
       financeMenuBackdrop?.addEventListener("click", closeFinanceMenu);
       financeFlyoutBackdrop?.addEventListener("click", () => setFinanceView("dashboard"));
+      financeFlyoutClose?.addEventListener("click", () => setFinanceView("dashboard"));
 
       financeSubnav.addEventListener("click", (event) => {
         const button = event.target.closest("button[data-subview]");
