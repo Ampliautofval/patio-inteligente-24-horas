@@ -2789,6 +2789,15 @@
                   <label>Nome do pátio</label>
                   <input id="settingsName" type="text" placeholder="Amplipatio" />
                 </div>
+                <div class="full">
+                  <label>Endereço da empresa (recibo)</label>
+                  <textarea
+                    id="settingsEndereco"
+                    rows="3"
+                    placeholder="Rua, número, complemento — bairro, cidade — UF, CEP"
+                    style="width: 100%; resize: vertical; min-height: 72px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.2); color: var(--text); font: inherit"
+                  ></textarea>
+                </div>
                 <div>
                   <label>Conta bancária</label>
                   <input id="settingsBank" type="text" placeholder="Banco / Agência / Conta" />
@@ -2802,7 +2811,9 @@
                   <input id="settingsInvoice" type="text" placeholder="Mensagem para nota fiscal" />
                 </div>
               </div>
-              <p class="notice">Essas informações serão usadas automaticamente nas cobranças e notas.</p>
+              <p class="notice">
+                Essas informações serão usadas nas cobranças, notas e no <strong>recibo PDF</strong> (timbrado: nome, CNPJ e endereço).
+              </p>
             </div>
           </div>
 
@@ -3526,6 +3537,7 @@
       const settingsCnpj = document.getElementById("settingsCnpj");
       const settingsName = document.getElementById("settingsName");
       const settingsBank = document.getElementById("settingsBank");
+      const settingsEndereco = document.getElementById("settingsEndereco");
       const settingsCharge = document.getElementById("settingsCharge");
       const settingsInvoice = document.getElementById("settingsInvoice");
       const saveSettings = document.getElementById("saveSettings");
@@ -3715,6 +3727,13 @@
 
       function formatCurrency(value) {
         return currency.format(value || 0);
+      }
+
+      /** Formata CNPJ com 14 dígitos para exibição; caso contrário devolve o texto original limpo. */
+      function formatCnpjForDisplay(raw) {
+        const d = String(raw || "").replace(/\D/g, "");
+        if (d.length !== 14) return String(raw || "").trim() || "";
+        return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12, 14)}`;
       }
 
       function setPlateSearchHints(text, visible) {
@@ -5495,6 +5514,7 @@
         if (state.settings) {
           settingsCnpj.value = state.settings.cnpj || "";
           settingsName.value = state.settings.nome_patio || "";
+          if (settingsEndereco) settingsEndereco.value = state.settings.endereco || "";
           settingsBank.value = state.settings.conta_bancaria || "";
           settingsCharge.value = state.settings.texto_cobranca || "";
           settingsInvoice.value = state.settings.texto_nota_fiscal || "";
@@ -6249,7 +6269,17 @@
         const responsavel = receivable?.responsavel_pagamento || "-";
         const periodoInicio = receivable?.period_start ? formatDateTime(receivable.period_start) : "-";
         const periodoFim = receivable?.period_end ? formatDateTime(receivable.period_end) : "-";
+        const cfg = state.settings || {};
+        const emp = (cfg.nome_patio || "").trim();
+        const cj = formatCnpjForDisplay(cfg.cnpj) || String(cfg.cnpj || "").trim();
+        const end = (cfg.endereco || "").trim();
+        const head = [];
+        if (emp) head.push(emp);
+        if (cj) head.push(`CNPJ: ${cj}`);
+        if (end) head.push(end.replace(/\n/g, " "));
+        if (head.length) head.push("");
         return [
+          ...head,
           "RECIBO DE RECEBIMENTO",
           "",
           `Data: ${formatDateTime(agora)}`,
@@ -6271,22 +6301,75 @@
         if (!jsPdfCtor) throw new Error("jsPDF indisponível");
         const doc = new jsPdfCtor({ unit: "pt", format: "a4" });
         const marginX = 48;
-        let y = 56;
+        const pageW = doc.internal.pageSize.getWidth();
+        const contentW = pageW - marginX * 2;
+        let y = 44;
+
+        const s = state.settings || {};
+        const empresa = (s.nome_patio || "").trim() || "Razão social / Pátio";
+        const cnpjRaw = (s.cnpj || "").trim();
+        const cnpjFmt = formatCnpjForDisplay(cnpjRaw) || cnpjRaw || "";
+        const enderecoTxt = (s.endereco || "").trim().replace(/\r\n/g, "\n");
+        const bancoTxt = (s.conta_bancaria || "").trim();
+
+        const drawTimbrado = () => {
+          doc.setDrawColor(52, 58, 70);
+          doc.setLineWidth(0.85);
+          doc.line(marginX, y, marginX + contentW, y);
+          y += 14;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(14);
+          doc.setTextColor(28, 32, 40);
+          doc.text(empresa, marginX, y);
+          y += 22;
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          doc.setTextColor(45, 52, 64);
+          if (cnpjFmt) {
+            doc.text(`CNPJ: ${cnpjFmt}`, marginX, y);
+            y += 15;
+          }
+          if (enderecoTxt) {
+            const addrLines = doc.splitTextToSize(enderecoTxt, contentW);
+            doc.text(addrLines, marginX, y);
+            y += addrLines.length * 13 + 4;
+          }
+          if (bancoTxt) {
+            doc.setFontSize(9);
+            doc.setTextColor(71, 85, 105);
+            const bankLines = doc.splitTextToSize(bancoTxt, contentW);
+            doc.text(bankLines, marginX, y);
+            y += bankLines.length * 12 + 6;
+            doc.setFontSize(10);
+            doc.setTextColor(45, 52, 64);
+          }
+          doc.setDrawColor(52, 58, 70);
+          doc.setLineWidth(0.5);
+          doc.line(marginX, y, marginX + contentW, y);
+          y += 22;
+        };
+
+        drawTimbrado();
+
         const addLine = (label, value = "") => {
           doc.setFont("helvetica", "bold");
+          doc.setFontSize(11);
+          doc.setTextColor(28, 32, 40);
           doc.text(label, marginX, y);
-          y += 18;
+          y += 16;
           doc.setFont("helvetica", "normal");
-          const lines = doc.splitTextToSize(value || "-", 500);
+          doc.setTextColor(45, 52, 64);
+          const lines = doc.splitTextToSize(value || "-", contentW);
           doc.text(lines, marginX, y);
-          y += lines.length * 15 + 10;
+          y += lines.length * 14 + 8;
         };
 
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
+        doc.setFontSize(15);
+        doc.setTextColor(17, 24, 39);
         doc.text("RECIBO DE RECEBIMENTO", marginX, y);
-        y += 28;
-        doc.setFontSize(11);
+        y += 26;
+        doc.setFontSize(10.5);
 
         const placa = vehicle?.placa || "-";
         const veiculo = [vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ") || "-";
@@ -6303,10 +6386,12 @@
         );
         addLine("Valor recebido", formatCurrency(valor));
 
-        y += 16;
+        y += 10;
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(45, 52, 64);
         doc.text("Declaro que recebi o valor acima referente à guarda/pátio do veículo descrito.", marginX, y);
-        y += 48;
+        y += 42;
         doc.text("Assinatura: __________________________________________", marginX, y);
 
         const safePlate = (placa || "veiculo").replace(/[^a-z0-9_-]+/gi, "_");
@@ -8773,10 +8858,12 @@
       });
 
       saveSettings.addEventListener("click", async () => {
+        const enderecoVal = settingsEndereco ? settingsEndereco.value.trim() : "";
         const payload = {
           user_id: effectiveUserId(),
           cnpj: settingsCnpj.value.trim(),
           nome_patio: settingsName.value.trim(),
+          endereco: enderecoVal,
           conta_bancaria: settingsBank.value.trim(),
           texto_cobranca: settingsCharge.value.trim(),
           texto_nota_fiscal: settingsInvoice.value.trim(),
@@ -8784,7 +8871,22 @@
         const settingsOp = state.settings?.id
           ? supabase.from("settings").update(payload).eq("id", state.settings.id)
           : supabase.from("settings").insert(payload);
-        const { error } = await settingsOp;
+        let { error } = await settingsOp;
+        if (error && /endereco|column/i.test(error.message || "")) {
+          const { endereco: _e, ...rest } = payload;
+          const fallbackOp = state.settings?.id
+            ? supabase.from("settings").update(rest).eq("id", state.settings.id)
+            : supabase.from("settings").insert(rest);
+          const retry = await fallbackOp;
+          error = retry.error;
+          if (!error) {
+            alert(
+              "Configurações salvas (sem gravar endereço). Execute no Supabase o script supabase/settings_endereco.sql para criar a coluna «endereco» e voltar a guardar o endereço."
+            );
+            loadSettings();
+            return;
+          }
+        }
         if (error) {
           alert(error.message);
           return;
