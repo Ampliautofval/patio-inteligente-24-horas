@@ -7533,12 +7533,18 @@
                 .join("")}
             `;
           }
-          document.getElementById("fdtTotalReceber")?.textContent = formatCurrency(totalReceber);
-          document.getElementById("fdtQtdReceber")?.textContent = `${openReceivablesFinanceiro.length} contas`;
-          document.getElementById("fdtTotalPagar")?.textContent = formatCurrency(totalPagar);
-          document.getElementById("fdtQtdPagar")?.textContent = `${openPayables.length} contas`;
-          document.getElementById("fdtCaixaAtual")?.textContent = formatCurrency(caixa);
-          document.getElementById("fdtCaixaStatus")?.textContent = caixa >= 0 ? "Posição positiva" : "Posição negativa";
+          const _fdtRec = document.getElementById("fdtTotalReceber");
+          if (_fdtRec) _fdtRec.textContent = formatCurrency(totalReceber);
+          const _fdtQtdRec = document.getElementById("fdtQtdReceber");
+          if (_fdtQtdRec) _fdtQtdRec.textContent = `${openReceivablesFinanceiro.length} contas`;
+          const _fdtPag = document.getElementById("fdtTotalPagar");
+          if (_fdtPag) _fdtPag.textContent = formatCurrency(totalPagar);
+          const _fdtQtdPag = document.getElementById("fdtQtdPagar");
+          if (_fdtQtdPag) _fdtQtdPag.textContent = `${openPayables.length} contas`;
+          const _fdtCx = document.getElementById("fdtCaixaAtual");
+          if (_fdtCx) _fdtCx.textContent = formatCurrency(caixa);
+          const _fdtCxSt = document.getElementById("fdtCaixaStatus");
+          if (_fdtCxSt) _fdtCxSt.textContent = caixa >= 0 ? "Posição positiva" : "Posição negativa";
           document.getElementById("fdtCaixaProjetado").textContent = formatCurrency(projetado);
           document.getElementById("fdtEntradasMes").textContent = formatCurrency(entradasMes);
           document.getElementById("fdtSaidasMesMeta").textContent = `Saídas no mês: ${formatCurrency(saidasMes)}`;
