@@ -6333,9 +6333,18 @@
         const nomePatio = (cfg.nome_patio || "").trim() || RECIBO_PATIO_PADRAO;
         const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "-";
         const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "-";
-        const corpo = `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${formatCurrency(
-          valor
-        )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Por este documento, dou plena e total quitação referente ao pagamento das estadias referidas acima.`;
+        const dEntrada =
+          vehicle?.data_entrada != null && vehicle.data_entrada !== ""
+            ? formatDateBr(vehicle.data_entrada)
+            : dIni;
+        const dSaida =
+          vehicle?.data_saida != null && vehicle.data_saida !== ""
+            ? formatDateBr(vehicle.data_saida)
+            : dFim;
+        const corpo =
+          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${formatCurrency(
+            valor
+          )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dEntrada} a ${dSaida}.\n\nPor este documento, dou plena e total\nquitação referente ao pagamento das estadias referidas acima.`;
         const parts = [corpo, "", "_______________________________", "Assinatura do emitente", "", reciboFooterLine(cfg)];
         return parts.join("\n");
       }
@@ -6388,6 +6397,14 @@
         const veiculoDesc = [marca, modelo].filter(Boolean).join(" ").trim() || "—";
         const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "—";
         const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "—";
+        const dEntrada =
+          vehicle?.data_entrada != null && vehicle.data_entrada !== ""
+            ? formatDateBr(vehicle.data_entrada)
+            : dIni;
+        const dSaida =
+          vehicle?.data_saida != null && vehicle.data_saida !== ""
+            ? formatDateBr(vehicle.data_saida)
+            : dFim;
         const valorTxt = formatCurrency(valor);
         const footerLine = reciboFooterLine(s);
 
@@ -6453,7 +6470,7 @@
         doc.setFont("helvetica", "normal");
         doc.setFontSize(11);
         doc.setTextColor(15, 23, 42);
-        doc.text(`Eu, ${emitente},`, marginX + 12, yEmit + 14);
+        doc.text(`${emitente},`, marginX + 12, yEmit + 14);
         doc.text(`inscrito no CNPJ ${cnpjFmt}.`, marginX + 12, yEmit + 28);
         y += emitBoxH + 18;
 
@@ -6499,12 +6516,19 @@
         drawBar("VEÍCULO E PERÍODO");
         rowL("Veículo:", veiculoDesc);
         rowL("Placa:", placa);
-        rowL(`Estadias ${dIni} até ${dFim}`, "");
+        rowL(`Estadias ${dEntrada} até ${dSaida}`, "");
         rowL("Valor recebido:", valorTxt);
-        y += 6;
+        y += 20;
+        doc.setFont("times", "italic");
+        doc.setFontSize(10.5);
+        doc.setTextColor(30, 41, 59);
+        doc.text("Por este documento, dou plena e total", marginX + 12, y + 12);
+        y += 15;
+        doc.text("quitação referente ao pagamento das estadias referidas acima.", marginX + 12, y + 12);
+        y += 28;
 
         const textoDeclaracao =
-          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Por este documento, dou plena e total quitação referente ao pagamento das estadias referidas acima.`;
+          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dEntrada} a ${dSaida}.`;
 
         doc.setDrawColor(226, 232, 240);
         doc.setLineWidth(0.35);
