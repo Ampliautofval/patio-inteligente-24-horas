@@ -1087,12 +1087,76 @@
         top: calc(100% + 8px);
         right: 0;
         z-index: 12;
-        min-width: min(260px, calc(100vw - 32px));
+        min-width: min(280px, calc(100vw - 32px));
+        max-height: min(72vh, 520px);
+        overflow-x: hidden;
+        overflow-y: auto;
         padding: 8px;
         border-radius: 12px;
         border: 1px solid var(--border);
         background: var(--card);
         box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+      }
+      body.menus-no-modulo #patioSubnav,
+      body.menus-no-modulo #financeSubnav,
+      body.menus-no-modulo #configSubnav,
+      body.menus-no-modulo #partnerSubnav,
+      body.menus-no-modulo #patioMenuToggle,
+      body.menus-no-modulo #financeMenuToggle,
+      body.menus-no-modulo .patio-module-tools {
+        display: none !important;
+      }
+      .header-menu-details {
+        border-radius: 8px;
+        margin: 2px 0;
+      }
+      .header-menu-details > summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        user-select: none;
+      }
+      .header-menu-details > summary::-webkit-details-marker {
+        display: none;
+      }
+      .header-menu-details > summary::after {
+        content: "▸";
+        float: right;
+        font-size: 11px;
+        opacity: 0.55;
+        margin-left: 8px;
+      }
+      .header-menu-details[open] > summary::after {
+        content: "▾";
+      }
+      .header-menu-details > summary:hover {
+        background: var(--primary-weak, rgba(56, 189, 248, 0.12));
+      }
+      .header-menu-nested {
+        padding: 2px 0 8px 8px;
+        border-left: 2px solid rgba(148, 163, 184, 0.35);
+        margin: 0 0 4px 6px;
+      }
+      .header-menu-nested button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 8px 10px;
+        margin: 2px 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .header-menu-nested button:hover {
+        background: var(--primary-weak, rgba(56, 189, 248, 0.1));
       }
       [data-theme="light"] .header-menu-dropdown {
         box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
@@ -2151,13 +2215,59 @@
               <span class="header-menu-bar" aria-hidden="true"></span>
               <span class="sr-only">Menu</span>
             </button>
-            <div id="appHeaderMenu" class="header-menu-dropdown hidden" role="menu" aria-label="Navegação da aplicação">
-              <button type="button" role="menuitem" data-view="dashboard">Painel</button>
-              <button type="button" role="menuitem" data-view="patio">Gestão de pátio</button>
-              <button type="button" role="menuitem" data-view="financeiro">Gestão financeira</button>
-              <button type="button" role="menuitem" data-view="configuracoes">Configurações</button>
+            <div id="appHeaderMenu" class="header-menu-dropdown hidden" aria-label="Menu principal">
+              <button type="button" class="header-menu-top" data-view="dashboard">Painel</button>
+
+              <details class="header-menu-details" id="headerDetailsPatio">
+                <summary>Gestão de pátio</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-patio="new-vehicle">Registrar veículo</button>
+                  <button type="button" data-header-patio="print">Imprimir</button>
+                  <button type="button" data-header-patio="parceiros">Parceiros</button>
+                  <button type="button" data-header-patio-sub="no_patio">VNP</button>
+                  <button type="button" data-header-patio-sub="removidos">VRP</button>
+                  <button type="button" data-header-patio-sub="nfse_pendente">NFSe pendente</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsParceiros">
+                <summary>Rede de parceiros</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-partner-sub="parceiros">Empresas de remoção</button>
+                  <button type="button" data-header-partner-sub="assessorias">Assessoria</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsFinance">
+                <summary>Gestão financeira</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-finance-sub="dashboard">Dashboard</button>
+                  <button type="button" data-header-finance-action="financeMenuNewPayable">Nova despesa</button>
+                  <button type="button" data-header-finance-action="financeMenuPrintOpenRec">Imprimir a receber em aberto</button>
+                  <button type="button" data-header-finance-action="financeMenuReload">Atualizar dados</button>
+                  <button type="button" data-header-finance-action="financeMenuReceberFilters">Filtro de contas a receber</button>
+                  <button type="button" data-header-finance-sub="aguardando_lancamento">Aguardando lançamento</button>
+                  <button type="button" data-header-finance-sub="receber">Contas a receber</button>
+                  <button type="button" data-header-finance-sub="receber_alerta">Recebimentos em alerta</button>
+                  <button type="button" data-header-finance-sub="pagar">Contas a pagar</button>
+                  <button type="button" data-header-finance-sub="caixa">Caixa</button>
+                  <button type="button" data-header-finance-sub="fechamento_mensal">Fechamento mensal</button>
+                  <button type="button" data-header-finance-sub="relatorios">Relatórios</button>
+                  <button type="button" data-header-finance-sub="historico_pagar">Histórico a pagar</button>
+                  <button type="button" data-header-finance-sub="historico_receber">Histórico a receber</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsConfig">
+                <summary>Configurações</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-config-sub="dados">Pátio e textos</button>
+                  <button type="button" data-header-config-sub="usuarios">Usuários</button>
+                </div>
+              </details>
+
               <div class="header-menu-sep" role="separator"></div>
-              <button type="button" role="menuitem" id="appHeaderMenuLogout" class="header-menu-item--danger">Sair</button>
+              <button type="button" id="appHeaderMenuLogout" class="header-menu-item--danger">Sair</button>
             </div>
           </div>
           <form id="plateSearchForm" class="header-plate-search" action="#" novalidate>
@@ -5426,6 +5536,7 @@
         authPanel.classList.add("hidden");
         appPanel.classList.remove("hidden");
         document.getElementById("appHeaderMenuWrap")?.classList.remove("hidden");
+        document.body.classList.add("menus-no-modulo");
         userInfo.textContent = user ? `Logado como ${displayManagerIdentity(user.email || "")}` : "Logado";
         state.user = user;
         await loadPatioDelegatedRole();
@@ -5437,6 +5548,7 @@
         authPanel.classList.remove("hidden");
         appPanel.classList.add("hidden");
         document.getElementById("appHeaderMenuWrap")?.classList.add("hidden");
+        document.body.classList.remove("menus-no-modulo");
         closeAppHeaderMenu();
         userInfo.textContent = "Não autenticado";
         state.user = null;
@@ -5480,6 +5592,9 @@
       function applyRoleRestrictions() {
         document.getElementById("track-manager-hide-values-style")?.remove();
         document.getElementById("vehicleForm")?.classList.remove("operador-simplified");
+        document.querySelectorAll("#appHeaderMenu .header-menu-details").forEach((el) => el.classList.remove("hidden"));
+        document.querySelectorAll("#headerDetailsPatio [data-header-patio-sub]").forEach((el) => el.classList.remove("hidden"));
+        document.querySelector('#headerDetailsPatio [data-header-patio="parceiros"]')?.classList.remove("hidden");
         document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((btn) => {
           btn.style.display = "";
         });
@@ -5509,6 +5624,15 @@
           btn.style.display = view === "dashboard" ? "" : "none";
         };
         document.querySelectorAll("#appHeaderMenu button[data-view]").forEach(hideGestorMainNavItem);
+        document.getElementById("headerDetailsFinance")?.classList.add("hidden");
+        document.getElementById("headerDetailsConfig")?.classList.add("hidden");
+        document.getElementById("headerDetailsParceiros")?.classList.add("hidden");
+        document
+          .querySelectorAll(
+            '#headerDetailsPatio [data-header-patio-sub="removidos"], #headerDetailsPatio [data-header-patio-sub="nfse_pendente"]'
+          )
+          .forEach((el) => el.classList.add("hidden"));
+        document.querySelector('#headerDetailsPatio [data-header-patio="parceiros"]')?.classList.add("hidden");
         document.getElementById("dashboardModuleFinanceWrap")?.classList.add("hidden");
         document.getElementById("openConfigFromPatio")?.classList.add("hidden");
 
@@ -10889,11 +11013,94 @@
 
       document.getElementById("appHeaderMenuBtn")?.addEventListener("click", toggleAppHeaderMenu);
       document.getElementById("appHeaderMenuBackdrop")?.addEventListener("click", () => closeAppHeaderMenu());
-      document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((button) => {
-        button.addEventListener("click", () => {
-          closeAppHeaderMenu();
-          navigateMainViewFromNav(button.getAttribute("data-view"));
+      document.querySelectorAll("#appHeaderMenu > .header-menu-details").forEach((det) => {
+        det.addEventListener("toggle", () => {
+          if (!det.open) return;
+          document.querySelectorAll("#appHeaderMenu > .header-menu-details").forEach((o) => {
+            if (o !== det) o.open = false;
+          });
         });
+      });
+      document.getElementById("appHeaderMenu")?.addEventListener("click", (e) => {
+        const dashBtn = e.target.closest("#appHeaderMenu > button[data-view]");
+        if (dashBtn) {
+          e.preventDefault();
+          closeAppHeaderMenu();
+          navigateMainViewFromNav(dashBtn.getAttribute("data-view"));
+          return;
+        }
+
+        const patioSub = e.target.closest("[data-header-patio-sub]");
+        if (patioSub) {
+          e.preventDefault();
+          if (normalizePlateSearch(plateQuery)) {
+            if (plateFilter) plateFilter.value = "";
+            plateQuery = "";
+            setPlateSearchHints("", false);
+            renderVehicles();
+          }
+          openPatioSubview(patioSub.getAttribute("data-header-patio-sub"));
+          closeAppHeaderMenu();
+          patioSub.closest("details")?.removeAttribute("open");
+          return;
+        }
+
+        const patioAct = e.target.closest("[data-header-patio]");
+        if (patioAct && !patioAct.hasAttribute("data-header-patio-sub")) {
+          e.preventDefault();
+          const k = patioAct.getAttribute("data-header-patio");
+          if (k === "parceiros") {
+            openMainView("parceiros");
+          } else {
+            openMainView("patio");
+            if (k === "new-vehicle") openVehicleModal("create");
+            else if (k === "print") openPatioPrintModal();
+          }
+          closeAppHeaderMenu();
+          patioAct.closest("details")?.removeAttribute("open");
+          return;
+        }
+
+        const partnerSub = e.target.closest("[data-header-partner-sub]");
+        if (partnerSub) {
+          e.preventDefault();
+          openPartnerSubview(partnerSub.getAttribute("data-header-partner-sub"));
+          closeAppHeaderMenu();
+          partnerSub.closest("details")?.removeAttribute("open");
+          return;
+        }
+
+        const finSub = e.target.closest("[data-header-finance-sub]");
+        if (finSub) {
+          e.preventDefault();
+          closeFinanceMenu();
+          openFinanceSubview(finSub.getAttribute("data-header-finance-sub"));
+          closeAppHeaderMenu();
+          finSub.closest("details")?.removeAttribute("open");
+          return;
+        }
+
+        const finAct = e.target.closest("[data-header-finance-action]");
+        if (finAct) {
+          e.preventDefault();
+          const id = finAct.getAttribute("data-header-finance-action");
+          closeFinanceMenu();
+          openMainView("financeiro");
+          document.getElementById(id)?.click();
+          closeAppHeaderMenu();
+          finAct.closest("details")?.removeAttribute("open");
+          return;
+        }
+
+        const cfgSub = e.target.closest("[data-header-config-sub]");
+        if (cfgSub) {
+          e.preventDefault();
+          openMainView("configuracoes");
+          setConfigSubview(cfgSub.getAttribute("data-header-config-sub"));
+          closeAppHeaderMenu();
+          cfgSub.closest("details")?.removeAttribute("open");
+          return;
+        }
       });
       document.getElementById("appHeaderMenuLogout")?.addEventListener("click", () => {
         closeAppHeaderMenu();
