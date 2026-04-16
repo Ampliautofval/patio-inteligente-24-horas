@@ -2468,33 +2468,43 @@
               <div class="card-value" id="cardSaidasHoje">0</div>
               <div class="dashboard-stat-meta" id="cardSaidasHojeMeta">No mês: 0</div>
             </div>
-            <div id="patioTopDashboard" class="section-card dashboard-embed-patio" style="grid-column: 1 / -1; margin-top: 8px">
-              <p class="dashboard-embed-kicker">Resumo — Gestão de pátio</p>
-              <div class="grid">
-                <div class="card"><div class="card-title">VNP</div><div class="card-value" id="pdtVnp">0</div></div>
-                <div class="card"><div class="card-title">Liberação em andamento</div><div class="card-value" id="pdtLib">0</div></div>
-                <div class="card"><div class="card-title">VRP (removidos)</div><div class="card-value" id="pdtVrp">0</div></div>
-                <div class="card"><div class="card-title">NFSe pendente</div><div class="card-value" id="pdtNfse">0</div></div>
+            <div class="card clickable dashboard-stat-card dashboard-stat--exits" id="cardVrpLink">
+              <div class="card-head">
+                <span class="card-title">VRP (removidos)</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4v16M12 20l-4-4m4 4l4-4M5 4h14"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
               </div>
+              <div class="card-value" id="cardVrp">0</div>
+            </div>
+            <div class="card clickable dashboard-stat-card dashboard-stat--release" id="cardNfsePendenteLink">
+              <div class="card-head">
+                <span class="card-title">NFSe pendente</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M7 3h8l4 4v14H7V3zM11 3v4h4M9 12h6M9 16h4"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardNfsePendente">0</div>
             </div>
             <div id="financeTopDashboard" class="section-card finance-top-dashboard dashboard-embed-finance" style="grid-column: 1 / -1; margin-top: 8px">
               <p class="dashboard-embed-kicker">Resumo — Gestão financeira</p>
               <div class="finance-dashboard-grid">
-                <div class="finance-kpi-card">
-                  <div class="finance-kpi-title">A receber em aberto</div>
-                  <div class="finance-kpi-value" id="fdtTotalReceber">R$ 0,00</div>
-                  <div class="finance-kpi-meta" id="fdtQtdReceber">0 contas</div>
-                </div>
-                <div class="finance-kpi-card">
-                  <div class="finance-kpi-title">A pagar em aberto</div>
-                  <div class="finance-kpi-value" id="fdtTotalPagar">R$ 0,00</div>
-                  <div class="finance-kpi-meta" id="fdtQtdPagar">0 contas</div>
-                </div>
-                <div class="finance-kpi-card">
-                  <div class="finance-kpi-title">Caixa atual</div>
-                  <div class="finance-kpi-value" id="fdtCaixaAtual">R$ 0,00</div>
-                  <div class="finance-kpi-meta" id="fdtCaixaStatus">Neutro</div>
-                </div>
                 <div class="finance-kpi-card">
                   <div class="finance-kpi-title">Projeção de caixa</div>
                   <div class="finance-kpi-value" id="fdtCaixaProjetado">R$ 0,00</div>
@@ -6099,6 +6109,12 @@
         if (dashPagMeta) dashPagMeta.textContent = `${openPagar.length} em aberto`;
         if (dashCxValue) dashCxValue.textContent = formatCurrency(caixaAtual);
         if (dashCxMeta) dashCxMeta.textContent = `Movimentações: ${(state.cash || []).length}`;
+        const removidosCount = (state.vehicles || []).filter((v) => v.status === "REMOVIDO").length;
+        const nfsePendCount = (state.vehicles || []).filter((v) => v.nfse_status === "PENDENTE").length;
+        const elVrp = document.getElementById("cardVrp");
+        const elNfse = document.getElementById("cardNfsePendente");
+        if (elVrp) elVrp.textContent = String(removidosCount);
+        if (elNfse) elNfse.textContent = String(nfsePendCount);
       }
 
       /** Para busca: só letras/números; ignora hífen/espaço (consulta acontece apenas no OK). */
@@ -6261,15 +6277,6 @@
         }
 
         const vnpUnified = [...sortVehiclesByPlaca(vlsForTable), ...sortVehiclesByPlaca(byStatus.NO_PATIO)];
-        const pdtVnp = document.getElementById("pdtVnp");
-        const pdtLib = document.getElementById("pdtLib");
-        const pdtVrp = document.getElementById("pdtVrp");
-        const pdtNfse = document.getElementById("pdtNfse");
-        if (pdtVnp) pdtVnp.textContent = String(vnpUnified.length);
-        if (pdtLib) pdtLib.textContent = String(vlsForTable.length);
-        if (pdtVrp) pdtVrp.textContent = String(byStatus.REMOVIDO.length);
-        if (pdtNfse) pdtNfse.textContent = String(nfsePendentes.length);
-
         const patioCardTitle1 = document.getElementById("patioCardTitle1");
         const patioCardTitle2 = document.getElementById("patioCardTitle2");
         const patioCardTitle3 = document.getElementById("patioCardTitle3");
@@ -7526,12 +7533,12 @@
                 .join("")}
             `;
           }
-          document.getElementById("fdtTotalReceber").textContent = formatCurrency(totalReceber);
-          document.getElementById("fdtQtdReceber").textContent = `${openReceivablesFinanceiro.length} contas`;
-          document.getElementById("fdtTotalPagar").textContent = formatCurrency(totalPagar);
-          document.getElementById("fdtQtdPagar").textContent = `${openPayables.length} contas`;
-          document.getElementById("fdtCaixaAtual").textContent = formatCurrency(caixa);
-          document.getElementById("fdtCaixaStatus").textContent = caixa >= 0 ? "Posição positiva" : "Posição negativa";
+          document.getElementById("fdtTotalReceber")?.textContent = formatCurrency(totalReceber);
+          document.getElementById("fdtQtdReceber")?.textContent = `${openReceivablesFinanceiro.length} contas`;
+          document.getElementById("fdtTotalPagar")?.textContent = formatCurrency(totalPagar);
+          document.getElementById("fdtQtdPagar")?.textContent = `${openPayables.length} contas`;
+          document.getElementById("fdtCaixaAtual")?.textContent = formatCurrency(caixa);
+          document.getElementById("fdtCaixaStatus")?.textContent = caixa >= 0 ? "Posição positiva" : "Posição negativa";
           document.getElementById("fdtCaixaProjetado").textContent = formatCurrency(projetado);
           document.getElementById("fdtEntradasMes").textContent = formatCurrency(entradasMes);
           document.getElementById("fdtSaidasMesMeta").textContent = `Saídas no mês: ${formatCurrency(saidasMes)}`;
@@ -8765,6 +8772,8 @@
       const cardSolicitadasLink = document.getElementById("cardSolicitadasLink");
       const cardEntradasHojeLink = document.getElementById("cardEntradasHojeLink");
       const cardSaidasHojeLink = document.getElementById("cardSaidasHojeLink");
+      const cardVrpLink = document.getElementById("cardVrpLink");
+      const cardNfsePendenteLink = document.getElementById("cardNfsePendenteLink");
 
       let lastAppHeaderModuleView = null;
 
@@ -9040,6 +9049,8 @@
       cardSolicitadasLink.addEventListener("click", () => openPatioSubview("no_patio"));
       cardEntradasHojeLink?.addEventListener("click", () => openPatioSubview("no_patio"));
       cardSaidasHojeLink?.addEventListener("click", () => openPatioSubview("removidos"));
+      cardVrpLink?.addEventListener("click", () => openPatioSubview("removidos"));
+      cardNfsePendenteLink?.addEventListener("click", () => openPatioSubview("nfse_pendente"));
 
       /** Busca só no envio do formulário (OK ou Enter) — digitar não dispara nada. */
       if (plateSearchForm) {
