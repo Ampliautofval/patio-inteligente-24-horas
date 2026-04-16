@@ -6335,7 +6335,7 @@
         const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "-";
         const corpo = `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${formatCurrency(
           valor
-        )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Pelo presente dou plena e total quitação referente ao pagamento das estadias referidas acima.`;
+        )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Por este documento, dou plena e total quitação referente ao pagamento das estadias referidas acima.`;
         const parts = [corpo, "", "_______________________________", "Assinatura do emitente", "", reciboFooterLine(cfg)];
         return parts.join("\n");
       }
@@ -6427,7 +6427,7 @@
         doc.setLineWidth(1.1);
         doc.line(0, bandH, pageW, bandH);
 
-        let y = bandH + 20;
+        let y = bandH + 46;
         doc.setTextColor(15, 23, 42);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(13.5);
@@ -6437,7 +6437,7 @@
         doc.setFontSize(8.5);
         doc.setTextColor(100, 116, 139);
         doc.text("Valores de veículo e período conforme registo do sistema.", pageW / 2, y, { align: "center" });
-        y += 22;
+        y += 40;
 
         const emitBoxH = 54;
         doc.setFillColor(248, 250, 252);
@@ -6449,7 +6449,7 @@
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
         doc.setTextColor(100, 116, 139);
-        doc.text("EMITENTE (PRÉ-PREENCHIDO)", marginX + 12, yEmit);
+        doc.text("EMITENTE", marginX + 12, yEmit);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(11);
         doc.setTextColor(15, 23, 42);
@@ -6469,6 +6469,16 @@
         };
 
         const rowL = (label, value) => {
+          const hasVal = String(value || "").trim().length > 0;
+          if (!hasVal && label) {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10.5);
+            doc.setTextColor(15, 23, 42);
+            const one = doc.splitTextToSize(label, contentW - 24);
+            doc.text(one, marginX + 12, y + 11);
+            y += Math.max(22, one.length * 12 + 10);
+            return;
+          }
           doc.setFont("helvetica", "bold");
           doc.setFontSize(8.5);
           doc.setTextColor(100, 116, 139);
@@ -6486,16 +6496,15 @@
         rowL("CPF / CNPJ:", pessoaDoc);
         y += 4;
 
-        drawBar("VEÍCULO E PERÍODO (AUTOMÁTICO)");
+        drawBar("VEÍCULO E PERÍODO");
         rowL("Veículo:", veiculoDesc);
         rowL("Placa:", placa);
-        rowL("Estadias (de / até):", `${dIni}  —  ${dFim}`);
+        rowL(`Estadias ${dIni} até ${dFim}`, "");
         rowL("Valor recebido:", valorTxt);
         y += 6;
 
         const textoDeclaracao =
-          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Pelo presente dou plena e total quitação referente ao pagamento das estadias referidas acima.` +
-          (pessoaDoc && pessoaDoc !== "—" ? ` Documento informado: ${pessoaDoc}.` : "");
+          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Por este documento, dou plena e total quitação referente ao pagamento das estadias referidas acima.`;
 
         doc.setDrawColor(226, 232, 240);
         doc.setLineWidth(0.35);
