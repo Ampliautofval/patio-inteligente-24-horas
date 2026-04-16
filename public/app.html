@@ -3673,7 +3673,17 @@
 
       function isRemocaoSolicitada(v) {
         if (!v) return false;
-        if (v.remocao_solicitada === true || v.remocao_solicitada === "t" || v.remocao_solicitada === 1) return true;
+        const flag = v.remocao_solicitada;
+        // Supabase pode devolver booleano, "t"/"f" ou números (e às vezes strings como "1"/"true")
+        if (
+          flag === true ||
+          flag === 1 ||
+          flag === "1" ||
+          flag === "t" ||
+          flag === "true" ||
+          flag === "TRUE"
+        )
+          return true;
         if (v.status === "REMocao_CONFIRMADA") return true;
         return false;
       }
