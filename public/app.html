@@ -7263,6 +7263,7 @@
               <th>Tipo</th>
               <th>Descrição</th>
               <th>Valor</th>
+              <th>Ações</th>
             </tr>`;
           state.cash
             .filter((mov) => {
@@ -7282,17 +7283,27 @@
               return false;
             })
             .forEach((mov) => {
-            rows.push(`
+              const recVinculado =
+                mov.tipo_conta === "RECEBER" && mov.conta_id
+                  ? state.receivables.find((r) => r.id === mov.conta_id)
+                  : null;
+              const podeVoltarRecebimento =
+                mov.tipo_conta === "RECEBER" && recVinculado && recVinculado.status === "PAGO";
+              const acoesCell = podeVoltarRecebimento
+                ? `<button class="secondary" type="button" data-action="voltar-caixa-receber" data-id="${mov.id}" title="Remove este lançamento do caixa e devolve a conta para «Contas a receber» em aberto">Voltar</button>`
+                : "—";
+              rows.push(`
               <tr>
                 <td>${formatDateTime(mov.data_movimento)}</td>
                 <td>${mov.tipo_conta}</td>
                 <td>${mov.descricao || "-"}</td>
                 <td>${formatCurrency(mov.valor)}</td>
+                <td class="actions">${acoesCell}</td>
               </tr>
             `);
             });
           if (!rows.length) {
-            setEmptyRow(tableFinance, "Nenhum movimento em caixa.", 4);
+            setEmptyRow(tableFinance, "Nenhum movimento em caixa.", 5);
           } else {
             tableFinance.innerHTML = rows.join("");
           }
@@ -10182,6 +10193,72 @@
             .eq("tipo_conta", "RECEBER")
             .eq("user_id", effectiveUserId());
           await Promise.all([loadReceivables(), loadCash()]);
+          renderFinance();
+          updateDashboard();
+          return;
+        }
+
+        if (action === "voltar-caixa-receber") {
+          const mov = state.cash.find((m) => String(m.id) === String(id));
+          if (!mov || mov.tipo_conta !== "RECEBER" || !mov.conta_id) {
+            alert("Movimento inválido ou já atualizado. Atualize o financeiro.");
+            return;
+          }
+          const receivable = state.receivables.find((r) => r.id === mov.conta_id);
+          if (!receivable || receivable.status !== "PAGO") {
+            alert("Este lançamento já não está ligado a um recebimento quitado. Atualize a página.");
+            return;
+          }
+          if (
+            !confirm(
+              "Desfazer este lançamento no caixa e voltar a conta para «Contas a receber» em aberto? O movimento de entrada será apagado."
+            )
+          )
+            return;
+          const { error: delErr } = await supabase
+            .from("cash_movements")
+            .delete()
+            .eq("id", mov.id)
+            .eq("user_id", effectiveUserId());
+          if (delErr) {
+            alert(delErr.message);
+            return;
+          }
+          const { error: upErr } = await supabase
+            .from("receivables")
+            .update({ status: "EM_ABERTO", financeiro_aprovado_contas_receber: false })
+            .eq("id", receivable.id)
+            .eq("user_id", effectiveUserId());
+          if (upErr) {
+            const { error: upFallback } = await supabase
+              .from("receivables")
+              .update({ status: "EM_ABERTO" })
+              .eq("id", receivable.id)
+              .eq("user_id", effectiveUserId());
+            if (upFallback) {
+              alert(upFallback.message);
+              await loadCash();
+              renderFinance();
+              return;
+            }
+          }
+          if (receivable.vehicle_id) {
+            const outroPagoMesmoVeiculo = state.receivables.some(
+              (r) =>
+                r.vehicle_id === receivable.vehicle_id &&
+                r.id !== receivable.id &&
+                r.status === "PAGO"
+            );
+            if (!outroPagoMesmoVeiculo) {
+              const { error: vErr } = await supabase
+                .from("vehicles")
+                .update({ payment_status: "EM_ABERTO" })
+                .eq("id", receivable.vehicle_id)
+                .eq("user_id", effectiveUserId());
+              if (vErr) console.warn("voltar_caixa_vehicle_payment_status", vErr);
+            }
+          }
+          await Promise.all([loadReceivables(), loadCash(), loadVehicles()]);
           renderFinance();
           updateDashboard();
           return;
