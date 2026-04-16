@@ -971,6 +971,106 @@
         align-items: center;
         gap: 12px;
       }
+      .header-app-menu-wrap {
+        position: relative;
+        margin-left: auto;
+      }
+      .header-menu-trigger {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        background: rgba(15, 23, 42, 0.35);
+        color: var(--text, #e2e8f0);
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .header-menu-trigger:hover {
+        background: rgba(30, 41, 59, 0.55);
+        border-color: rgba(148, 163, 184, 0.65);
+      }
+      .header-menu-trigger:focus-visible {
+        outline: 2px solid var(--primary, #38bdf8);
+        outline-offset: 2px;
+      }
+      .header-menu-trigger .header-menu-bar {
+        display: block;
+        width: 18px;
+        height: 2px;
+        border-radius: 1px;
+        background: currentColor;
+      }
+      [data-theme="light"] .header-menu-trigger {
+        background: rgba(255, 255, 255, 0.72);
+        border-color: rgba(203, 213, 225, 0.95);
+        color: var(--text, #0f172a);
+      }
+      [data-theme="light"] .header-menu-trigger:hover {
+        background: rgba(248, 250, 252, 0.95);
+      }
+      .header-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 8;
+        background: rgba(2, 6, 23, 0.28);
+      }
+      [data-theme="light"] .header-menu-backdrop {
+        background: rgba(15, 23, 42, 0.12);
+      }
+      .header-menu-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 12;
+        min-width: min(260px, calc(100vw - 32px));
+        padding: 8px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+      }
+      [data-theme="light"] .header-menu-dropdown {
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      }
+      .header-menu-dropdown button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 10px 12px;
+        margin: 0;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .header-menu-dropdown button:hover {
+        background: var(--primary-weak, rgba(56, 189, 248, 0.12));
+      }
+      .header-menu-dropdown button.active {
+        color: var(--primary);
+        font-weight: 600;
+        background: var(--primary-weak, rgba(56, 189, 248, 0.15));
+      }
+      .header-menu-dropdown button.header-menu-item--danger {
+        color: #f87171;
+      }
+      .header-menu-dropdown button.header-menu-item--danger:hover {
+        background: rgba(248, 113, 113, 0.12);
+      }
+      .header-menu-sep {
+        height: 1px;
+        margin: 6px 4px;
+        background: var(--border);
+      }
       #themeToggle,
       #userInfo {
         display: none;
@@ -1193,6 +1293,17 @@
         color: var(--primary);
         font-weight: 600;
         background: var(--primary-weak);
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       .hidden {
         display: none;
@@ -2025,6 +2136,31 @@
           <span id="themeLabel">Tema escuro</span>
         </button>
         <div class="user" id="userInfo">Não autenticado</div>
+        <div id="appHeaderMenuWrap" class="header-app-menu-wrap hidden">
+          <div id="appHeaderMenuBackdrop" class="header-menu-backdrop hidden" aria-hidden="true"></div>
+          <button
+            type="button"
+            id="appHeaderMenuBtn"
+            class="header-menu-trigger"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="appHeaderMenu"
+            title="Menu"
+          >
+            <span class="header-menu-bar" aria-hidden="true"></span>
+            <span class="header-menu-bar" aria-hidden="true"></span>
+            <span class="header-menu-bar" aria-hidden="true"></span>
+            <span class="sr-only">Menu</span>
+          </button>
+          <div id="appHeaderMenu" class="header-menu-dropdown hidden" role="menu" aria-label="Navegação da aplicação">
+            <button type="button" role="menuitem" data-view="dashboard">Painel</button>
+            <button type="button" role="menuitem" data-view="patio">Gestão de pátio</button>
+            <button type="button" role="menuitem" data-view="financeiro">Gestão financeira</button>
+            <button type="button" role="menuitem" data-view="configuracoes">Configurações</button>
+            <div class="header-menu-sep" role="separator"></div>
+            <button type="button" role="menuitem" id="appHeaderMenuLogout" class="header-menu-item--danger">Sair</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -5303,6 +5439,7 @@
       async function showApp(user) {
         authPanel.classList.add("hidden");
         appPanel.classList.remove("hidden");
+        document.getElementById("appHeaderMenuWrap")?.classList.remove("hidden");
         userInfo.textContent = user ? `Logado como ${displayManagerIdentity(user.email || "")}` : "Logado";
         state.user = user;
         await loadPatioDelegatedRole();
@@ -5313,6 +5450,8 @@
       function showAuth() {
         authPanel.classList.remove("hidden");
         appPanel.classList.add("hidden");
+        document.getElementById("appHeaderMenuWrap")?.classList.add("hidden");
+        closeAppHeaderMenu();
         userInfo.textContent = "Não autenticado";
         state.user = null;
         state.patioOwnerUserId = null;
@@ -5355,6 +5494,12 @@
       function applyRoleRestrictions() {
         document.getElementById("track-manager-hide-values-style")?.remove();
         document.getElementById("vehicleForm")?.classList.remove("operador-simplified");
+        document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
+          btn.style.display = "";
+        });
+        document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((btn) => {
+          btn.style.display = "";
+        });
         document.getElementById("openParceirosFromPatio")?.classList.remove("hidden");
         document.getElementById("printPatioVehicleList")?.classList.remove("hidden");
         document.getElementById("printPatioByPartner")?.classList.remove("hidden");
@@ -5375,10 +5520,13 @@
           console.warn("navStack", e);
         }
 
-        document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
+        const hideGestorMainNavItem = (btn) => {
           const view = btn.getAttribute("data-view");
+          if (!view) return;
           btn.style.display = view === "dashboard" ? "" : "none";
-        });
+        };
+        document.querySelectorAll(".nav button[data-view]").forEach(hideGestorMainNavItem);
+        document.querySelectorAll("#appHeaderMenu button[data-view]").forEach(hideGestorMainNavItem);
         document.getElementById("dashboardModuleFinanceWrap")?.classList.add("hidden");
         document.getElementById("openConfigFromPatio")?.classList.add("hidden");
 
@@ -8443,6 +8591,9 @@
         document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
           btn.classList.toggle("active", btn.getAttribute("data-view") === view);
         });
+        document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-view") === view);
+        });
         document.body.classList.remove("app-module-patio", "app-module-finance");
         if (view === "financeiro") {
           document.body.classList.add("app-module-finance");
@@ -10657,6 +10808,44 @@
         }
       });
 
+      function closeAppHeaderMenu() {
+        const b = document.getElementById("appHeaderMenuBtn");
+        const p = document.getElementById("appHeaderMenu");
+        const bd = document.getElementById("appHeaderMenuBackdrop");
+        b?.setAttribute("aria-expanded", "false");
+        p?.classList.add("hidden");
+        bd?.classList.add("hidden");
+      }
+
+      function openAppHeaderMenu() {
+        const b = document.getElementById("appHeaderMenuBtn");
+        const p = document.getElementById("appHeaderMenu");
+        const bd = document.getElementById("appHeaderMenuBackdrop");
+        b?.setAttribute("aria-expanded", "true");
+        p?.classList.remove("hidden");
+        bd?.classList.remove("hidden");
+      }
+
+      function toggleAppHeaderMenu(e) {
+        if (e) e.stopPropagation();
+        const p = document.getElementById("appHeaderMenu");
+        if (p?.classList.contains("hidden")) openAppHeaderMenu();
+        else closeAppHeaderMenu();
+      }
+
+      function navigateMainViewFromNav(view) {
+        if (!view) return;
+        if (view === "dashboard") {
+          navStack.splice(0, navStack.length, "dashboard");
+          showMainView("dashboard");
+          setPatioView("dashboard");
+          setPartnerView("none");
+          setFinanceView("none");
+          return;
+        }
+        openMainView(view);
+      }
+
       const navButtons = document.querySelectorAll(".nav button[data-view]");
       const views = {
         dashboard: document.getElementById("viewDashboard"),
@@ -10672,17 +10861,34 @@
 
       navButtons.forEach((button) => {
         button.addEventListener("click", () => {
-          const view = button.getAttribute("data-view");
-          if (view === "dashboard") {
-            navStack.splice(0, navStack.length, "dashboard");
-            showMainView("dashboard");
-            setPatioView("dashboard");
-            setPartnerView("none");
-            setFinanceView("none");
-            return;
-          }
-          openMainView(view);
+          navigateMainViewFromNav(button.getAttribute("data-view"));
         });
+      });
+
+      document.getElementById("appHeaderMenuBtn")?.addEventListener("click", toggleAppHeaderMenu);
+      document.getElementById("appHeaderMenuBackdrop")?.addEventListener("click", () => closeAppHeaderMenu());
+      document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((button) => {
+        button.addEventListener("click", () => {
+          closeAppHeaderMenu();
+          navigateMainViewFromNav(button.getAttribute("data-view"));
+        });
+      });
+      document.getElementById("appHeaderMenuLogout")?.addEventListener("click", () => {
+        closeAppHeaderMenu();
+        logoutBtn?.click();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        const p = document.getElementById("appHeaderMenu");
+        if (!p || p.classList.contains("hidden")) return;
+        closeAppHeaderMenu();
+      });
+      document.addEventListener("click", (e) => {
+        const p = document.getElementById("appHeaderMenu");
+        const wrap = document.getElementById("appHeaderMenuWrap");
+        if (!p || !wrap || wrap.classList.contains("hidden") || p.classList.contains("hidden")) return;
+        if (wrap.contains(e.target)) return;
+        closeAppHeaderMenu();
       });
 
       bootstrap();
