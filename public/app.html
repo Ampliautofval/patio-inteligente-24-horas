@@ -2825,7 +2825,7 @@
                 </div>
               </div>
               <p class="notice">
-                O <strong>recibo em PDF</strong> usa o <strong>logotipo</strong> em <code>public/assets/logo.png</code>, o nome do emitente, CNPJ, período do veículo e os dados de rodapé (endereço e telefone). A4, texto de quitação conforme modelo legal.
+                O <strong>recibo em PDF</strong> (A4) usa o logotipo em <code>public/assets/recibo-header-logo.png</code> (ou <code>logo.png</code> como reserva), emitente e CNPJ padrão da empresa, e permite alterar rodapé em endereço/telefone.
               </p>
             </div>
           </div>
@@ -6295,42 +6295,72 @@
         return `Serviço de guarda e custódia de veículo automotor realizado em pátio particular. Veículo: ${veiculo} de placa ${placa} Período de permanência:\n${entrada} a ${saida} (${dias} diárias) Valor total a pagar: ${total}. Dados para Pagamento: Fernando Vasconcellos de Albuquerque Lima CNPJ: 57.936.119/0001-98 Banco Inter (Código 077) Agência: 0001 Conta Corrente PJ: 44506284-3 PIX (CNPJ): 57.936.119/0001-98.`;
       }
 
+      const RECIBO_EMITENTE_PADRAO = "Fernando Vasconcellos de Albuquerque Lima";
+      const RECIBO_CNPJ_PADRAO = "57.936.119/0001-98";
+      const RECIBO_RODAPE_PADRAO = "Rua Marques de Baipendi, 119 — Campo Grande, Recife-PE — (81) 9 9991-8484";
+      const RECIBO_PATIO_PADRAO = "AMPLIAUTO";
+
+      function reciboEmitenteNome(settings) {
+        const v = (settings?.recibo_emitente_nome || "").trim();
+        return v || RECIBO_EMITENTE_PADRAO;
+      }
+
+      function reciboCnpjExibicao(settings) {
+        const raw = (settings?.cnpj || "").trim();
+        const fmt = formatCnpjForDisplay(raw);
+        if (fmt) return fmt;
+        if (raw.replace(/\D/g, "").length === 14) return formatCnpjForDisplay(raw) || RECIBO_CNPJ_PADRAO;
+        return RECIBO_CNPJ_PADRAO;
+      }
+
+      function reciboFooterLine(settings) {
+        const e = (settings?.endereco || "").trim().replace(/\n/g, " ");
+        const t = (settings?.recibo_telefone || "").trim();
+        if (e && t) return `${e} — ${t}`;
+        if (e) return e;
+        if (t) return t;
+        return RECIBO_RODAPE_PADRAO;
+      }
+
       function buildRecebimentoReciboText({ receivable, vehicle, destinatario, valor }) {
+        const cfg = state.settings || {};
         const placa = vehicle?.placa || "-";
         const marca = vehicle?.marca || "";
         const modelo = vehicle?.modelo || "";
         const veiculoDesc = [marca, modelo].filter(Boolean).join(" ").trim() || "—";
-        const cfg = state.settings || {};
-        const emitente = (cfg.recibo_emitente_nome || "").trim() || "(emitente — Configurações)";
-        const cnpjFmt = formatCnpjForDisplay(cfg.cnpj) || String(cfg.cnpj || "").trim() || "—";
-        const nomePatio = (cfg.nome_patio || "AMPLIAUTO").trim();
+        const emitente = reciboEmitenteNome(cfg);
+        const cnpjFmt = reciboCnpjExibicao(cfg);
+        const nomePatio = (cfg.nome_patio || "").trim() || RECIBO_PATIO_PADRAO;
         const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "-";
         const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "-";
-        const endRod = (cfg.endereco || "").trim().replace(/\n/g, " ");
-        const telRod = (cfg.recibo_telefone || "").trim();
         const corpo = `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${formatCurrency(
           valor
         )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Pelo presente dou plena e total quitação referente ao pagamento das estadias referidas acima.`;
-        const rod = [endRod && `Endereço: ${endRod}`, telRod && `Contato: ${telRod}`].filter(Boolean).join("\n");
-        const parts = [corpo, "", "_______________________________", "Assinatura do emitente"];
-        if (rod) parts.push("", rod);
+        const parts = [corpo, "", "_______________________________", "Assinatura do emitente", "", reciboFooterLine(cfg)];
         return parts.join("\n");
       }
 
       async function loadReciboLogoDataUrl() {
-        try {
-          const r = await fetch("/assets/logo.png", { cache: "force-cache" });
-          if (!r.ok) return null;
-          const blob = await r.blob();
-          return await new Promise((resolve, reject) => {
-            const fr = new FileReader();
-            fr.onloadend = () => resolve(String(fr.result || ""));
-            fr.onerror = reject;
-            fr.readAsDataURL(blob);
-          });
-        } catch {
-          return null;
+        const paths = ["/assets/recibo-header-logo.png", "/assets/logo.png"];
+        for (const path of paths) {
+          try {
+            const r = await fetch(path, { cache: "force-cache" });
+            if (!r.ok) continue;
+            const blob = await r.blob();
+            const mime = (blob.type || "").toLowerCase();
+            const type = mime.includes("png") ? "PNG" : "JPEG";
+            const dataUrl = await new Promise((resolve, reject) => {
+              const fr = new FileReader();
+              fr.onloadend = () => resolve(String(fr.result || ""));
+              fr.onerror = reject;
+              fr.readAsDataURL(blob);
+            });
+            return { dataUrl, type };
+          } catch {
+            /* tenta próximo ficheiro */
+          }
         }
+        return null;
       }
 
       async function downloadReciboPdf({ receivable, vehicle, destinatarioNome, destinatarioDoc, valor }) {
@@ -6338,109 +6368,179 @@
         const jsPdfCtor = window.jspdf?.jsPDF;
         if (!jsPdfCtor) throw new Error("jsPDF indisponível");
         const doc = new jsPdfCtor({ unit: "pt", format: "a4" });
-        const marginX = 56;
-        const marginBottom = 64;
         const pageW = doc.internal.pageSize.getWidth();
         const pageH = doc.internal.pageSize.getHeight();
-        const contentW = pageW - marginX * 2;
-        let y = 48;
+        const marginX = 48;
+        const marginR = 48;
+        const contentW = pageW - marginX - marginR;
+        const footerBand = 46;
+        const yFooterTop = pageH - footerBand;
 
         const s = state.settings || {};
-        const emitente = (s.recibo_emitente_nome || "").trim() || "______________________________________________";
-        const cnpjRaw = (s.cnpj || "").trim();
-        const cnpjFmt = formatCnpjForDisplay(cnpjRaw) || cnpjRaw || "______________________";
-        const nomePatio = (s.nome_patio || "AMPLIAUTO").trim();
-        const enderecoRodape = (s.endereco || "").trim().replace(/\r\n/g, "\n");
-        const telefoneRodape = (s.recibo_telefone || "").trim();
-        const pessoa = (destinatarioNome || "").trim() || "________________________";
+        const emitente = reciboEmitenteNome(s);
+        const cnpjFmt = reciboCnpjExibicao(s);
+        const nomePatio = (s.nome_patio || "").trim() || RECIBO_PATIO_PADRAO;
+        const pessoa = (destinatarioNome || "").trim() || "—";
+        const pessoaDoc = (destinatarioDoc || "").trim() || "—";
         const placa = vehicle?.placa || "—";
         const marca = (vehicle?.marca || "").trim();
         const modelo = (vehicle?.modelo || "").trim();
         const veiculoDesc = [marca, modelo].filter(Boolean).join(" ").trim() || "—";
-        const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "-";
-        const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "-";
+        const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "—";
+        const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "—";
         const valorTxt = formatCurrency(valor);
+        const footerLine = reciboFooterLine(s);
 
-        const logoData = await loadReciboLogoDataUrl();
-        if (logoData) {
+        const bandH = 76;
+        doc.setFillColor(10, 11, 15);
+        doc.rect(0, 0, pageW, bandH, "F");
+
+        const logo = await loadReciboLogoDataUrl();
+        if (logo) {
           try {
-            const props = doc.getImageProperties(logoData);
-            const maxW = 200;
-            const maxH = 56;
+            const props = doc.getImageProperties(logo.dataUrl);
+            const maxW = 260;
+            const maxH = 40;
             let imgW = maxW;
             let imgH = (props.height * imgW) / props.width;
             if (imgH > maxH) {
               imgH = maxH;
               imgW = (props.width * imgH) / props.height;
             }
-            const xLogo = (pageW - imgW) / 2;
-            doc.addImage(logoData, "PNG", xLogo, y, imgW, imgH);
-            y += imgH + 28;
+            const xL = (pageW - imgW) / 2;
+            const yL = (bandH - imgH) / 2;
+            doc.addImage(logo.dataUrl, logo.type, xL, yL, imgW, imgH);
           } catch {
+            doc.setTextColor(255, 255, 255);
             doc.setFont("helvetica", "bold");
-            doc.setFontSize(20);
-            doc.setTextColor(17, 24, 39);
-            doc.text(nomePatio.toUpperCase(), pageW / 2, y + 14, { align: "center" });
-            y += 40;
+            doc.setFontSize(17);
+            doc.text(nomePatio.toUpperCase(), pageW / 2, bandH / 2 + 5, { align: "center" });
           }
         } else {
+          doc.setTextColor(255, 255, 255);
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(20);
-          doc.setTextColor(17, 24, 39);
-          doc.text(nomePatio.toUpperCase(), pageW / 2, y + 14, { align: "center" });
-          y += 40;
+          doc.setFontSize(17);
+          doc.text(nomePatio.toUpperCase(), pageW / 2, bandH / 2 + 5, { align: "center" });
         }
 
-        doc.setDrawColor(55, 65, 80);
-        doc.setLineWidth(0.6);
-        doc.line(marginX, y, marginX + contentW, y);
+        doc.setDrawColor(220, 38, 38);
+        doc.setLineWidth(1.1);
+        doc.line(0, bandH, pageW, bandH);
+
+        let y = bandH + 20;
+        doc.setTextColor(15, 23, 42);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13.5);
+        doc.text("RECIBO DE QUITAÇÃO DE ESTADIAS", pageW / 2, y, { align: "center" });
+        y += 14;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("Valores de veículo e período conforme registo do sistema.", pageW / 2, y, { align: "center" });
         y += 22;
 
-        const corpo =
-          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Pelo presente dou plena e total quitação referente ao pagamento das estadias referidas acima.` +
-          (destinatarioDoc ? ` Documento do Sr(a).: ${String(destinatarioDoc).trim()}.` : "");
-
-        doc.setFont("times", "normal");
-        doc.setFontSize(12);
-        doc.setTextColor(17, 24, 39);
-        const corpoLines = doc.splitTextToSize(corpo, contentW);
-        const lh = 15.2;
-        doc.text(corpoLines, marginX, y, { lineHeightFactor: lh / 12, maxWidth: contentW });
-        y += corpoLines.length * lh + 36;
-
-        doc.setFont("times", "italic");
-        doc.setFontSize(10);
-        doc.setTextColor(71, 85, 105);
-        const localData = `Local e data: _______________________, ${formatDateBr(new Date().toISOString())}.`;
-        doc.text(localData, marginX, y);
-        y += 28;
-
-        doc.setFont("times", "normal");
-        doc.setFontSize(11);
-        doc.setTextColor(17, 24, 39);
-        doc.text("__________________________________________________________", marginX, y);
-        y += 18;
-        doc.setFontSize(10);
-        doc.text("Assinatura do emitente", marginX, y);
-        y += 40;
-
-        const footerY = pageH - marginBottom;
-        doc.setDrawColor(100, 116, 139);
-        doc.setLineWidth(0.45);
-        doc.line(marginX, footerY - 8, marginX + contentW, footerY - 8);
-
+        const emitBoxH = 54;
+        doc.setFillColor(248, 250, 252);
+        doc.rect(marginX, y, contentW, emitBoxH, "F");
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.4);
+        doc.rect(marginX, y, contentW, emitBoxH, "S");
+        const yEmit = y + 14;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("EMITENTE (PRÉ-PREENCHIDO)", marginX + 12, yEmit);
         doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`Eu, ${emitente},`, marginX + 12, yEmit + 14);
+        doc.text(`inscrito no CNPJ ${cnpjFmt}.`, marginX + 12, yEmit + 28);
+        y += emitBoxH + 18;
+
+        const drawBar = (label) => {
+          doc.setFillColor(51, 65, 85);
+          doc.rect(marginX, y, contentW, 17, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.text(label, marginX + 10, y + 11.5);
+          y += 21;
+          doc.setTextColor(15, 23, 42);
+        };
+
+        const rowL = (label, value) => {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text(label, marginX + 12, y + 11);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10.5);
+          doc.setTextColor(15, 23, 42);
+          const lines = doc.splitTextToSize(value || "—", contentW - 118);
+          doc.text(lines, marginX + 104, y + 11);
+          y += Math.max(22, lines.length * 12 + 10);
+        };
+
+        drawBar("QUEM EFETUOU O PAGAMENTO");
+        rowL("Nome:", pessoa);
+        rowL("CPF / CNPJ:", pessoaDoc);
+        y += 4;
+
+        drawBar("VEÍCULO E PERÍODO (AUTOMÁTICO)");
+        rowL("Veículo:", veiculoDesc);
+        rowL("Placa:", placa);
+        rowL("Estadias (de / até):", `${dIni}  —  ${dFim}`);
+        rowL("Valor recebido:", valorTxt);
+        y += 6;
+
+        const textoDeclaracao =
+          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dIni} a ${dFim}. Pelo presente dou plena e total quitação referente ao pagamento das estadias referidas acima.` +
+          (pessoaDoc && pessoaDoc !== "—" ? ` Documento informado: ${pessoaDoc}.` : "");
+
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.35);
+        const declH = Math.max(76, Math.min(132, yFooterTop - y - 72));
+        doc.rect(marginX, y, contentW, declH, "S");
+        doc.setFont("times", "normal");
+        doc.setFontSize(10.5);
+        doc.setTextColor(30, 41, 59);
+        const innerW = contentW - 20;
+        const declLines = doc.splitTextToSize(textoDeclaracao, innerW);
+        const lineStep = 14.2;
+        const maxLines = Math.max(1, Math.floor((declH - 18) / lineStep));
+        const useLines = declLines.slice(0, maxLines);
+        let dy = y + 14;
+        useLines.forEach((ln) => {
+          doc.text(ln, marginX + 10, dy, { maxWidth: innerW });
+          dy += lineStep;
+        });
+        y += declH + 14;
+
+        doc.setFont("helvetica", "italic");
         doc.setFontSize(9.5);
         doc.setTextColor(71, 85, 105);
-        let fy = footerY;
-        if (enderecoRodape) {
-          const endLines = doc.splitTextToSize(enderecoRodape, contentW);
-          doc.text(endLines, marginX, fy);
-          fy += endLines.length * 12 + 4;
-        }
-        if (telefoneRodape) {
-          doc.text(`Contato: ${telefoneRodape}`, marginX, fy);
-        }
+        doc.text(`Local e data: Recife-PE, ${formatDateBr(new Date().toISOString())}.`, marginX + 10, y);
+        y += 22;
+        doc.setDrawColor(148, 163, 184);
+        doc.setLineWidth(0.35);
+        doc.line(marginX + 10, y, marginX + contentW - 10, y);
+        y += 6;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.text("Assinatura do emitente", marginX + 10, y + 12);
+
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineWidth(0.6);
+        doc.line(marginX, yFooterTop - 2, marginX + contentW, yFooterTop - 2);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        const footLines = doc.splitTextToSize(footerLine, contentW - 8);
+        let fy = yFooterTop + 10;
+        footLines.forEach((ln) => {
+          doc.text(ln, pageW / 2, fy, { align: "center" });
+          fy += 11.5;
+        });
 
         const safePlate = (placa || "veiculo").replace(/[^a-z0-9_-]+/gi, "_");
         doc.save(`recibo_recebimento_${safePlate}.pdf`);
