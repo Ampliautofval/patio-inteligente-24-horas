@@ -3273,6 +3273,30 @@
           </div>
         </div>
       </div>
+      <div id="reciboModal" class="modal-backdrop hidden">
+        <div class="modal">
+          <div class="modal-header">
+            <div>
+              <h3>Recibo de recebimento</h3>
+            </div>
+            <button class="modal-close" id="closeReciboModal">Fechar</button>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label for="reciboDestinatarioNome">Nome do direcionado</label>
+              <input id="reciboDestinatarioNome" type="text" placeholder="Nome completo" />
+            </div>
+            <div>
+              <label for="reciboDestinatarioDoc">CPF ou CNPJ</label>
+              <input id="reciboDestinatarioDoc" type="text" placeholder="Somente números ou formatado" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="confirmReciboModal">Confirmar e gerar PDF</button>
+            <button type="button" class="secondary" id="cancelReciboModal">Cancelar</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Supabase no mesmo domínio: evita falha no celular quando CDN externa é bloqueada -->
@@ -3321,6 +3345,26 @@
           document.head.appendChild(s);
         });
         return html2canvasLoadPromise;
+      }
+
+      let jsPdfLoadPromise = null;
+      function loadJsPdf() {
+        if (window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+        if (jsPdfLoadPromise) return jsPdfLoadPromise;
+        jsPdfLoadPromise = new Promise(function (resolve, reject) {
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+          s.onload = function () {
+            resolve();
+          };
+          s.onerror = function () {
+            jsPdfLoadPromise = null;
+            reject(new Error("jspdf"));
+          };
+          document.head.appendChild(s);
+        });
+        return jsPdfLoadPromise;
       }
 
       const authPanel = document.getElementById("authPanel");
@@ -3407,6 +3451,12 @@
       const closeTextModal = document.getElementById("closeTextModal");
       const closeTextModal2 = document.getElementById("closeTextModal2");
       const copyTextModal = document.getElementById("copyTextModal");
+      const reciboModal = document.getElementById("reciboModal");
+      const closeReciboModal = document.getElementById("closeReciboModal");
+      const cancelReciboModal = document.getElementById("cancelReciboModal");
+      const confirmReciboModal = document.getElementById("confirmReciboModal");
+      const reciboDestinatarioNome = document.getElementById("reciboDestinatarioNome");
+      const reciboDestinatarioDoc = document.getElementById("reciboDestinatarioDoc");
 
       const tableNoPatio = document.getElementById("tableNoPatio");
       const tableConfirmada = document.getElementById("tableConfirmada");
@@ -6171,6 +6221,77 @@
         return `Serviço de guarda e custódia de veículo automotor realizado em pátio particular. Veículo: ${veiculo} de placa ${placa} Período de permanência:\n${entrada} a ${saida} (${dias} diárias) Valor total a pagar: ${total}. Dados para Pagamento: Fernando Vasconcellos de Albuquerque Lima CNPJ: 57.936.119/0001-98 Banco Inter (Código 077) Agência: 0001 Conta Corrente PJ: 44506284-3 PIX (CNPJ): 57.936.119/0001-98.`;
       }
 
+      function buildRecebimentoReciboText({ receivable, vehicle, destinatario, valor }) {
+        const agora = new Date().toISOString();
+        const placa = vehicle?.placa || "-";
+        const veiculo = [vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ") || "-";
+        const responsavel = receivable?.responsavel_pagamento || "-";
+        const periodoInicio = receivable?.period_start ? formatDateTime(receivable.period_start) : "-";
+        const periodoFim = receivable?.period_end ? formatDateTime(receivable.period_end) : "-";
+        return [
+          "RECIBO DE RECEBIMENTO",
+          "",
+          `Data: ${formatDateTime(agora)}`,
+          `Destinatário: ${destinatario}`,
+          `Responsável financeiro: ${responsavel}`,
+          `Veículo: ${placa} • ${veiculo}`,
+          `Período de cobrança: ${periodoInicio} até ${periodoFim}`,
+          `Valor recebido: ${formatCurrency(valor)}`,
+          "",
+          "Declaro que recebi o valor acima referente à guarda/pátio do veículo descrito.",
+          "",
+          "Assinatura: __________________________________________",
+        ].join("\n");
+      }
+
+      async function downloadReciboPdf({ receivable, vehicle, destinatarioNome, destinatarioDoc, valor }) {
+        await loadJsPdf();
+        const jsPdfCtor = window.jspdf?.jsPDF;
+        if (!jsPdfCtor) throw new Error("jsPDF indisponível");
+        const doc = new jsPdfCtor({ unit: "pt", format: "a4" });
+        const marginX = 48;
+        let y = 56;
+        const addLine = (label, value = "") => {
+          doc.setFont("helvetica", "bold");
+          doc.text(label, marginX, y);
+          y += 18;
+          doc.setFont("helvetica", "normal");
+          const lines = doc.splitTextToSize(value || "-", 500);
+          doc.text(lines, marginX, y);
+          y += lines.length * 15 + 10;
+        };
+
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        doc.text("RECIBO DE RECEBIMENTO", marginX, y);
+        y += 28;
+        doc.setFontSize(11);
+
+        const placa = vehicle?.placa || "-";
+        const veiculo = [vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ") || "-";
+        addLine("Data", formatDateTime(new Date().toISOString()));
+        addLine("Nome do direcionado", destinatarioNome);
+        addLine("CPF/CNPJ do direcionado", destinatarioDoc);
+        addLine("Responsável financeiro", receivable?.responsavel_pagamento || "-");
+        addLine("Veículo", `${placa} • ${veiculo}`);
+        addLine(
+          "Período de cobrança",
+          `${receivable?.period_start ? formatDateTime(receivable.period_start) : "-"} até ${
+            receivable?.period_end ? formatDateTime(receivable.period_end) : "-"
+          }`
+        );
+        addLine("Valor recebido", formatCurrency(valor));
+
+        y += 16;
+        doc.setFont("helvetica", "normal");
+        doc.text("Declaro que recebi o valor acima referente à guarda/pátio do veículo descrito.", marginX, y);
+        y += 48;
+        doc.text("Assinatura: __________________________________________", marginX, y);
+
+        const safePlate = (placa || "veiculo").replace(/[^a-z0-9_-]+/gi, "_");
+        doc.save(`recibo_recebimento_${safePlate}.pdf`);
+      }
+
       async function openNfseModal(vehicle) {
         nfseVehicleId = vehicle.id;
         nfseResumo.textContent = `Veículo: ${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`;
@@ -7267,7 +7388,7 @@
                     <button class="secondary" data-action="editar-conta-receber" data-id="${r.id}" title="Editar responsável, categoria, período e valor">Editar</button>
                     <button class="secondary" data-action="cobranca" data-id="${r.id}">Cobrança</button>
                     <button class="secondary" data-action="nota" data-id="${r.id}">Nota fiscal</button>
-                    <button class="secondary" data-action="receber" data-id="${r.id}">Pagamento</button>
+                    <button class="secondary" data-action="receber" data-id="${r.id}" title="Confirma o recebimento e gera recibo">Confirmar recebimento</button>
                   </td>
                 </tr>
               `);
@@ -7532,6 +7653,37 @@
       });
       closeTextModal.addEventListener("click", () => textModal.classList.add("hidden"));
       closeTextModal2.addEventListener("click", () => textModal.classList.add("hidden"));
+      closeReciboModal?.addEventListener("click", () => {
+        reciboModal.classList.add("hidden");
+        if (reciboModalResolver) {
+          reciboModalResolver(null);
+          reciboModalResolver = null;
+        }
+      });
+      cancelReciboModal?.addEventListener("click", () => {
+        reciboModal.classList.add("hidden");
+        if (reciboModalResolver) {
+          reciboModalResolver(null);
+          reciboModalResolver = null;
+        }
+      });
+      confirmReciboModal?.addEventListener("click", () => {
+        const nome = (reciboDestinatarioNome?.value || "").trim();
+        const doc = (reciboDestinatarioDoc?.value || "").trim();
+        if (!nome) {
+          alert("Informe o nome do direcionado.");
+          return;
+        }
+        if (!doc) {
+          alert("Informe o CPF ou CNPJ do direcionado.");
+          return;
+        }
+        reciboModal.classList.add("hidden");
+        if (reciboModalResolver) {
+          reciboModalResolver({ nome, doc });
+          reciboModalResolver = null;
+        }
+      });
       copyTextModal.addEventListener("click", async () => {
         if (!textModalBody.value) return;
         await navigator.clipboard.writeText(textModalBody.value);
@@ -7592,7 +7744,7 @@
         workflowModalConfig = null;
       });
 
-      [vehicleModal, partnerModal, dateModal, liberacaoModal, payableModal, fichaModal, nfseModal, textModal].forEach((modal) => {
+      [vehicleModal, partnerModal, dateModal, liberacaoModal, payableModal, fichaModal, nfseModal, textModal, reciboModal].forEach((modal) => {
         modal.addEventListener("click", (event) => {
           if (event.target === modal) {
             modal.classList.add("hidden");
@@ -7606,6 +7758,10 @@
               liberacaoModalResolver = null;
               workflowModalConfig = null;
             }
+            if (modal === reciboModal && reciboModalResolver) {
+              reciboModalResolver(null);
+              reciboModalResolver = null;
+            }
           }
         });
       });
@@ -7618,6 +7774,7 @@
 
       let dateModalResolver = null;
       let liberacaoModalResolver = null;
+      let reciboModalResolver = null;
       let workflowModalConfig = null;
       function openDateModal({ title, label, type = "date", value = "" }) {
         return new Promise((resolve) => {
@@ -7635,6 +7792,15 @@
         if (!row) return;
         row.classList.toggle("hidden", !visible);
         row.setAttribute("aria-hidden", visible ? "false" : "true");
+      }
+
+      function openReciboDestinatarioModal({ defaultNome = "", defaultDoc = "" }) {
+        return new Promise((resolve) => {
+          reciboModalResolver = resolve;
+          if (reciboDestinatarioNome) reciboDestinatarioNome.value = defaultNome;
+          if (reciboDestinatarioDoc) reciboDestinatarioDoc.value = defaultDoc;
+          reciboModal.classList.remove("hidden");
+        });
       }
 
       function openWorkflowStepModal({
@@ -9754,6 +9920,10 @@
             return;
           }
           const vehicle = state.vehicles.find((v) => v.id === receivable.vehicle_id);
+          const destinatarioInfo = await openReciboDestinatarioModal({
+            defaultNome: receivable.responsavel_pagamento || "",
+          });
+          if (!destinatarioInfo) return;
           const totalAtual = Number(receivable.valor || 0);
           if (totalAtual <= 0) {
             alert("Valor inválido para recebimento. Confira o valor do ciclo ou atualize os dados do veículo.");
@@ -9812,6 +9982,13 @@
           await Promise.all([loadReceivables(), loadCash()]);
           renderFinance();
           updateDashboard();
+          await downloadReciboPdf({
+            receivable,
+            vehicle,
+            destinatarioNome: destinatarioInfo.nome,
+            destinatarioDoc: destinatarioInfo.doc,
+            valor: totalAtual,
+          });
           return;
         }
 
