@@ -6527,27 +6527,7 @@
         doc.text("quitação referente ao pagamento das estadias referidas acima.", marginX + 12, y + 12);
         y += 28;
 
-        const textoDeclaracao =
-          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${valorTxt} do Sr(a). ${pessoa}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dEntrada} a ${dSaida}.`;
-
-        doc.setDrawColor(226, 232, 240);
-        doc.setLineWidth(0.35);
-        const declH = Math.max(76, Math.min(132, yFooterTop - y - 72));
-        doc.rect(marginX, y, contentW, declH, "S");
-        doc.setFont("times", "normal");
-        doc.setFontSize(10.5);
-        doc.setTextColor(30, 41, 59);
-        const innerW = contentW - 20;
-        const declLines = doc.splitTextToSize(textoDeclaracao, innerW);
-        const lineStep = 14.2;
-        const maxLines = Math.max(1, Math.floor((declH - 18) / lineStep));
-        const useLines = declLines.slice(0, maxLines);
-        let dy = y + 14;
-        useLines.forEach((ln) => {
-          doc.text(ln, marginX + 10, dy, { maxWidth: innerW });
-          dy += lineStep;
-        });
-        y += declH + 14;
+        y += 8;
 
         doc.setFont("helvetica", "italic");
         doc.setFontSize(9.5);
