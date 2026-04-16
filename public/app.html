@@ -3130,18 +3130,30 @@
         <div class="modal">
           <div class="modal-header">
             <div>
-              <h3>Liberação solicitada</h3>
+              <h3 id="liberacaoModalTitle">Fluxo VNP</h3>
             </div>
             <button class="modal-close" id="closeLiberacaoModal">Fechar</button>
           </div>
           <div class="form-grid">
-            <div>
-              <label>Quem solicitou a liberação?</label>
+            <div id="libRowSolicitante">
+              <label id="libSolicitanteLabel">Quem solicitou a liberação?</label>
               <input id="libSolicitante" type="text" placeholder="Nome do solicitante" />
             </div>
-            <div class="hidden" aria-hidden="true">
-              <label>Responsável financeiro (não usado neste passo)</label>
-              <input id="libResponsavelPagamento" type="text" placeholder="—" tabindex="-1" />
+            <div id="libRowConfirmador" class="hidden" aria-hidden="true">
+              <label id="libConfirmadorLabel">Quem confirmou a liberação?</label>
+              <input id="libConfirmador" type="text" placeholder="Nome do confirmador" />
+            </div>
+            <div id="libRowResponsavel" class="hidden" aria-hidden="true">
+              <label id="libResponsavelLabel">Quem será o responsável financeiro?</label>
+              <input id="libResponsavelPagamento" type="text" placeholder="Nome do responsável" />
+            </div>
+            <div id="libRowSolicRemocao" class="hidden" aria-hidden="true">
+              <label id="libSolicRemocaoLabel">Quem solicitou a remoção?</label>
+              <input id="libSolicitanteRemocao" type="text" placeholder="Nome do solicitante da remoção" />
+            </div>
+            <div id="libRowRemoveu" class="hidden" aria-hidden="true">
+              <label id="libRemoveuLabel">Quem removeu o veículo?</label>
+              <input id="libRemoveu" type="text" placeholder="Nome de quem removeu" />
             </div>
           </div>
           <div class="form-actions">
@@ -3354,12 +3366,18 @@
       const closeLiberacaoModal = document.getElementById("closeLiberacaoModal");
       const cancelLiberacaoModal = document.getElementById("cancelLiberacaoModal");
       const confirmLiberacaoModal = document.getElementById("confirmLiberacaoModal");
+      const liberacaoModalTitle = document.getElementById("liberacaoModalTitle");
+      const libRowSolicitante = document.getElementById("libRowSolicitante");
+      const libRowConfirmador = document.getElementById("libRowConfirmador");
+      const libRowResponsavel = document.getElementById("libRowResponsavel");
+      const libRowSolicRemocao = document.getElementById("libRowSolicRemocao");
+      const libRowRemoveu = document.getElementById("libRowRemoveu");
+      const libSolicitanteLabel = document.getElementById("libSolicitanteLabel");
       const libSolicitante = document.getElementById("libSolicitante");
-      const libEmpresaRemocao = document.getElementById("libEmpresaRemocao");
-      const libAssessoria = document.getElementById("libAssessoria");
+      const libConfirmador = document.getElementById("libConfirmador");
       const libResponsavelPagamento = document.getElementById("libResponsavelPagamento");
-      const libCadastrarEmpresa = document.getElementById("libCadastrarEmpresa");
-      const libCadastrarAssessoria = document.getElementById("libCadastrarAssessoria");
+      const libSolicitanteRemocao = document.getElementById("libSolicitanteRemocao");
+      const libRemoveu = document.getElementById("libRemoveu");
 
       const openPayableForm = document.getElementById("openPayableForm");
       const payableModal = document.getElementById("payableModal");
@@ -3686,6 +3704,42 @@
           return true;
         if (v.status === "REMocao_CONFIRMADA") return true;
         return false;
+      }
+
+      async function getVehicleWorkflowActors(vehicleId) {
+        const actors = {
+          solicitante: "",
+          confirmador: "",
+          responsavelFinanceiro: "",
+          solicitanteRemocao: "",
+          removeu: "",
+        };
+        if (!vehicleId) return actors;
+
+        const { data: events } = await supabase
+          .from("vehicle_events")
+          .select("tipo,responsavel,created_at")
+          .eq("vehicle_id", vehicleId)
+          .in("tipo", ["LIBERACAO_SOLICITADA", "LIBERACAO_CONFIRMADA", "REMOCAO_SOLICITADA", "REMOVIDO"])
+          .order("created_at", { ascending: false })
+          .limit(50);
+
+        const getByType = (type) => events?.find((e) => e.tipo === type)?.responsavel || "";
+        actors.solicitante = getByType("LIBERACAO_SOLICITADA");
+        actors.confirmador = getByType("LIBERACAO_CONFIRMADA");
+        actors.solicitanteRemocao = getByType("REMOCAO_SOLICITADA");
+        actors.removeu = getByType("REMOVIDO");
+
+        const { data: rec } = await supabase
+          .from("receivables")
+          .select("responsavel_pagamento,created_at")
+          .eq("user_id", effectiveUserId())
+          .eq("vehicle_id", vehicleId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        actors.responsavelFinanceiro = rec?.responsavel_pagamento || "";
+        return actors;
       }
 
       async function clearRemocaoSolicitadaOnVehicle(vehicleId) {
@@ -5904,31 +5958,24 @@
                 actionsCell = `<span class="notice">Sem permissão de ação</span>`;
               }
             } else {
-              const partes = [];
-              const libSol = `<button class="secondary" data-action="solicitar" data-id="${v.id}">Liberação solicitada</button>`;
-              const libConf = `<button class="secondary" data-action="confirmar_liberacao" data-id="${v.id}">Liberação confirmada</button>`;
-              const remAguardando = `<button class="secondary" data-action="confirmar" data-id="${v.id}">Aguardando remoção</button>`;
-              const remEf = `<button class="secondary" data-action="confirmar" data-id="${v.id}">Remoção efetivada</button>`;
+              let fluxoBtn = "";
               if (v.status === "NO_PATIO") {
-                partes.push(libSol);
+                fluxoBtn = `<button class="secondary" data-action="solicitar" data-id="${v.id}">Liberação solicitada</button>`;
               } else if (v.status === "LIBERACAO_SOLICITADA") {
-                partes.push(libConf);
+                fluxoBtn = `<button class="secondary" data-action="confirmar_liberacao" data-id="${v.id}">Confirmar liberação</button>`;
               } else if (v.status === "LIBERACAO_CONFIRMADA") {
-                // Fluxo operacional do VNP: após confirmar liberação, já pode aguardar remoção e efetivar saída.
-                partes.push(remAguardando);
+                if (isRemocaoSolicitada(v)) {
+                  fluxoBtn = `<button class="secondary" data-action="confirmar" data-id="${v.id}">VRP</button>`;
+                } else {
+                  fluxoBtn = `<button class="secondary" data-action="remocao_solicitada" data-id="${v.id}">Confirmar remoção</button>`;
+                }
               } else if (v.status === "REMocao_CONFIRMADA") {
-                partes.push(remEf);
+                fluxoBtn = `<button class="secondary" data-action="confirmar" data-id="${v.id}">VRP</button>`;
               }
-              const nextStepBtn = partes.join("");
-              // Voltar pode gerar confusão no fluxo do VNP; mantemos apenas para casos legados.
-              const podeVoltarFluxo = v.status === "NO_PATIO" && isRemocaoSolicitada(v);
-              const voltarBtn = podeVoltarFluxo
-                ? `<button class="secondary" data-action="voltar" data-id="${v.id}" title="Volta um passo no fluxo de liberação ou desfaz a remoção solicitada">Voltar</button>`
-                : "";
               actionsCell = `
-                  ${nextStepBtn}
+                  ${fluxoBtn}
                   <button class="secondary" data-action="ficha" data-id="${v.id}">Ficha</button>
-                  ${voltarBtn}
+                  <button class="secondary" data-action="voltar" data-id="${v.id}" title="Volta um passo no fluxo">Voltar</button>
                   <button class="secondary" data-action="editar" data-id="${v.id}">Editar</button>
                   <button class="secondary" data-action="apagar" data-id="${v.id}">Apagar</button>
                 `;
@@ -6236,8 +6283,9 @@
               situacao =
                 '<p class="notice" style="margin:0"><strong>Liberação solicitada</strong>. Próximo passo operacional: <strong>Liberação confirmada</strong> (define responsável financeiro e abre o ciclo).</p>';
             } else if (vehicle.status === "LIBERACAO_CONFIRMADA") {
-              situacao =
-                '<p class="notice" style="margin:0">Liberação <strong>confirmada</strong> (veículo apto a sair com responsável financeiro definido).<br />Próximo passo: <strong>Aguardando remoção</strong> (clique para efetivar VRP).</p>';
+              situacao = rem
+                ? '<p class="notice" style="margin:0">Remoção já <strong>confirmada</strong>. Próximo passo: botão <strong>VRP</strong> para finalizar a saída.</p>'
+                : '<p class="notice" style="margin:0">Liberação <strong>confirmada</strong>. Próximo passo: <strong>Confirmar remoção</strong>.</p>';
             } else if (vehicle.status === "REMocao_CONFIRMADA") {
               situacao =
                 '<p class="notice" style="margin:0">Estado <strong>legado</strong> de remoção solicitada. Próximo passo: <strong>Remoção efetivada</strong>.</p>';
@@ -6253,21 +6301,21 @@
               );
             } else if (vehicle.status === "LIBERACAO_SOLICITADA") {
               botoes.push(
-                `<button type="button" class="secondary" data-action="confirmar_liberacao" data-id="${vehicle.id}">Liberação confirmada</button>`
+                `<button type="button" class="secondary" data-action="confirmar_liberacao" data-id="${vehicle.id}">Confirmar liberação</button>`
               );
             } else if (vehicle.status === "LIBERACAO_CONFIRMADA") {
-              botoes.push(
-                `<button type="button" class="secondary" data-action="trocar-responsavel" data-id="${vehicle.id}">Trocar responsável</button>`
-              );
-              botoes.push(
-                `<button type="button" class="secondary" data-action="confirmar" data-id="${vehicle.id}">Aguardando remoção</button>`
-              );
+              if (rem) {
+                botoes.push(
+                  `<button type="button" class="secondary" data-action="confirmar" data-id="${vehicle.id}">VRP</button>`
+                );
+              } else {
+                botoes.push(
+                  `<button type="button" class="secondary" data-action="remocao_solicitada" data-id="${vehicle.id}">Confirmar remoção</button>`
+                );
+              }
             } else if (vehicle.status === "REMocao_CONFIRMADA") {
               botoes.push(
-                `<button type="button" class="secondary" data-action="trocar-responsavel" data-id="${vehicle.id}">Trocar responsável</button>`
-              );
-              botoes.push(
-                `<button type="button" class="secondary" data-action="confirmar" data-id="${vehicle.id}">Remoção efetivada</button>`
+                `<button type="button" class="secondary" data-action="confirmar" data-id="${vehicle.id}">VRP</button>`
               );
             }
             fichaSectionSlv.innerHTML = `${situacao}<div class="ficha-inline-actions">${botoes.join("")}</div>`;
@@ -7513,18 +7561,35 @@
           liberacaoModalResolver(null);
           liberacaoModalResolver = null;
         }
+        workflowModalConfig = null;
       });
       confirmLiberacaoModal.addEventListener("click", () => {
+        if (!workflowModalConfig) return;
         const solicitante = (libSolicitante.value || "").trim();
-        if (!solicitante) {
-          alert("Informe quem solicitou a liberação.");
-          return;
-        }
+        const confirmador = (libConfirmador.value || "").trim();
+        const responsavelFinanceiro = (libResponsavelPagamento.value || "").trim();
+        const solicitanteRemocao = (libSolicitanteRemocao.value || "").trim();
+        const removeu = (libRemoveu.value || "").trim();
+        const required = workflowModalConfig.requiredFields || [];
+        if (required.includes("solicitante") && !solicitante) return alert("Informe quem solicitou a liberação.");
+        if (required.includes("confirmador") && !confirmador) return alert("Informe quem confirmou a liberação.");
+        if (required.includes("responsavelFinanceiro") && !responsavelFinanceiro)
+          return alert("Informe o responsável financeiro.");
+        if (required.includes("solicitanteRemocao") && !solicitanteRemocao)
+          return alert("Informe quem solicitou a remoção.");
+        if (required.includes("removeu") && !removeu) return alert("Informe quem removeu o veículo.");
         liberacaoModal.classList.add("hidden");
         if (liberacaoModalResolver) {
-          liberacaoModalResolver({ solicitante });
+          liberacaoModalResolver({
+            solicitante,
+            confirmador,
+            responsavelFinanceiro,
+            solicitanteRemocao,
+            removeu,
+          });
           liberacaoModalResolver = null;
         }
+        workflowModalConfig = null;
       });
 
       [vehicleModal, partnerModal, dateModal, liberacaoModal, payableModal, fichaModal, nfseModal, textModal].forEach((modal) => {
@@ -7539,6 +7604,7 @@
             if (modal === liberacaoModal && liberacaoModalResolver) {
               liberacaoModalResolver(null);
               liberacaoModalResolver = null;
+              workflowModalConfig = null;
             }
           }
         });
@@ -7552,6 +7618,7 @@
 
       let dateModalResolver = null;
       let liberacaoModalResolver = null;
+      let workflowModalConfig = null;
       function openDateModal({ title, label, type = "date", value = "" }) {
         return new Promise((resolve) => {
           dateModalResolver = resolve;
@@ -7564,11 +7631,51 @@
         });
       }
 
-      function openSolicitarLiberacaoModal({ defaultSolicitante = "" }) {
+      function setWorkflowFieldVisibility(row, visible) {
+        if (!row) return;
+        row.classList.toggle("hidden", !visible);
+        row.setAttribute("aria-hidden", visible ? "false" : "true");
+      }
+
+      function openWorkflowStepModal({
+        title = "Fluxo VNP",
+        submitLabel = "Confirmar",
+        requiredFields = [],
+        values = {},
+        readonly = {},
+      }) {
         return new Promise((resolve) => {
           liberacaoModalResolver = resolve;
-          libSolicitante.value = defaultSolicitante || "";
-          libResponsavelPagamento.value = "";
+          workflowModalConfig = { requiredFields };
+
+          if (liberacaoModalTitle) liberacaoModalTitle.textContent = title;
+          if (confirmLiberacaoModal) confirmLiberacaoModal.textContent = submitLabel;
+          if (libSolicitanteLabel) libSolicitanteLabel.textContent = "Quem solicitou a liberação?";
+
+          setWorkflowFieldVisibility(libRowSolicitante, requiredFields.includes("solicitante") || !!values.solicitante);
+          setWorkflowFieldVisibility(libRowConfirmador, requiredFields.includes("confirmador") || !!values.confirmador);
+          setWorkflowFieldVisibility(
+            libRowResponsavel,
+            requiredFields.includes("responsavelFinanceiro") || !!values.responsavelFinanceiro
+          );
+          setWorkflowFieldVisibility(
+            libRowSolicRemocao,
+            requiredFields.includes("solicitanteRemocao") || !!values.solicitanteRemocao
+          );
+          setWorkflowFieldVisibility(libRowRemoveu, requiredFields.includes("removeu") || !!values.removeu);
+
+          libSolicitante.value = values.solicitante || "";
+          libConfirmador.value = values.confirmador || "";
+          libResponsavelPagamento.value = values.responsavelFinanceiro || "";
+          libSolicitanteRemocao.value = values.solicitanteRemocao || "";
+          libRemoveu.value = values.removeu || "";
+
+          libSolicitante.readOnly = !!readonly.solicitante;
+          libConfirmador.readOnly = !!readonly.confirmador;
+          libResponsavelPagamento.readOnly = !!readonly.responsavelFinanceiro;
+          libSolicitanteRemocao.readOnly = !!readonly.solicitanteRemocao;
+          libRemoveu.readOnly = !!readonly.removeu;
+
           liberacaoModal.classList.remove("hidden");
         });
       }
@@ -9027,9 +9134,21 @@
             alert("Esta ação só pode ser usada quando o veículo está em «Liberação solicitada».");
             return;
           }
-          const responsavelPagamento = prompt("Quem será o responsável financeiro (pagamento / diárias)?");
-          if (!responsavelPagamento || !String(responsavelPagamento).trim()) return;
-          const responsavel = String(responsavelPagamento).trim();
+          const actors = await getVehicleWorkflowActors(id);
+          const libData = await openWorkflowStepModal({
+            title: "Confirmar liberação",
+            submitLabel: "OK",
+            requiredFields: ["confirmador", "responsavelFinanceiro"],
+            values: {
+              solicitante: actors.solicitante,
+              confirmador: actors.confirmador,
+              responsavelFinanceiro: actors.responsavelFinanceiro,
+            },
+            readonly: { solicitante: true },
+          });
+          if (!libData) return;
+          const responsavel = String(libData.responsavelFinanceiro || "").trim();
+          const confirmador = String(libData.confirmador || "").trim();
           const { error: upErr } = await supabase
             .from("vehicles")
             .update({ status: "LIBERACAO_CONFIRMADA" })
@@ -9084,8 +9203,8 @@
           await supabase.from("vehicle_events").insert({
             vehicle_id: id,
             tipo: "LIBERACAO_CONFIRMADA",
-            responsavel,
-            descricao: `Liberação confirmada. Responsável financeiro: ${responsavel}.`,
+            responsavel: confirmador || responsavel,
+            descricao: `Liberação confirmada por ${confirmador || "-"}. Responsável financeiro: ${responsavel}.`,
           });
           await loadVehicles();
           await loadReceivables();
@@ -9101,13 +9220,33 @@
             alert("Veículo já consta como removido.");
             return;
           }
+          if (vehicle.status !== "LIBERACAO_CONFIRMADA") {
+            alert("A confirmação de remoção só pode ser feita após a liberação confirmada.");
+            return;
+          }
           if (isRemocaoSolicitada(vehicle)) {
             alert("A remoção já foi solicitada para este veículo.");
             return;
           }
-          const solicitanteRemocao = prompt("Quem solicitou a remoção?");
-          if (!solicitanteRemocao || !String(solicitanteRemocao).trim()) return;
-          const por = String(solicitanteRemocao).trim();
+          const actors = await getVehicleWorkflowActors(id);
+          const remData = await openWorkflowStepModal({
+            title: "Confirmar remoção",
+            submitLabel: "OK",
+            requiredFields: ["solicitanteRemocao"],
+            values: {
+              solicitante: actors.solicitante,
+              confirmador: actors.confirmador,
+              responsavelFinanceiro: actors.responsavelFinanceiro,
+              solicitanteRemocao: actors.solicitanteRemocao,
+            },
+            readonly: {
+              solicitante: true,
+              confirmador: true,
+              responsavelFinanceiro: true,
+            },
+          });
+          if (!remData) return;
+          const por = String(remData.solicitanteRemocao || "").trim();
           const agora = new Date().toISOString();
           const { error: upErr } = await supabase
             .from("vehicles")
@@ -9237,7 +9376,11 @@
         }
 
         if (action === "solicitar") {
-          const libData = await openSolicitarLiberacaoModal({});
+          const libData = await openWorkflowStepModal({
+            title: "Liberação solicitada",
+            submitLabel: "OK",
+            requiredFields: ["solicitante"],
+          });
           if (!libData) return;
           const { solicitante } = libData;
           if (!solicitante || !String(solicitante).trim()) {
@@ -9277,21 +9420,32 @@
             );
             return;
           }
-          const responsavel = prompt("Quem removeu o veículo?");
-          if (!responsavel) return;
-          const dataSaidaInput = await openDateModal({
-            title: "Data e hora da remoção",
-            label: "Data e hora",
-            type: "datetime-local",
-            value: toLocalInput(new Date()),
-          });
-          if (!dataSaidaInput) return;
-          const parsed = new Date(dataSaidaInput);
-          if (Number.isNaN(parsed.getTime())) {
-            alert("Data inválida. Selecione novamente.");
+          if (vehicle.status === "LIBERACAO_CONFIRMADA" && !isRemocaoSolicitada(vehicle)) {
+            alert("Antes de enviar para VRP, confirme a remoção (agendamento).");
             return;
           }
-          const dataSaida = parsed.toISOString();
+          const actors = await getVehicleWorkflowActors(id);
+          const vrpData = await openWorkflowStepModal({
+            title: "VRP - Efetivar saída",
+            submitLabel: "OK",
+            requiredFields: ["removeu"],
+            values: {
+              solicitante: actors.solicitante,
+              confirmador: actors.confirmador,
+              responsavelFinanceiro: actors.responsavelFinanceiro,
+              solicitanteRemocao: actors.solicitanteRemocao,
+              removeu: actors.removeu,
+            },
+            readonly: {
+              solicitante: true,
+              confirmador: true,
+              responsavelFinanceiro: true,
+              solicitanteRemocao: true,
+            },
+          });
+          if (!vrpData) return;
+          const responsavel = String(vrpData.removeu || "").trim();
+          const dataSaida = new Date().toISOString();
           const previousStatus = vehicle.status;
           const { error: eventError } = await supabase.from("vehicle_events").insert({
             vehicle_id: id,
