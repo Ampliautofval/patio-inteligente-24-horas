@@ -1306,6 +1306,24 @@
         overflow-x: auto;
         border-radius: 12px;
       }
+      /* Livro do financeiro: última coluna (Ações) fica sempre visível ao deslizar horizontalmente */
+      #viewFinanceiro .finance-ledger {
+        min-width: 880px;
+      }
+      #viewFinanceiro .finance-ledger thead th:last-child,
+      #viewFinanceiro .finance-ledger tbody td:last-child {
+        position: sticky;
+        right: 0;
+        z-index: 2;
+        background: rgba(22, 27, 34, 0.97);
+        box-shadow: -8px 0 18px rgba(0, 0, 0, 0.28);
+        vertical-align: top;
+      }
+      [data-theme="light"] #viewFinanceiro .finance-ledger thead th:last-child,
+      [data-theme="light"] #viewFinanceiro .finance-ledger tbody td:last-child {
+        background: rgba(248, 250, 252, 0.98);
+        box-shadow: -8px 0 14px rgba(15, 23, 42, 0.1);
+      }
       .table thead th {
         text-align: left;
         padding: 12px 10px;
@@ -2648,8 +2666,11 @@
                 </div>
               </div>
               <div class="section-card" style="margin-top: 18px;">
+                <p id="financeCaixaScrollNotice" class="notice hidden" style="margin: 0 0 10px; font-size: 12px">
+                  A coluna «Ações» fica à direita. Se não a vir, deslize esta tabela para o lado (barra de deslocamento por baixo).
+                </p>
                 <div class="table-wrap">
-                  <table class="table">
+                  <table class="table finance-ledger">
                   <thead id="financeHead"></thead>
                   <tbody id="tableFinance"></tbody>
                   </table>
@@ -6629,6 +6650,8 @@
       }
 
       function renderFinance() {
+        const financeCaixaScrollNotice = document.getElementById("financeCaixaScrollNotice");
+        if (financeCaixaScrollNotice) financeCaixaScrollNotice.classList.add("hidden");
         const openReceivablesFinanceiro = state.receivables.filter((r) => receivableIsContaReceberFinanceiro(r));
         const openPayables = state.payables.filter((p) => p.status === "EM_ABERTO");
         const financePlateNorm = normalizePlateSearch(financePlateQuery);
@@ -7257,6 +7280,7 @@
         }
 
         if (currentFinanceView === "caixa") {
+          if (financeCaixaScrollNotice) financeCaixaScrollNotice.classList.remove("hidden");
           financeHead.innerHTML = `
             <tr>
               <th>Data</th>
@@ -7265,11 +7289,21 @@
               <th>Valor</th>
               <th>Ações</th>
             </tr>`;
+          const receivableByContaId = (contaId) => {
+            if (contaId == null || contaId === "") return null;
+            const sid = String(contaId);
+            return state.receivables.find((r) => String(r.id) === sid) || null;
+          };
+          const payableByContaId = (contaId) => {
+            if (contaId == null || contaId === "") return null;
+            const sid = String(contaId);
+            return state.payables.find((p) => String(p.id) === sid) || null;
+          };
           state.cash
             .filter((mov) => {
               if (!financePlateNorm) return true;
               if (mov.tipo_conta === "RECEBER") {
-                const rec = state.receivables.find((r) => r.id === mov.conta_id);
+                const rec = receivableByContaId(mov.conta_id);
                 if (rec) return matchesVehicleId(rec.vehicle_id);
                 const d = normalizePlateSearch(mov.descricao || "");
                 return d.includes(financePlateNorm);
@@ -7277,20 +7311,16 @@
               const dMov = normalizePlateSearch(mov.descricao || "");
               if (dMov.includes(financePlateNorm)) return true;
               if (mov.tipo_conta === "PAGAR" && mov.conta_id) {
-                const pay = state.payables.find((p) => p.id === mov.conta_id);
+                const pay = payableByContaId(mov.conta_id);
                 if (pay) return payableDescMatchesPlate(pay);
               }
               return false;
             })
             .forEach((mov) => {
               const recVinculado =
-                mov.tipo_conta === "RECEBER" && mov.conta_id
-                  ? state.receivables.find((r) => r.id === mov.conta_id)
-                  : null;
+                mov.tipo_conta === "RECEBER" && mov.conta_id ? receivableByContaId(mov.conta_id) : null;
               const payVinculado =
-                mov.tipo_conta === "PAGAR" && mov.conta_id
-                  ? state.payables.find((p) => p.id === mov.conta_id)
-                  : null;
+                mov.tipo_conta === "PAGAR" && mov.conta_id ? payableByContaId(mov.conta_id) : null;
               const receberQuitadoPodeGestionar =
                 mov.tipo_conta === "RECEBER" && recVinculado && recVinculado.status === "PAGO";
               const pagarQuitadoPodeGestionar =
