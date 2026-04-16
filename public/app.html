@@ -6345,7 +6345,7 @@
           `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${formatCurrency(
             valor
           )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dEntrada} a ${dSaida}.\n\nPor este documento, dou plena e total\nquitação referente ao pagamento das estadias referidas acima.`;
-        const parts = [corpo, "", "_______________________________", "Assinatura do emitente", "", reciboFooterLine(cfg)];
+        const parts = [corpo, "", reciboFooterLine(cfg)];
         return parts.join("\n");
       }
 
@@ -6450,11 +6450,7 @@
         doc.setFontSize(13.5);
         doc.text("RECIBO DE QUITAÇÃO DE ESTADIAS", pageW / 2, y, { align: "center" });
         y += 14;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8.5);
-        doc.setTextColor(100, 116, 139);
-        doc.text("Valores de veículo e período conforme registo do sistema.", pageW / 2, y, { align: "center" });
-        y += 40;
+        y += 26;
 
         const emitBoxH = 54;
         doc.setFillColor(248, 250, 252);
@@ -6516,7 +6512,7 @@
         drawBar("VEÍCULO E PERÍODO");
         rowL("Veículo:", veiculoDesc);
         rowL("Placa:", placa);
-        rowL(`Estadias ${dEntrada} até ${dSaida}`, "");
+        rowL("Estadias:", `${dEntrada} até ${dSaida}`);
         rowL("Valor recebido:", valorTxt);
         y += 20;
         doc.setFont("times", "italic");
@@ -6534,13 +6530,6 @@
         doc.setTextColor(71, 85, 105);
         doc.text(`Local e data: Recife-PE, ${formatDateBr(new Date().toISOString())}.`, marginX + 10, y);
         y += 22;
-        doc.setDrawColor(148, 163, 184);
-        doc.setLineWidth(0.35);
-        doc.line(marginX + 10, y, marginX + contentW - 10, y);
-        y += 6;
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.text("Assinatura do emitente", marginX + 10, y + 12);
 
         doc.setDrawColor(203, 213, 225);
         doc.setLineWidth(0.6);
