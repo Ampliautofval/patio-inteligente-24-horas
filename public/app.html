@@ -2243,6 +2243,19 @@
             <div id="appHeaderMenu" class="header-menu-dropdown hidden" aria-label="Menu principal">
               <button type="button" class="header-menu-top" data-view="dashboard">Painel</button>
 
+              <details class="header-menu-details" id="headerDetailsLista">
+                <summary>Lista</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-lista-subview="vnp">VNP</button>
+                  <button type="button" data-lista-subview="vrp">VRP</button>
+                  <button type="button" data-lista-subview="aguardando_lancamento" data-lista-gestor-hide="1">Aguardando lançamento</button>
+                  <button type="button" data-lista-subview="receber" data-lista-gestor-hide="1">Contas a receber</button>
+                  <button type="button" data-lista-subview="receber_alerta" data-lista-gestor-hide="1">Recebimentos em alerta</button>
+                  <button type="button" data-lista-subview="pagar" data-lista-gestor-hide="1">Contas a pagar</button>
+                  <button type="button" data-lista-subview="caixa" data-lista-gestor-hide="1">Caixa</button>
+                </div>
+              </details>
+
               <details class="header-menu-details" id="headerDetailsPatio">
                 <summary>Gestão de pátio</summary>
                 <div class="header-menu-nested">
@@ -2548,6 +2561,66 @@
                   <div class="finance-chart-legend">Linha mostra a evolução esperada do saldo</div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewLista" class="panel hidden" style="max-width: 1200px; margin: 0 auto">
+          <div class="toolbar">
+            <div>
+              <p class="module-kicker module-kicker--finance" style="margin: 0 0 4px">Consulta</p>
+              <h2 style="margin: 0">Lista</h2>
+              <p class="subtitle" style="margin: 6px 0 0; max-width: 42rem">
+                Filtros comuns (localizador, assessoria e texto tipo banco) aplicam-se à área escolhida. Para editar ou lançar valores, use as abas
+                <strong>Gestão de pátio</strong> e <strong>Gestão financeira</strong>.
+              </p>
+            </div>
+            <div class="actions">
+              <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar">X</button>
+            </div>
+          </div>
+          <div class="filter-bar" style="margin: 0 0 14px; flex-wrap: wrap; gap: 10px; align-items: flex-end">
+            <div>
+              <label for="listaFilterLocator">Localizador</label>
+              <select id="listaFilterLocator" style="min-width: 11rem">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="listaFilterAssessoria">Assessoria</label>
+              <select id="listaFilterAssessoria" style="min-width: 11rem">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 12rem">
+              <label for="listaFilterBanco">Banco / texto</label>
+              <input
+                id="listaFilterBanco"
+                type="search"
+                placeholder="Procura em observações, responsável, descrição…"
+                autocomplete="off"
+                style="width: 100%; max-width: 22rem"
+              />
+            </div>
+            <button type="button" class="secondary" id="listaFiltersClear">Limpar filtros</button>
+            <button type="button" id="listaFiltersApply">Atualizar lista</button>
+            <button type="button" class="secondary" id="listaFiltersPrint">Imprimir / PDF</button>
+          </div>
+          <div class="subnav" id="listaSubnav" style="margin-bottom: 12px; flex-wrap: wrap">
+            <button type="button" data-lista-subview="vnp">VNP</button>
+            <button type="button" data-lista-subview="vrp">VRP</button>
+            <button type="button" data-lista-subview="aguardando_lancamento" data-lista-gestor-hide="1">Aguardando lançamento</button>
+            <button type="button" data-lista-subview="receber" data-lista-gestor-hide="1">Contas a receber</button>
+            <button type="button" data-lista-subview="receber_alerta" data-lista-gestor-hide="1">Recebimentos em alerta</button>
+            <button type="button" data-lista-subview="pagar" data-lista-gestor-hide="1">Contas a pagar</button>
+            <button type="button" data-lista-subview="caixa" data-lista-gestor-hide="1">Caixa</button>
+          </div>
+          <div class="section-card" style="margin: 0">
+            <div class="table-wrap">
+              <table class="table stacked">
+                <thead id="listaTableHead"></thead>
+                <tbody id="listaTableBody"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -3892,6 +3965,10 @@
       let financePlateInputTimer = null;
       let vlsListFilterLocatorId = "";
       let vlsListFilterAssessoriaId = "";
+      let listaFilterLocatorId = "";
+      let listaFilterAssessoriaId = "";
+      let listaFilterBanco = "";
+      let currentListaView = "vnp";
       let editingVehicleId = null;
       let editingVehicleData = null;
       let nfseVehicleId = null;
@@ -4266,6 +4343,343 @@
           assSel.value = "";
           vlsListFilterAssessoriaId = "";
         }
+      }
+
+      function readListaFiltersFromDom() {
+        listaFilterLocatorId = document.getElementById("listaFilterLocator")?.value || "";
+        listaFilterAssessoriaId = document.getElementById("listaFilterAssessoria")?.value || "";
+        listaFilterBanco = (document.getElementById("listaFilterBanco")?.value || "").trim();
+      }
+
+      function syncListaFilterSelects() {
+        const locSel = document.getElementById("listaFilterLocator");
+        const assSel = document.getElementById("listaFilterAssessoria");
+        if (!locSel || !assSel) return;
+        const parceiros = state.partners.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const assessorias = state.partners.filter((p) => p.tipo === "ASSESSORIA");
+        const opt = (id, label) => {
+          const vid = String(id).replace(/"/g, "&quot;");
+          return `<option value="${vid}">${escapeHtml(label)}</option>`;
+        };
+        locSel.innerHTML =
+          `<option value="">Todos os localizadores</option>` +
+          parceiros.map((p) => opt(p.id, p.nome || "-")).join("");
+        assSel.innerHTML =
+          `<option value="">Todas as assessorias</option>` +
+          assessorias.map((p) => opt(p.id, p.nome || "-")).join("");
+        if (parceiros.some((p) => p.id === listaFilterLocatorId)) locSel.value = listaFilterLocatorId;
+        else {
+          locSel.value = "";
+          listaFilterLocatorId = "";
+        }
+        if (assessorias.some((p) => p.id === listaFilterAssessoriaId)) assSel.value = listaFilterAssessoriaId;
+        else {
+          assSel.value = "";
+          listaFilterAssessoriaId = "";
+        }
+      }
+
+      function maybeRefreshListaPanel() {
+        const el = document.getElementById("viewLista");
+        if (el && !el.classList.contains("hidden")) renderListaPanel();
+      }
+
+      function listaTextoBancoMatch(...parts) {
+        const q = (listaFilterBanco || "").trim().toLowerCase();
+        if (!q) return true;
+        const blob = parts
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return blob.includes(q);
+      }
+
+      function listaVehicleMatches(v) {
+        if (!v) return false;
+        if (listaFilterLocatorId && v.localizador_id !== listaFilterLocatorId) return false;
+        if (listaFilterAssessoriaId && v.assessoria_id !== listaFilterAssessoriaId) return false;
+        return listaTextoBancoMatch(v.observacoes, v.placa, state.settings?.conta_bancaria);
+      }
+
+      function listaReceivableMatches(r, vehicle) {
+        if (listaFilterLocatorId && (vehicle?.localizador_id || "") !== listaFilterLocatorId) return false;
+        if (listaFilterAssessoriaId && (vehicle?.assessoria_id || "") !== listaFilterAssessoriaId) return false;
+        return listaTextoBancoMatch(
+          r.responsavel_pagamento,
+          r.receivable_category,
+          vehicle?.observacoes,
+          vehicle?.placa,
+          state.settings?.conta_bancaria
+        );
+      }
+
+      function listaPayableMatches(p) {
+        const locName = listaFilterLocatorId
+          ? state.partners.find((x) => x.id === listaFilterLocatorId)?.nome || ""
+          : "";
+        const assName = listaFilterAssessoriaId
+          ? state.partners.find((x) => x.id === listaFilterAssessoriaId)?.nome || ""
+          : "";
+        const desc = (p.descricao || "").toLowerCase();
+        if (listaFilterLocatorId && locName && !desc.includes(String(locName).toLowerCase())) return false;
+        if (listaFilterAssessoriaId && assName && !desc.includes(String(assName).toLowerCase())) return false;
+        return listaTextoBancoMatch(p.descricao, p.payable_category, state.settings?.conta_bancaria);
+      }
+
+      function listaCashMatches(mov) {
+        const rec =
+          mov.tipo_conta === "RECEBER" && mov.conta_id != null && mov.conta_id !== ""
+            ? state.receivables.find((r) => String(r.id) === String(mov.conta_id))
+            : null;
+        const pay =
+          mov.tipo_conta === "PAGAR" && mov.conta_id != null && mov.conta_id !== ""
+            ? state.payables.find((p) => String(p.id) === String(mov.conta_id))
+            : null;
+        const v = rec ? state.vehicles.find((x) => x.id === rec.vehicle_id) : null;
+        if (rec && !listaReceivableMatches(rec, v)) return false;
+        if (pay && !listaPayableMatches(pay)) return false;
+        if (!rec && !pay) {
+          if (listaFilterLocatorId || listaFilterAssessoriaId) return false;
+          return listaTextoBancoMatch(mov.descricao, state.settings?.conta_bancaria);
+        }
+        return listaTextoBancoMatch(mov.descricao);
+      }
+
+      function syncListaSubnavActive() {
+        document.querySelectorAll("#listaSubnav button[data-lista-subview]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-lista-subview") === currentListaView);
+        });
+      }
+
+      function buildListaVnpVehicleRows() {
+        const vehicles = (state.vehicles || []).filter(listaVehicleMatches);
+        const byStatus = {
+          NO_PATIO: [],
+          LIBERACAO_SOLICITADA: [],
+          LIBERACAO_CONFIRMADA: [],
+          REMocao_CONFIRMADA: [],
+          REMOVIDO: [],
+        };
+        vehicles.forEach((v) => {
+          if (byStatus[v.status]) byStatus[v.status].push(v);
+        });
+        const vlsMerged = mergeVlsItems(byStatus);
+        const vnpUnified = sortVehiclesByRegistroDesc([...vlsMerged, ...byStatus.NO_PATIO]);
+        return vnpUnified;
+      }
+
+      function renderListaPanel() {
+        readListaFiltersFromDom();
+        const head = document.getElementById("listaTableHead");
+        const body = document.getElementById("listaTableBody");
+        if (!head || !body) return;
+        syncListaSubnavActive();
+        const vehicleById = new Map((state.vehicles || []).map((v) => [v.id, v]));
+        const semVal = isGestorPista;
+        const locLabel = (id) => state.partners.find((p) => p.id === id)?.nome || "-";
+
+        if (currentListaView === "vnp") {
+          head.innerHTML = `<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Situação</th>${
+            semVal ? "" : "<th>Valor estimado</th>"
+          }</tr>`;
+          const items = buildListaVnpVehicleRows();
+          if (!items.length) {
+            body.innerHTML = `<tr><td colspan="7" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = items
+            .map((v) => {
+              const sit =
+                v.status === "NO_PATIO"
+                  ? isRemocaoSolicitada(v)
+                    ? "No pátio · remoção solicitada"
+                    : "No pátio"
+                  : VLS_STATUS_LABELS[v.status] || v.status || "-";
+              const val = semVal ? "" : `<td data-label="Valor">${escapeHtml(formatCurrency(calcTotal(v)))}</td>`;
+              return `<tr>
+                <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
+                <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
+                <td data-label="Localizador">${escapeHtml(locLabel(v.localizador_id))}</td>
+                <td data-label="Assessoria">${escapeHtml(locLabel(v.assessoria_id))}</td>
+                <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
+                <td data-label="Situação">${escapeHtml(sit)}</td>
+                ${val}
+              </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        if (currentListaView === "vrp") {
+          head.innerHTML = `<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Saída</th>${
+            semVal ? "" : "<th>Valor</th>"
+          }</tr>`;
+          const items = sortVehiclesByRegistroDesc(
+            (state.vehicles || []).filter((v) => v.status === "REMOVIDO" && listaVehicleMatches(v))
+          );
+          if (!items.length) {
+            body.innerHTML = `<tr><td colspan="7" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = items
+            .map((v) => {
+              const val = semVal ? "" : `<td data-label="Valor">${escapeHtml(formatCurrency(calcTotal(v)))}</td>`;
+              return `<tr>
+                <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
+                <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
+                <td data-label="Localizador">${escapeHtml(locLabel(v.localizador_id))}</td>
+                <td data-label="Assessoria">${escapeHtml(locLabel(v.assessoria_id))}</td>
+                <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
+                <td data-label="Saída">${escapeHtml(formatDateTime(v.data_saida))}</td>
+                ${val}
+              </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        if (currentListaView === "aguardando_lancamento") {
+          head.innerHTML = `<tr><th>Resumo</th><th>Valor</th><th>Estado</th></tr>`;
+          const rows = [];
+          state.receivables
+            .filter((r) => receivableNaFilaAguardandoTriagem(r))
+            .filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)))
+            .forEach((r) => {
+              const vehicle = vehicleById.get(r.vehicle_id);
+              const vehicleInfo = vehicle
+                ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+                : "Veículo não encontrado";
+              const ini = r.period_start ? formatDate(r.period_start) : "-";
+              const fim = r.period_end
+                ? formatDate(r.period_end)
+                : vehicle?.data_saida
+                  ? formatDate(vehicle.data_saida)
+                  : "-";
+              rows.push(`<tr>
+                <td data-label="Resumo">${escapeHtml(r.responsavel_pagamento || "—")}<br /><span class="notice">${escapeHtml(
+                  vehicleInfo
+                )}</span><br />${escapeHtml(ini)} → ${escapeHtml(fim)}</td>
+                <td data-label="Valor">${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
+                <td data-label="Estado"><span class="tag warning">Aguardando triagem</span></td>
+              </tr>`);
+            });
+          body.innerHTML = rows.length
+            ? rows.join("")
+            : `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+          return;
+        }
+
+        if (currentListaView === "receber" || currentListaView === "receber_alerta") {
+          head.innerHTML = `<tr><th>Resumo</th><th>Valor</th><th>Estado</th></tr>`;
+          const openList = (state.receivables || []).filter((r) => receivableIsContaReceberFinanceiro(r));
+          const overdueReceivables = openList.filter((r) => {
+            if (!r.created_at) return false;
+            const created = new Date(r.created_at).getTime();
+            const days = Math.floor((Date.now() - created) / 86400000);
+            return days > 10;
+          });
+          let list = openList.filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)));
+          if (currentListaView === "receber_alerta") {
+            list = list.filter((r) => overdueReceivables.some((o) => o.id === r.id));
+          }
+          if (!list.length) {
+            body.innerHTML = `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = list
+            .map((r) => {
+              const vehicle = vehicleById.get(r.vehicle_id);
+              const vehicleInfo = vehicle
+                ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+                : "—";
+              const st = r.status === "EM_ABERTO" ? "Em aberto" : r.status || "—";
+              return `<tr>
+              <td data-label="Resumo">${escapeHtml(r.responsavel_pagamento || "—")}<br /><span class="notice">${escapeHtml(
+                vehicleInfo
+              )}</span></td>
+              <td data-label="Valor">${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
+              <td data-label="Estado">${escapeHtml(st)}</td>
+            </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        if (currentListaView === "pagar") {
+          head.innerHTML = `<tr><th>Descrição</th><th>Vencimento</th><th>Valor</th><th>Estado</th></tr>`;
+          const list = (state.payables || []).filter((p) => p.status === "EM_ABERTO" && listaPayableMatches(p));
+          if (!list.length) {
+            body.innerHTML = `<tr><td colspan="4" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = list
+            .map((p) => {
+              return `<tr>
+              <td data-label="Descrição">${escapeHtml(p.descricao || "—")}</td>
+              <td data-label="Vencimento">${escapeHtml(p.data_vencimento ? formatDate(p.data_vencimento) : "—")}</td>
+              <td data-label="Valor">${escapeHtml(formatCurrency(Number(p.valor || 0)))}</td>
+              <td data-label="Estado">${escapeHtml(p.status || "—")}</td>
+            </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        if (currentListaView === "caixa") {
+          head.innerHTML = `<tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr>`;
+          const list = (state.cash || []).filter(listaCashMatches);
+          if (!list.length) {
+            body.innerHTML = `<tr><td colspan="4" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = list
+            .map((mov) => {
+              return `<tr>
+              <td data-label="Data">${escapeHtml(formatDateTime(mov.data_movimento))}</td>
+              <td data-label="Tipo">${escapeHtml(mov.tipo_conta || "—")}</td>
+              <td data-label="Descrição">${escapeHtml(mov.descricao || "—")}</td>
+              <td data-label="Valor">${escapeHtml(formatCurrency(Number(mov.valor || 0)))}</td>
+            </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        head.innerHTML = "";
+        body.innerHTML = `<tr><td class="notice">Vista de lista não reconhecida.</td></tr>`;
+      }
+
+      function runListaPrintDocument() {
+        readListaFiltersFromDom();
+        renderListaPanel();
+        const nomePatio = state.settings?.nome_patio || "Pátio";
+        const headHtml = document.getElementById("listaTableHead")?.innerHTML || "";
+        const bodyHtml = document.getElementById("listaTableBody")?.innerHTML || "";
+        const filtros = [
+          listaFilterLocatorId ? `Localizador: ${state.partners.find((p) => p.id === listaFilterLocatorId)?.nome || listaFilterLocatorId}` : "",
+          listaFilterAssessoriaId ? `Assessoria: ${state.partners.find((p) => p.id === listaFilterAssessoriaId)?.nome || listaFilterAssessoriaId}` : "",
+          listaFilterBanco ? `Texto: ${listaFilterBanco}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        const viewLabel = document.querySelector(`#listaSubnav button[data-lista-subview="${currentListaView}"]`)?.textContent?.trim() || currentListaView;
+        const meta = [viewLabel, filtros || "Sem filtros adicionais", `Emitido: ${formatDateTime(new Date().toISOString())}`].join(" · ");
+        const printCss = `
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
+  h1 { font-size: 1.2rem; margin: 0 0 6px; }
+  .meta { font-size: 0.82rem; color: #444; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 12mm; }`;
+        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>${escapeHtml(
+          nomePatio
+        )} — Lista</title><style>${printCss}</style></head><body>
+  <h1>${escapeHtml(nomePatio)} — Lista · ${escapeHtml(viewLabel)}</h1>
+  <div class="meta">${escapeHtml(meta)}</div>
+  <table><thead>${headHtml}</thead><tbody>${bodyHtml}</tbody></table>
+</body></html>`;
+        printHtmlInHiddenIframe(html, { iframeTitle: "Impressão lista", closeModalId: null });
       }
 
       function printHtmlInHiddenIframe(html, opts = {}) {
@@ -5639,6 +6053,9 @@
         document.getElementById("track-manager-hide-values-style")?.remove();
         document.getElementById("vehicleForm")?.classList.remove("operador-simplified");
         document.querySelectorAll("#appHeaderMenu .header-menu-details").forEach((el) => el.classList.remove("hidden"));
+        document.querySelectorAll("#headerDetailsLista [data-lista-gestor-hide], #listaSubnav [data-lista-gestor-hide]").forEach((el) => {
+          el.classList.remove("hidden");
+        });
         document.querySelectorAll("#headerDetailsPatio [data-header-patio-sub]").forEach((el) => el.classList.remove("hidden"));
         document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((btn) => {
           btn.style.display = "";
@@ -5676,6 +6093,9 @@
         document.getElementById("headerDetailsFinance")?.classList.add("hidden");
         document.getElementById("headerDetailsConfig")?.classList.add("hidden");
         document.getElementById("headerDetailsParceiros")?.classList.add("hidden");
+        document.querySelectorAll("#headerDetailsLista [data-lista-gestor-hide], #listaSubnav [data-lista-gestor-hide]").forEach((el) => {
+          el.classList.add("hidden");
+        });
         document
           .querySelectorAll(
             '#headerDetailsPatio [data-header-patio-sub="removidos"], #headerDetailsPatio [data-header-patio-sub="nfse_pendente"]'
@@ -5777,6 +6197,7 @@
         state.partners = data || [];
         renderPartners();
         renderPartnerOptions();
+        maybeRefreshListaPanel();
       }
 
       async function loadVehicles() {
@@ -5791,6 +6212,7 @@
         }
         state.vehicles = data || [];
         renderVehicles();
+        maybeRefreshListaPanel();
       }
 
       async function loadReceivables() {
@@ -5804,6 +6226,7 @@
           return;
         }
         state.receivables = data || [];
+        maybeRefreshListaPanel();
       }
 
       async function loadPayables() {
@@ -5817,6 +6240,7 @@
           return;
         }
         state.payables = data || [];
+        maybeRefreshListaPanel();
       }
 
       async function loadCash() {
@@ -5830,6 +6254,7 @@
           return;
         }
         state.cash = data || [];
+        maybeRefreshListaPanel();
       }
 
       async function loadSettings() {
@@ -5863,6 +6288,7 @@
             if (!opErr) state.settings.operational_month = curYm;
           }
         }
+        maybeRefreshListaPanel();
       }
 
       function currentYearMonthLocal() {
@@ -8159,6 +8585,7 @@
         } else {
           tableFinance.innerHTML = rows.join("");
         }
+        maybeRefreshListaPanel();
       }
 
       function setFinanceView(view) {
@@ -8603,6 +9030,32 @@
         renderVehicles();
       });
 
+      document.getElementById("listaSubnav")?.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-lista-subview]");
+        if (!btn) return;
+        openListaSubview(btn.getAttribute("data-lista-subview"));
+      });
+      document.getElementById("listaFiltersApply")?.addEventListener("click", () => {
+        readListaFiltersFromDom();
+        renderListaPanel();
+      });
+      document.getElementById("listaFiltersPrint")?.addEventListener("click", () => {
+        runListaPrintDocument();
+      });
+      document.getElementById("listaFiltersClear")?.addEventListener("click", () => {
+        listaFilterLocatorId = "";
+        listaFilterAssessoriaId = "";
+        listaFilterBanco = "";
+        const loc = document.getElementById("listaFilterLocator");
+        const ass = document.getElementById("listaFilterAssessoria");
+        const banco = document.getElementById("listaFilterBanco");
+        if (loc) loc.value = "";
+        if (ass) ass.value = "";
+        if (banco) banco.value = "";
+        syncListaFilterSelects();
+        renderListaPanel();
+      });
+
       document.getElementById("closePatioPartnerPrintModal")?.addEventListener("click", () => {
         document.getElementById("patioPartnerPrintModal")?.classList.add("hidden");
       });
@@ -8801,6 +9254,7 @@
         if (view === "patio") menu.querySelector("#headerDetailsPatio")?.classList.add("header-menu-details--current");
         else if (view === "parceiros") menu.querySelector("#headerDetailsParceiros")?.classList.add("header-menu-details--current");
         else if (view === "financeiro") menu.querySelector("#headerDetailsFinance")?.classList.add("header-menu-details--current");
+        else if (view === "lista") menu.querySelector("#headerDetailsLista")?.classList.add("header-menu-details--current");
         else if (view === "configuracoes") menu.querySelector("#headerDetailsConfig")?.classList.add("header-menu-details--current");
       }
 
@@ -8827,6 +9281,8 @@
         } else if (view === "patio") {
           document.body.classList.add("app-module-patio");
           document.title = "Amplipatio · Gestão de pátio";
+        } else if (view === "lista") {
+          document.title = "Amplipatio · Lista";
         } else {
           document.title = "Amplipatio";
         }
@@ -8840,7 +9296,7 @@
         if (view === "configuracoes") {
           setConfigSubview("dados");
         }
-        const headerModViews = ["dashboard", "patio", "parceiros", "financeiro", "configuracoes"];
+        const headerModViews = ["dashboard", "patio", "parceiros", "financeiro", "lista", "configuracoes"];
         if (headerModViews.includes(view) && lastAppHeaderModuleView !== view) {
           document.querySelectorAll("#appHeaderMenu > .header-menu-details").forEach((d) => d.removeAttribute("open"));
           lastAppHeaderModuleView = view;
@@ -8916,7 +9372,7 @@
       });
 
       function openMainView(view) {
-        if (isGestorPista && view !== "patio") {
+        if (isGestorPista && view !== "patio" && view !== "lista") {
           showMainView("patio");
           return;
         }
@@ -8932,6 +9388,10 @@
         if (view === "patio") setPatioView("no_patio");
         if (view === "parceiros") setPartnerView("none");
         if (view === "financeiro") setFinanceView("receber");
+        if (view === "lista") {
+          syncListaFilterSelects();
+          renderListaPanel();
+        }
       }
 
       function goToPatioForPlateSearch() {
@@ -9003,6 +9463,37 @@
         setFinanceView(sub);
       }
 
+      function openListaSubview(sub) {
+        if (!sub) return;
+        if (
+          isGestorPista &&
+          ["aguardando_lancamento", "receber", "receber_alerta", "pagar", "caixa"].includes(sub)
+        ) {
+          alert("Com o perfil de gestor de pista só estão disponíveis as listas VNP e VRP.");
+          sub = "vnp";
+        }
+        const top = navStack[navStack.length - 1];
+        if (top === `lista:${sub}`) {
+          currentListaView = sub;
+          syncListaSubnavActive();
+          renderListaPanel();
+          return;
+        }
+        if (top && typeof top === "string" && top.startsWith("lista:")) navStack.pop();
+
+        if (navStack[navStack.length - 1] !== "lista") {
+          navStack.push("lista");
+          showMainView("lista");
+        } else {
+          showMainView("lista");
+        }
+
+        navStack.push(`lista:${sub}`);
+        currentListaView = sub;
+        syncListaSubnavActive();
+        renderListaPanel();
+      }
+
       function closeStackTop() {
         if (navStack.length <= 1) return;
         navStack.pop();
@@ -9022,6 +9513,20 @@
           return setFinanceView("receber");
         }
         if (top === "configuracoes") return showMainView("configuracoes");
+
+        if (top === "lista") {
+          showMainView("lista");
+          currentListaView = "vnp";
+          syncListaSubnavActive();
+          return renderListaPanel();
+        }
+        if (top && typeof top === "string" && top.startsWith("lista:")) {
+          const sub = top.split(":")[1];
+          showMainView("lista");
+          currentListaView = sub;
+          syncListaSubnavActive();
+          return renderListaPanel();
+        }
 
         if (top && typeof top === "string" && top.startsWith("patio:")) {
           const sub = top.split(":")[1];
@@ -11099,11 +11604,12 @@
         patio: document.getElementById("viewPatio"),
         parceiros: document.getElementById("viewParceiros"),
         financeiro: document.getElementById("viewFinanceiro"),
+        lista: document.getElementById("viewLista"),
         configuracoes: document.getElementById("viewConfiguracoes"),
       };
 
       function syncHeaderMenuHighlightFromDom() {
-        const order = ["dashboard", "patio", "parceiros", "financeiro", "configuracoes"];
+        const order = ["dashboard", "patio", "parceiros", "financeiro", "lista", "configuracoes"];
         for (const name of order) {
           const el = views[name];
           if (el && !el.classList.contains("hidden")) {
@@ -11134,6 +11640,16 @@
           e.preventDefault();
           closeAppHeaderMenu();
           navigateMainViewFromNav(dashBtn.getAttribute("data-view"));
+          return;
+        }
+
+        const listaHdr = e.target.closest("#appHeaderMenu [data-lista-subview]");
+        if (listaHdr) {
+          e.preventDefault();
+          const sub = listaHdr.getAttribute("data-lista-subview");
+          openMainView("lista");
+          openListaSubview(sub);
+          closeAppHeaderMenu();
           return;
         }
 
