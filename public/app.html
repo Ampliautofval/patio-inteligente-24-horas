@@ -4409,6 +4409,28 @@
         });
       }
 
+      /** VNP unificado: liberação solicitada e confirmada (e remoção confirmada) no topo; depois no pátio. Dentro de cada grupo, entrada mais recente primeiro. */
+      const VNP_UNIFIED_STATUS_ORDER = {
+        LIBERACAO_SOLICITADA: 0,
+        LIBERACAO_CONFIRMADA: 1,
+        REMocao_CONFIRMADA: 2,
+        NO_PATIO: 3,
+      };
+
+      function sortVnpUnifiedForDisplay(list) {
+        return [...list].sort((a, b) => {
+          const ra = VNP_UNIFIED_STATUS_ORDER[a.status];
+          const rb = VNP_UNIFIED_STATUS_ORDER[b.status];
+          const oa = ra === undefined ? 50 : ra;
+          const ob = rb === undefined ? 50 : rb;
+          if (oa !== ob) return oa - ob;
+          const ta = new Date(a.data_entrada || a.created_at || 0).getTime();
+          const tb = new Date(b.data_entrada || b.created_at || 0).getTime();
+          if (tb !== ta) return tb - ta;
+          return String(b.id || "").localeCompare(String(a.id || ""), "pt-BR");
+        });
+      }
+
       function patioPrintVehicleLine(v) {
         const vehicleLine = [v.marca, v.modelo].filter(Boolean).join(" ").trim() || "-";
         const placa = v.placa || "-";
@@ -4612,7 +4634,7 @@
           if (byStatus[v.status]) byStatus[v.status].push(v);
         });
         const vlsMerged = mergeVlsItems(byStatus);
-        const vnpUnified = sortVehiclesByRegistroDesc([...vlsMerged, ...byStatus.NO_PATIO]);
+        const vnpUnified = sortVnpUnifiedForDisplay([...vlsMerged, ...byStatus.NO_PATIO]);
         return vnpUnified;
       }
 
@@ -7088,7 +7110,7 @@
           }
         }
 
-        const vnpUnified = sortVehiclesByRegistroDesc([...vlsForTable, ...byStatus.NO_PATIO]);
+        const vnpUnified = sortVnpUnifiedForDisplay([...vlsForTable, ...byStatus.NO_PATIO]);
         const patioCardTitle1 = document.getElementById("patioCardTitle1");
         const patioCardTitle2 = document.getElementById("patioCardTitle2");
         const patioCardTitle3 = document.getElementById("patioCardTitle3");
