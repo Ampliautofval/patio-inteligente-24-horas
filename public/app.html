@@ -2536,10 +2536,10 @@
                 class="dashboard-finance-card dashboard-finance-card--diarias-patio dashboard-card-static"
                 aria-live="polite"
               >
-                <span class="dashboard-finance-card__title">Diárias no pátio (agora)</span>
+                <span class="dashboard-finance-card__title">Diárias geradas hoje</span>
                 <div class="dashboard-finance-card__value" id="dashboardDiariasPatioValue">R$ 0,00</div>
-                <span class="dashboard-finance-card__meta" id="dashboardDiariasPatioMeta">0 veículos VNP</span>
-                <span class="dashboard-finance-card__go" style="opacity: 0.72; font-weight: 600">Dias corridos × diária, até este instante (igual à ficha)</span>
+                <span class="dashboard-finance-card__meta" id="dashboardDiariasPatioMeta">0 veículos com diária hoje</span>
+                <span class="dashboard-finance-card__go" style="opacity: 0.72; font-weight: 600">1× valor da diária por veículo VNP em permanência no dia (hora local)</span>
               </div>
             </div>
             <div class="card clickable dashboard-stat-card dashboard-stat--vnp" id="cardVeiculosLink">
@@ -6081,6 +6081,25 @@
         return days * Number(vehicle.valor_diaria);
       }
 
+      /** O veículo está em permanência no pátio em algum momento do dia civil local `dayYmd` (YYYY-MM-DD)? */
+      function vehicleStayIncludesLocalCalendarDay(vehicle, dayYmd) {
+        if (!vehicle?.data_entrada || !dayYmd) return false;
+        const start = toLocalYmd(vehicle.data_entrada);
+        if (!start || dayYmd < start) return false;
+        if (!vehicle.data_saida) return true;
+        const end = toLocalYmd(vehicle.data_saida);
+        if (!end) return true;
+        return dayYmd <= end;
+      }
+
+      /** Valor de diária «gerado» só naquele dia civil: 1× valor_diária se houver permanência nesse dia. */
+      function calcDiariaValorGeradoNoDiaLocal(vehicle, dayYmd) {
+        if (!vehicleStayIncludesLocalCalendarDay(vehicle, dayYmd)) return 0;
+        const vd = Number(vehicle.valor_diaria);
+        if (!vd || vd <= 0) return 0;
+        return vd;
+      }
+
       function calcPeriodTotal(vehicle, periodStart, periodEnd) {
         if (!vehicle?.valor_diaria || !periodStart) return 0;
         const start = new Date(periodStart);
@@ -6888,14 +6907,14 @@
         if (dashCxValue) dashCxValue.textContent = formatCurrency(caixaAtual);
         if (dashCxMeta) dashCxMeta.textContent = `Movimentações: ${(state.cash || []).length}`;
         const patioDiariaList = [...noPatio, ...vls];
-        const diariasPatioTotal = patioDiariaList.reduce((s, v) => s + calcTotal(v), 0);
-        const comDiariaDefinida = patioDiariaList.filter((v) => v.data_entrada && Number(v.valor_diaria) > 0).length;
+        const diariasGeradasHojeTotal = patioDiariaList.reduce((s, v) => s + calcDiariaValorGeradoNoDiaLocal(v, todayYmd), 0);
+        const veiculosComDiariaHoje = patioDiariaList.filter((v) => calcDiariaValorGeradoNoDiaLocal(v, todayYmd) > 0).length;
         const elDiariasVal = document.getElementById("dashboardDiariasPatioValue");
         const elDiariasMeta = document.getElementById("dashboardDiariasPatioMeta");
-        if (elDiariasVal) elDiariasVal.textContent = formatCurrency(diariasPatioTotal);
+        if (elDiariasVal) elDiariasVal.textContent = formatCurrency(diariasGeradasHojeTotal);
         if (elDiariasMeta) {
-          const n = noPatio.length + vls.length;
-          elDiariasMeta.textContent = `${n} veículo${n === 1 ? "" : "s"} VNP · ${comDiariaDefinida} com diária definida`;
+          const labelDia = formatDateBr(new Date().toISOString());
+          elDiariasMeta.textContent = `${veiculosComDiariaHoje} veículo${veiculosComDiariaHoje === 1 ? "" : "s"} · ${labelDia}`;
         }
         const removidosCount = (state.vehicles || []).filter((v) => v.status === "REMOVIDO").length;
         const nfsePendCount = (state.vehicles || []).filter((v) => v.nfse_status === "PENDENTE").length;
