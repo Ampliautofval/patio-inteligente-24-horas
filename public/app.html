@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- amplipatio-static build=lista-receber-datas-diarias -->
+<!-- amplipatio-static build=lista-logo-toolbar -->
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="amplipatio-build" content="lista-receber-datas-diarias" />
+    <meta name="amplipatio-build" content="lista-logo-toolbar" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta
       name="viewport"
@@ -1524,6 +1524,48 @@
       .toolbar h2 {
         margin: 0;
       }
+      #viewLista .toolbar {
+        align-items: flex-start;
+      }
+      #viewLista .lista-toolbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+      #viewLista .lista-toolbar-logo {
+        height: 48px;
+        width: auto;
+        max-width: min(220px, 46vw);
+        object-fit: contain;
+        object-position: right center;
+        display: block;
+      }
+      @media (max-width: 520px) {
+        #viewLista .lista-toolbar-logo {
+          height: 38px;
+          max-width: 160px;
+        }
+      }
+      .lista-capture-heading-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+      .lista-capture-heading-row #listaCaptureHeading {
+        flex: 1;
+        min-width: 0;
+        line-height: 1.45;
+      }
+      .lista-capture-logo-mark {
+        height: 44px;
+        width: auto;
+        max-width: 180px;
+        object-fit: contain;
+        flex-shrink: 0;
+      }
       .pill {
         display: inline-flex;
         align-items: center;
@@ -2639,7 +2681,15 @@
                 <strong>Gestão de pátio</strong> e <strong>Gestão financeira</strong>.
               </p>
             </div>
-            <div class="actions">
+            <div class="actions lista-toolbar-actions">
+              <img
+                src="/assets/logo.png"
+                alt="AMPLIAUTO — Pátio inteligente 24hrs"
+                class="lista-toolbar-logo"
+                width="220"
+                height="48"
+                decoding="async"
+              />
               <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar">X</button>
             </div>
           </div>
@@ -2681,7 +2731,17 @@
             <button type="button" data-lista-subview="caixa" data-lista-gestor-hide="1">Caixa</button>
           </div>
           <div id="listaCaptureRoot" class="lista-capture-root" style="background: #fff; color: #111; padding: 16px; border-radius: 12px; border: 1px solid #ddd">
-            <div id="listaCaptureHeading" style="margin-bottom: 12px; line-height: 1.45"></div>
+            <div class="lista-capture-heading-row">
+              <div id="listaCaptureHeading"></div>
+              <img
+                src="/assets/logo.png"
+                alt="AMPLIAUTO"
+                class="lista-capture-logo-mark"
+                width="180"
+                height="44"
+                decoding="async"
+              />
+            </div>
             <div class="section-card" style="margin: 0; border: 0; box-shadow: none; padding: 0">
               <div class="table-wrap">
                 <table class="table stacked">
