@@ -2916,6 +2916,10 @@
               <option value="">Todos</option>
             </select>
             <button type="button" class="secondary" id="clearFinanceReceberFilters">Limpar filtros</button>
+            <span class="notice" style="flex-basis: 100%; margin-top: 6px; line-height: 1.45">
+              Listagem com totais, impressão e imagem: use o menu principal <strong>Lista</strong> → <strong>Contas a receber</strong> ou
+              <strong>Recebimentos em alerta</strong>.
+            </span>
           </div>
           <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45"></p>
           <div id="financeFilters" class="filter-bar hidden">
@@ -2996,37 +3000,6 @@
                   <div class="card-title" id="financeCardTitle3">Saldo em caixa</div>
                   <div class="card-value" id="financeCaixa">R$ 0,00</div>
                   <span class="tag success" id="financeCaixaStatus">Positivo</span>
-                </div>
-              </div>
-              <div id="financeReceberResumoWrap" class="section-card hidden" style="margin-top: 18px">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px">
-                  <h3 style="margin: 0; font-size: 1.05rem">Lista em aberto — entrada, saída e valor por veículo</h3>
-                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
-                    <button type="button" class="secondary" id="printFinanceReceberResumoBtn">Imprimir esta lista</button>
-                    <button type="button" class="secondary" id="downloadFinanceReceberResumoBtn">Baixar imagem (PNG)</button>
-                  </div>
-                </div>
-                <div
-                  id="financeReceberResumoCapture"
-                  style="background: #fff; color: #111; padding: 14px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.35)"
-                >
-                  <p id="financeReceberResumoMeta" class="notice" style="margin: 0 0 12px; color: #334155"></p>
-                  <div class="table-wrap">
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th>Placa</th>
-                          <th>Veículo</th>
-                          <th>Localizador</th>
-                          <th>Assessoria</th>
-                          <th>Entrada (pátio)</th>
-                          <th>Saída</th>
-                          <th>Valor em aberto</th>
-                        </tr>
-                      </thead>
-                      <tbody id="financeReceberResumoBody"></tbody>
-                    </table>
-                  </div>
                 </div>
               </div>
               <div class="section-card" style="margin-top: 18px;">
@@ -4698,11 +4671,16 @@
           if (currentListaView === "receber_alerta") {
             list = list.filter((r) => overdueReceivables.some((o) => o.id === r.id));
           }
+          const totalReceber = list.reduce((s, r) => s + Number(r.valor || 0), 0);
+          const footReceber = `<tr class="lista-tabela-total" style="border-top: 2px solid var(--border); background: rgba(148, 163, 184, 0.08)">
+              <td data-label="Resumo" style="text-align: right; font-weight: 700">Total (soma dos valores da lista)</td>
+              <td data-label="Valor" style="font-weight: 700">${escapeHtml(formatCurrency(totalReceber))}</td>
+              <td data-label="Estado"></td>
+            </tr>`;
           if (!list.length) {
-            body.innerHTML = `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            body.innerHTML = `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>${footReceber}`;
             return;
           }
-          const totalReceber = list.reduce((s, r) => s + Number(r.valor || 0), 0);
           const rowsHtml = list
             .map((r) => {
               const vehicle = vehicleById.get(r.vehicle_id);
@@ -4719,11 +4697,6 @@
             </tr>`;
             })
             .join("");
-          const footReceber = `<tr class="lista-tabela-total" style="border-top: 2px solid var(--border); background: rgba(148, 163, 184, 0.08)">
-              <td data-label="Resumo" style="text-align: right; font-weight: 700">Total</td>
-              <td data-label="Valor" style="font-weight: 700">${escapeHtml(formatCurrency(totalReceber))}</td>
-              <td data-label="Estado"></td>
-            </tr>`;
           body.innerHTML = rowsHtml + footReceber;
           return;
         }
@@ -5357,135 +5330,6 @@
           });
         }
         return { list, vehicleById };
-      }
-
-      async function downloadFinanceReceberResumoAsPng() {
-        const wrap = document.getElementById("financeReceberResumoWrap");
-        const root = document.getElementById("financeReceberResumoCapture");
-        if (!wrap || !root || wrap.classList.contains("hidden")) {
-          alert("Abra «Contas a receber» ou «Recebimentos em alerta» no financeiro para ver esta lista.");
-          return;
-        }
-        const btn = document.getElementById("downloadFinanceReceberResumoBtn");
-        const prev = btn?.textContent;
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = "A gerar imagem…";
-        }
-        try {
-          const html2canvas = await ensureHtml2Canvas();
-          const canvas = await html2canvas(root, {
-            backgroundColor: "#ffffff",
-            scale: Math.min(2, (window.devicePixelRatio || 1) * 1.5),
-            useCORS: true,
-            logging: false,
-          });
-          const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-          const suffix = currentFinanceView === "receber_alerta" ? "alerta" : "aberto";
-          await new Promise((resolve) => {
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) {
-                  alert("Não foi possível gerar o ficheiro.");
-                  resolve();
-                  return;
-                }
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `contas-a-receber-${suffix}-${stamp}.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-                resolve();
-              },
-              "image/png",
-              0.95
-            );
-          });
-        } catch (e) {
-          console.error(e);
-          alert("Não foi possível gerar a imagem. Verifique a ligação à Internet ou tente noutro navegador.");
-        } finally {
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = prev || "Baixar imagem (PNG)";
-          }
-        }
-      }
-
-      function runFinanceReceberResumoPrint() {
-        const alertaOnly = currentFinanceView === "receber_alerta";
-        const { list, vehicleById } = collectFinanceReceberFilteredList({ alertaOnly });
-        if (!list.length) {
-          alert("Nenhuma conta em aberto com os filtros atuais.");
-          return;
-        }
-        const partnerById = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
-        const nomePatio = state.settings?.nome_patio || "Pátio";
-        const total = list.reduce((s, r) => s + Number(r.valor || 0), 0);
-        const rowHtml = list
-          .map((r) => {
-            const v = vehicleById.get(r.vehicle_id);
-            const placa = v?.placa || "—";
-            const vm = [v?.marca, v?.modelo].filter(Boolean).join(" ") || "—";
-            const loc = v?.localizador_id ? partnerById.get(v.localizador_id) || "—" : "—";
-            const ass = v?.assessoria_id ? partnerById.get(v.assessoria_id) || "—" : "—";
-            return `<tr>
-            <td>${escapeHtml(placa)}</td>
-            <td>${escapeHtml(vm)}</td>
-            <td>${escapeHtml(loc)}</td>
-            <td>${escapeHtml(ass)}</td>
-            <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
-            <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
-            <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
-          </tr>`;
-          })
-          .join("");
-        const metaParts = [
-          `${list.length} conta(s) em aberto`,
-          `Total: ${formatCurrency(total)}`,
-          `Emitido: ${formatDateTime(new Date().toISOString())}`,
-        ];
-        if (alertaOnly) metaParts.unshift("Só recebimentos em alerta (>10 dias)");
-        if (financePlateQuery.trim()) metaParts.unshift(`Placa: ${financePlateQuery.trim()}`);
-        const locSel = document.getElementById("financeReceberFilterLoc");
-        const assSel = document.getElementById("financeReceberFilterAss");
-        const respSel = document.getElementById("financeReceberFilterResp");
-        if (locSel?.value) {
-          metaParts.unshift(`Localizador: ${partnerById.get(locSel.value) || "-"}`);
-        }
-        if (assSel?.value) {
-          metaParts.unshift(`Assessoria: ${partnerById.get(assSel.value) || "-"}`);
-        }
-        if (respSel?.value) {
-          try {
-            metaParts.unshift(`Responsável: ${decodeURIComponent(respSel.value)}`);
-          } catch (e) {
-            /* ignore */
-          }
-        }
-        const printCss = `
-  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
-  h1 { font-size: 1.2rem; margin: 0 0 8px; }
-  .meta { font-size: 0.82rem; color: #444; margin-bottom: 14px; line-height: 1.45; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
-  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; }
-  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  tfoot td { font-weight: 700; background: #f7f7f7; }
-  @page { margin: 12mm; }
-  @media print { body { margin: 0; } }`;
-        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>Contas a receber — lista</title>
-<style>${printCss}</style></head><body>
-  <h1>${escapeHtml(nomePatio)} — Contas a receber em aberto</h1>
-  <div class="meta">${escapeHtml(metaParts.join(" · "))}</div>
-  <table><thead><tr>
-    <th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th>
-    <th>Entrada (pátio)</th><th>Saída</th><th>Valor em aberto</th>
-  </tr></thead><tbody>${rowHtml}</tbody>
-  <tfoot><tr><td colspan="6" style="text-align:right">Total em aberto</td><td>${escapeHtml(formatCurrency(total))}</td></tr></tfoot>
-  </table>
-</body></html>`;
-        printHtmlInHiddenIframe(html, { iframeTitle: "Lista contas a receber em aberto" });
       }
 
       function syncFinanceOpenRecPrintFilterOptions() {
@@ -8664,43 +8508,6 @@
           syncFinanceReceberBarOptions();
           const alertaOnly = currentFinanceView === "receber_alerta";
           const { list: recvFiltered } = collectFinanceReceberFilteredList({ alertaOnly });
-          const partnerByIdResumo = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
-          const totalResumo = recvFiltered.reduce((s, r) => s + Number(r.valor || 0), 0);
-          const metaEl = document.getElementById("financeReceberResumoMeta");
-          const bodyEl = document.getElementById("financeReceberResumoBody");
-          if (metaEl) {
-            const parts = [`${recvFiltered.length} conta(s) em aberto`, `Total: ${formatCurrency(totalResumo)}`];
-            if (financePlateQuery.trim()) parts.unshift(`Placa: ${financePlateQuery.trim()}`);
-            if (alertaOnly) parts.push("filtro: só alerta (>10 dias)");
-            metaEl.textContent = parts.join(" · ");
-          }
-          const footRowResumo = `<tr class="finance-receber-resumo-total" style="border-top: 2px solid #cbd5e1; background: #f1f5f9; font-weight: 700">
-                <td colspan="6" style="text-align: right">Total a receber (lista filtrada)</td>
-                <td>${escapeHtml(formatCurrency(totalResumo))}</td>
-              </tr>`;
-          if (bodyEl) {
-            bodyEl.innerHTML =
-              recvFiltered.length === 0
-                ? `<tr><td colspan="7"><em>Nenhum registo com os filtros atuais.</em></td></tr>${footRowResumo}`
-                : `${recvFiltered
-                    .map((r) => {
-                      const v = vehicleById.get(r.vehicle_id);
-                      const placa = v?.placa || "—";
-                      const vm = [v?.marca, v?.modelo].filter(Boolean).join(" ") || "—";
-                      const loc = v?.localizador_id ? partnerByIdResumo.get(v.localizador_id) || "—" : "—";
-                      const ass = v?.assessoria_id ? partnerByIdResumo.get(v.assessoria_id) || "—" : "—";
-                      return `<tr>
-                <td>${escapeHtml(placa)}</td>
-                <td>${escapeHtml(vm)}</td>
-                <td>${escapeHtml(loc)}</td>
-                <td>${escapeHtml(ass)}</td>
-                <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
-                <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
-                <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
-              </tr>`;
-                    })
-                    .join("")}${footRowResumo}`;
-          }
 
           recvFiltered.forEach((r) => {
             const created = r.created_at ? new Date(r.created_at).getTime() : 0;
@@ -8869,7 +8676,6 @@
           financeFlyoutBackdrop?.classList.add("hidden");
           document.getElementById("financeAguardandoIntro")?.classList.add("hidden");
           document.getElementById("financeReceberFilters")?.classList.add("hidden");
-          document.getElementById("financeReceberResumoWrap")?.classList.add("hidden");
           renderFinance();
           return;
         }
@@ -8886,7 +8692,6 @@
         document.getElementById("financeAguardandoIntro")?.classList.toggle("hidden", view !== "aguardando_lancamento");
         const receberExtras = view === "receber" || view === "receber_alerta";
         document.getElementById("financeReceberFilters")?.classList.toggle("hidden", !receberExtras);
-        document.getElementById("financeReceberResumoWrap")?.classList.toggle("hidden", !receberExtras);
         renderFinance();
       }
 
@@ -9391,12 +9196,6 @@
           if (el) el.value = "";
         });
         renderFinance();
-      });
-      document.getElementById("printFinanceReceberResumoBtn")?.addEventListener("click", () => {
-        runFinanceReceberResumoPrint();
-      });
-      document.getElementById("downloadFinanceReceberResumoBtn")?.addEventListener("click", () => {
-        void downloadFinanceReceberResumoAsPng();
       });
 
       const triggerFinanceReload = () => {
