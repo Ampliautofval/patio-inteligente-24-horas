@@ -3857,6 +3857,23 @@
         });
       }
 
+      /** Mesmo critério visual de `renderVnpUnifiedTable` (classes vnp-row-liberacao / vnp-row-sem-valor). */
+      function isVnpUnifiedListDestaque(v) {
+        if (!v) return false;
+        const semValorDiaria = !v.valor_diaria || Number(v.valor_diaria) <= 0;
+        const emPipeline = v.status !== "NO_PATIO";
+        return semValorDiaria || emPipeline || isRemocaoSolicitada(v);
+      }
+
+      function sortVehiclesByRegistroDesc(list) {
+        return [...list].sort((a, b) => {
+          const ta = new Date(a.data_entrada || a.created_at || 0).getTime();
+          const tb = new Date(b.data_entrada || b.created_at || 0).getTime();
+          if (tb !== ta) return tb - ta;
+          return String(b.id || "").localeCompare(String(a.id || ""), "pt-BR");
+        });
+      }
+
       function patioPrintVehicleLine(v) {
         const vehicleLine = [v.marca, v.modelo].filter(Boolean).join(" ").trim() || "-";
         const placa = v.placa || "-";
@@ -5874,7 +5891,10 @@
           }
         }
 
-        const vnpUnified = [...sortVehiclesByPlaca(vlsForTable), ...sortVehiclesByPlaca(byStatus.NO_PATIO)];
+        const vnpCombined = [...vlsForTable, ...byStatus.NO_PATIO];
+        const vnpDestaque = vnpCombined.filter(isVnpUnifiedListDestaque);
+        const vnpRestantes = vnpCombined.filter((v) => !isVnpUnifiedListDestaque(v));
+        const vnpUnified = [...sortVehiclesByRegistroDesc(vnpDestaque), ...sortVehiclesByRegistroDesc(vnpRestantes)];
         const pdtVnp = document.getElementById("pdtVnp");
         const pdtLib = document.getElementById("pdtLib");
         const pdtVrp = document.getElementById("pdtVrp");
