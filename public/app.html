@@ -2605,6 +2605,7 @@
             <button type="button" class="secondary" id="listaFiltersClear">Limpar filtros</button>
             <button type="button" id="listaFiltersApply">Atualizar lista</button>
             <button type="button" class="secondary" id="listaFiltersPrint">Imprimir / PDF</button>
+            <button type="button" class="secondary" id="listaFiltersDownloadImage">Baixar imagem (PNG)</button>
           </div>
           <div class="subnav" id="listaSubnav" style="margin-bottom: 12px; flex-wrap: wrap">
             <button type="button" data-lista-subview="vnp">VNP</button>
@@ -2615,13 +2616,28 @@
             <button type="button" data-lista-subview="pagar" data-lista-gestor-hide="1">Contas a pagar</button>
             <button type="button" data-lista-subview="caixa" data-lista-gestor-hide="1">Caixa</button>
           </div>
-          <div class="section-card" style="margin: 0">
-            <div class="table-wrap">
-              <table class="table stacked">
-                <thead id="listaTableHead"></thead>
-                <tbody id="listaTableBody"></tbody>
-              </table>
+          <div id="listaCaptureRoot" class="lista-capture-root" style="background: #fff; color: #111; padding: 16px; border-radius: 12px; border: 1px solid #ddd">
+            <div id="listaCaptureHeading" style="margin-bottom: 12px; line-height: 1.45"></div>
+            <div class="section-card" style="margin: 0; border: 0; box-shadow: none; padding: 0">
+              <div class="table-wrap">
+                <table class="table stacked">
+                  <thead id="listaTableHead"></thead>
+                  <tbody id="listaTableBody"></tbody>
+                </table>
+              </div>
             </div>
+            <div
+              id="listaCaptureTotal"
+              style="
+                margin-top: 14px;
+                padding: 12px 14px;
+                background: #f4f7fb;
+                border-radius: 8px;
+                font-size: 1.08rem;
+                font-weight: 700;
+                border: 1px solid #dde;
+              "
+            ></div>
           </div>
         </div>
 
@@ -2985,25 +3001,32 @@
               <div id="financeReceberResumoWrap" class="section-card hidden" style="margin-top: 18px">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px">
                   <h3 style="margin: 0; font-size: 1.05rem">Lista em aberto — entrada, saída e valor por veículo</h3>
-                  <button type="button" class="secondary" id="printFinanceReceberResumoBtn">Imprimir esta lista</button>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                    <button type="button" class="secondary" id="printFinanceReceberResumoBtn">Imprimir esta lista</button>
+                    <button type="button" class="secondary" id="downloadFinanceReceberResumoBtn">Baixar imagem (PNG)</button>
+                  </div>
                 </div>
-                <p id="financeReceberResumoMeta" class="notice" style="margin: 0 0 12px"></p>
-                <div class="table-wrap">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>Placa</th>
-                        <th>Veículo</th>
-                        <th>Localizador</th>
-                        <th>Assessoria</th>
-                        <th>Entrada (pátio)</th>
-                        <th>Saída</th>
-                        <th>Valor em aberto</th>
-                      </tr>
-                    </thead>
-                    <tbody id="financeReceberResumoBody"></tbody>
-                    <tfoot id="financeReceberResumoFoot"></tfoot>
-                  </table>
+                <div
+                  id="financeReceberResumoCapture"
+                  style="background: #fff; color: #111; padding: 14px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.35)"
+                >
+                  <p id="financeReceberResumoMeta" class="notice" style="margin: 0 0 12px; color: #334155"></p>
+                  <div class="table-wrap">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Placa</th>
+                          <th>Veículo</th>
+                          <th>Localizador</th>
+                          <th>Assessoria</th>
+                          <th>Entrada (pátio)</th>
+                          <th>Saída</th>
+                          <th>Valor em aberto</th>
+                        </tr>
+                      </thead>
+                      <tbody id="financeReceberResumoBody"></tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
               <div class="section-card" style="margin-top: 18px;">
@@ -4468,6 +4491,98 @@
         return vnpUnified;
       }
 
+      function computeListaGrandTotalForCurrentView() {
+        readListaFiltersFromDom();
+        const vehicleById = new Map((state.vehicles || []).map((v) => [v.id, v]));
+        const semVal = isGestorPista;
+
+        if (currentListaView === "vnp") {
+          const items = buildListaVnpVehicleRows();
+          const label = "Total estimado";
+          if (semVal) return { amount: 0, label, hideAmount: true };
+          return {
+            amount: items.reduce((s, v) => s + Number(calcTotal(v) || 0), 0),
+            label,
+            hideAmount: false,
+          };
+        }
+        if (currentListaView === "vrp") {
+          const items = sortVehiclesByRegistroDesc(
+            (state.vehicles || []).filter((v) => v.status === "REMOVIDO" && listaVehicleMatches(v))
+          );
+          const label = "Total (VRP)";
+          if (semVal) return { amount: 0, label, hideAmount: true };
+          return {
+            amount: items.reduce((s, v) => s + Number(calcTotal(v) || 0), 0),
+            label,
+            hideAmount: false,
+          };
+        }
+        if (currentListaView === "aguardando_lancamento") {
+          const rows = (state.receivables || [])
+            .filter((r) => receivableNaFilaAguardandoTriagem(r))
+            .filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)));
+          const label = "Total";
+          const amount = rows.reduce((s, r) => s + Number(r.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        if (currentListaView === "receber" || currentListaView === "receber_alerta") {
+          const openList = (state.receivables || []).filter((r) => receivableIsContaReceberFinanceiro(r));
+          const overdueReceivables = openList.filter((r) => {
+            if (!r.created_at) return false;
+            const created = new Date(r.created_at).getTime();
+            const days = Math.floor((Date.now() - created) / 86400000);
+            return days > 10;
+          });
+          let list = openList.filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)));
+          if (currentListaView === "receber_alerta") {
+            list = list.filter((r) => overdueReceivables.some((o) => o.id === r.id));
+          }
+          const label = currentListaView === "receber_alerta" ? "Total (contas em alerta)" : "Total a receber";
+          const amount = list.reduce((s, r) => s + Number(r.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        if (currentListaView === "pagar") {
+          const list = (state.payables || []).filter((p) => p.status === "EM_ABERTO" && listaPayableMatches(p));
+          const label = "Total contas a pagar";
+          const amount = list.reduce((s, p) => s + Number(p.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        if (currentListaView === "caixa") {
+          const list = (state.cash || []).filter(listaCashMatches);
+          const label = "Soma dos valores (movimentos filtrados)";
+          const amount = list.reduce((s, mov) => s + Number(mov.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        return { amount: 0, label: "Total", hideAmount: false };
+      }
+
+      function updateListaCaptureSummary() {
+        const hEl = document.getElementById("listaCaptureHeading");
+        const tEl = document.getElementById("listaCaptureTotal");
+        if (!hEl || !tEl) return;
+        const nomePatio = state.settings?.nome_patio || "Pátio";
+        const viewLabel =
+          document.querySelector(`#listaSubnav button[data-lista-subview="${currentListaView}"]`)?.textContent?.trim() ||
+          currentListaView;
+        const filtros = [
+          listaFilterLocatorId ? `Loc.: ${state.partners.find((p) => p.id === listaFilterLocatorId)?.nome || ""}` : "",
+          listaFilterAssessoriaId ? `Ass.: ${state.partners.find((p) => p.id === listaFilterAssessoriaId)?.nome || ""}` : "",
+          listaFilterBanco ? `Texto: ${listaFilterBanco}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        hEl.innerHTML = `<strong>${escapeHtml(nomePatio)}</strong> — Lista · ${escapeHtml(viewLabel)}<br /><span style="font-size:0.85rem;color:#444">${escapeHtml(
+          filtros || "Sem filtros de parceiro/texto"
+        )}</span><br /><span style="font-size:0.78rem;color:#666">${escapeHtml(formatDateTime(new Date().toISOString()))}</span>`;
+        const g = computeListaGrandTotalForCurrentView();
+        if (g.hideAmount) {
+          tEl.textContent = "Valor total: não disponível neste perfil.";
+        } else {
+          tEl.textContent = `${g.label}: ${formatCurrency(g.amount)}`;
+        }
+      }
+
       function renderListaPanel() {
         readListaFiltersFromDom();
         const head = document.getElementById("listaTableHead");
@@ -4478,6 +4593,7 @@
         const semVal = isGestorPista;
         const locLabel = (id) => state.partners.find((p) => p.id === id)?.nome || "-";
 
+        try {
         if (currentListaView === "vnp") {
           head.innerHTML = `<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Situação</th>${
             semVal ? "" : "<th>Valor estimado</th>"
@@ -4586,7 +4702,8 @@
             body.innerHTML = `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
             return;
           }
-          body.innerHTML = list
+          const totalReceber = list.reduce((s, r) => s + Number(r.valor || 0), 0);
+          const rowsHtml = list
             .map((r) => {
               const vehicle = vehicleById.get(r.vehicle_id);
               const vehicleInfo = vehicle
@@ -4602,6 +4719,12 @@
             </tr>`;
             })
             .join("");
+          const footReceber = `<tr class="lista-tabela-total" style="border-top: 2px solid var(--border); background: rgba(148, 163, 184, 0.08)">
+              <td data-label="Resumo" style="text-align: right; font-weight: 700">Total</td>
+              <td data-label="Valor" style="font-weight: 700">${escapeHtml(formatCurrency(totalReceber))}</td>
+              <td data-label="Estado"></td>
+            </tr>`;
+          body.innerHTML = rowsHtml + footReceber;
           return;
         }
 
@@ -4612,7 +4735,8 @@
             body.innerHTML = `<tr><td colspan="4" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
             return;
           }
-          body.innerHTML = list
+          const totalPagar = list.reduce((s, p) => s + Number(p.valor || 0), 0);
+          const rowsPagar = list
             .map((p) => {
               return `<tr>
               <td data-label="Descrição">${escapeHtml(p.descricao || "—")}</td>
@@ -4622,6 +4746,12 @@
             </tr>`;
             })
             .join("");
+          const footPagar = `<tr class="lista-tabela-total" style="border-top: 2px solid var(--border); background: rgba(148, 163, 184, 0.08)">
+              <td data-label="Descrição" colspan="2" style="text-align: right; font-weight: 700">Total</td>
+              <td data-label="Valor" style="font-weight: 700">${escapeHtml(formatCurrency(totalPagar))}</td>
+              <td data-label="Estado"></td>
+            </tr>`;
+          body.innerHTML = rowsPagar + footPagar;
           return;
         }
 
@@ -4647,6 +4777,82 @@
 
         head.innerHTML = "";
         body.innerHTML = `<tr><td class="notice">Vista de lista não reconhecida.</td></tr>`;
+        } finally {
+          updateListaCaptureSummary();
+        }
+      }
+
+      let html2canvasLoadPromise = null;
+      function ensureHtml2Canvas() {
+        if (window.html2canvas) return Promise.resolve(window.html2canvas);
+        if (html2canvasLoadPromise) return html2canvasLoadPromise;
+        html2canvasLoadPromise = new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+          s.async = true;
+          s.onload = () => {
+            if (window.html2canvas) resolve(window.html2canvas);
+            else reject(new Error("html2canvas não disponível"));
+          };
+          s.onerror = () => reject(new Error("Falha ao carregar html2canvas"));
+          document.head.appendChild(s);
+        });
+        return html2canvasLoadPromise;
+      }
+
+      async function downloadListaCaptureAsPng() {
+        const root = document.getElementById("listaCaptureRoot");
+        if (!root) {
+          alert("Área da lista não encontrada.");
+          return;
+        }
+        readListaFiltersFromDom();
+        renderListaPanel();
+        const btn = document.getElementById("listaFiltersDownloadImage");
+        const prev = btn?.textContent;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "A gerar imagem…";
+        }
+        try {
+          const html2canvas = await ensureHtml2Canvas();
+          const canvas = await html2canvas(root, {
+            backgroundColor: "#ffffff",
+            scale: Math.min(2, (window.devicePixelRatio || 1) * 1.5),
+            useCORS: true,
+            logging: false,
+          });
+          const safeSub = String(currentListaView || "lista").replace(/[^\w-]+/g, "_");
+          const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+          await new Promise((resolve) => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  alert("Não foi possível gerar o ficheiro.");
+                  resolve();
+                  return;
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `lista-${safeSub}-${stamp}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+                resolve();
+              },
+              "image/png",
+              0.95
+            );
+          });
+        } catch (e) {
+          console.error(e);
+          alert("Não foi possível gerar a imagem. Verifique a ligação à Internet ou tente noutro navegador.");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || "Baixar imagem (PNG)";
+          }
+        }
       }
 
       function runListaPrintDocument() {
@@ -4664,6 +4870,10 @@
           .join(" · ");
         const viewLabel = document.querySelector(`#listaSubnav button[data-lista-subview="${currentListaView}"]`)?.textContent?.trim() || currentListaView;
         const meta = [viewLabel, filtros || "Sem filtros adicionais", `Emitido: ${formatDateTime(new Date().toISOString())}`].join(" · ");
+        const g = computeListaGrandTotalForCurrentView();
+        const totalBlock = g.hideAmount
+          ? `<p style="margin-top:12px;font-weight:600">${escapeHtml("Valor total: não disponível neste perfil.")}</p>`
+          : `<p style="margin-top:12px;font-weight:700;font-size:1.05rem">${escapeHtml(`${g.label}: ${formatCurrency(g.amount)}`)}</p>`;
         const printCss = `
   body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
   h1 { font-size: 1.2rem; margin: 0 0 6px; }
@@ -4678,6 +4888,7 @@
   <h1>${escapeHtml(nomePatio)} — Lista · ${escapeHtml(viewLabel)}</h1>
   <div class="meta">${escapeHtml(meta)}</div>
   <table><thead>${headHtml}</thead><tbody>${bodyHtml}</tbody></table>
+  ${totalBlock}
 </body></html>`;
         printHtmlInHiddenIframe(html, { iframeTitle: "Impressão lista", closeModalId: null });
       }
@@ -5146,6 +5357,60 @@
           });
         }
         return { list, vehicleById };
+      }
+
+      async function downloadFinanceReceberResumoAsPng() {
+        const wrap = document.getElementById("financeReceberResumoWrap");
+        const root = document.getElementById("financeReceberResumoCapture");
+        if (!wrap || !root || wrap.classList.contains("hidden")) {
+          alert("Abra «Contas a receber» ou «Recebimentos em alerta» no financeiro para ver esta lista.");
+          return;
+        }
+        const btn = document.getElementById("downloadFinanceReceberResumoBtn");
+        const prev = btn?.textContent;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "A gerar imagem…";
+        }
+        try {
+          const html2canvas = await ensureHtml2Canvas();
+          const canvas = await html2canvas(root, {
+            backgroundColor: "#ffffff",
+            scale: Math.min(2, (window.devicePixelRatio || 1) * 1.5),
+            useCORS: true,
+            logging: false,
+          });
+          const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+          const suffix = currentFinanceView === "receber_alerta" ? "alerta" : "aberto";
+          await new Promise((resolve) => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  alert("Não foi possível gerar o ficheiro.");
+                  resolve();
+                  return;
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `contas-a-receber-${suffix}-${stamp}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+                resolve();
+              },
+              "image/png",
+              0.95
+            );
+          });
+        } catch (e) {
+          console.error(e);
+          alert("Não foi possível gerar a imagem. Verifique a ligação à Internet ou tente noutro navegador.");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || "Baixar imagem (PNG)";
+          }
+        }
       }
 
       function runFinanceReceberResumoPrint() {
@@ -8403,18 +8668,21 @@
           const totalResumo = recvFiltered.reduce((s, r) => s + Number(r.valor || 0), 0);
           const metaEl = document.getElementById("financeReceberResumoMeta");
           const bodyEl = document.getElementById("financeReceberResumoBody");
-          const footEl = document.getElementById("financeReceberResumoFoot");
           if (metaEl) {
             const parts = [`${recvFiltered.length} conta(s) em aberto`, `Total: ${formatCurrency(totalResumo)}`];
             if (financePlateQuery.trim()) parts.unshift(`Placa: ${financePlateQuery.trim()}`);
             if (alertaOnly) parts.push("filtro: só alerta (>10 dias)");
             metaEl.textContent = parts.join(" · ");
           }
+          const footRowResumo = `<tr class="finance-receber-resumo-total" style="border-top: 2px solid #cbd5e1; background: #f1f5f9; font-weight: 700">
+                <td colspan="6" style="text-align: right">Total a receber (lista filtrada)</td>
+                <td>${escapeHtml(formatCurrency(totalResumo))}</td>
+              </tr>`;
           if (bodyEl) {
             bodyEl.innerHTML =
               recvFiltered.length === 0
-                ? `<tr><td colspan="7"><em>Nenhum registo com os filtros atuais.</em></td></tr>`
-                : recvFiltered
+                ? `<tr><td colspan="7"><em>Nenhum registo com os filtros atuais.</em></td></tr>${footRowResumo}`
+                : `${recvFiltered
                     .map((r) => {
                       const v = vehicleById.get(r.vehicle_id);
                       const placa = v?.placa || "—";
@@ -8431,10 +8699,7 @@
                 <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
               </tr>`;
                     })
-                    .join("");
-          }
-          if (footEl) {
-            footEl.innerHTML = `<tr><td colspan="6" style="text-align:right;font-weight:700">Total em aberto</td><td style="font-weight:700">${escapeHtml(formatCurrency(totalResumo))}</td></tr>`;
+                    .join("")}${footRowResumo}`;
           }
 
           recvFiltered.forEach((r) => {
@@ -9042,6 +9307,9 @@
       document.getElementById("listaFiltersPrint")?.addEventListener("click", () => {
         runListaPrintDocument();
       });
+      document.getElementById("listaFiltersDownloadImage")?.addEventListener("click", () => {
+        void downloadListaCaptureAsPng();
+      });
       document.getElementById("listaFiltersClear")?.addEventListener("click", () => {
         listaFilterLocatorId = "";
         listaFilterAssessoriaId = "";
@@ -9126,6 +9394,9 @@
       });
       document.getElementById("printFinanceReceberResumoBtn")?.addEventListener("click", () => {
         runFinanceReceberResumoPrint();
+      });
+      document.getElementById("downloadFinanceReceberResumoBtn")?.addEventListener("click", () => {
+        void downloadFinanceReceberResumoAsPng();
       });
 
       const triggerFinanceReload = () => {
