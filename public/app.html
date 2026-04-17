@@ -70,10 +70,7 @@
           radial-gradient(circle at 10% 20%, rgba(0, 0, 0, 0.03), transparent 35%),
           var(--bg);
       }
-      /* Gestão financeira: foco no módulo (barra global oculta). Pátio mantém a nav para Sair e troca de aba. */
-      body.app-module-finance #appPanel > .panel:first-child {
-        display: none;
-      }
+      /* Navegação principal: menu no cabeçalho (sem barra de abas no corpo). */
       body.app-module-patio {
         background: radial-gradient(circle at 12% 0%, rgba(225, 29, 46, 0.14), transparent 42%),
           radial-gradient(circle at 88% 8%, rgba(248, 113, 113, 0.06), transparent 46%),
@@ -690,6 +687,14 @@
       .finance-top-dashboard {
         margin: 0 0 12px;
       }
+      .dashboard-embed-kicker {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+      }
       .finance-charts-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -971,6 +976,249 @@
         align-items: center;
         gap: 12px;
       }
+      .header-app-menu-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+        margin-left: auto;
+      }
+      .header-menu-tray {
+        position: relative;
+        align-self: flex-end;
+      }
+      .header-plate-search {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 6px;
+        max-width: min(100vw - 48px, 320px);
+        justify-content: flex-end;
+      }
+      .header-plate-search .header-plate-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 0;
+        padding: 0 2px 0 0;
+      }
+      .header-plate-search input#plateFilter {
+        width: 92px;
+        min-width: 0;
+        min-height: 26px;
+        padding: 3px 6px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+      }
+      .header-plate-search button {
+        min-height: 26px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .header-plate-search button[type="submit"] {
+        border: 1px solid var(--primary);
+        background: var(--primary-weak);
+        color: var(--primary);
+      }
+      .header-plate-search button.secondary {
+        padding: 2px 6px;
+        font-size: 10px;
+      }
+      .header-plate-search-hint {
+        margin: 0;
+        max-width: min(100vw - 48px, 320px);
+        font-size: 10px;
+        text-align: right;
+        line-height: 1.25;
+      }
+      .header-menu-trigger {
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        background: rgba(15, 23, 42, 0.35);
+        color: var(--text, #e2e8f0);
+        cursor: pointer;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .header-menu-trigger:hover {
+        background: rgba(30, 41, 59, 0.55);
+        border-color: rgba(148, 163, 184, 0.65);
+      }
+      .header-menu-trigger:focus-visible {
+        outline: 2px solid var(--primary, #38bdf8);
+        outline-offset: 2px;
+      }
+      .header-menu-trigger .header-menu-bar {
+        display: block;
+        width: 18px;
+        height: 2px;
+        border-radius: 1px;
+        background: currentColor;
+      }
+      [data-theme="light"] .header-menu-trigger {
+        background: rgba(255, 255, 255, 0.72);
+        border-color: rgba(203, 213, 225, 0.95);
+        color: var(--text, #0f172a);
+      }
+      [data-theme="light"] .header-menu-trigger:hover {
+        background: rgba(248, 250, 252, 0.95);
+      }
+      .header-menu-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 8;
+        background: rgba(2, 6, 23, 0.28);
+      }
+      [data-theme="light"] .header-menu-backdrop {
+        background: rgba(15, 23, 42, 0.12);
+      }
+      .header-menu-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 12;
+        min-width: min(280px, calc(100vw - 32px));
+        max-height: min(72vh, 520px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding: 8px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+      }
+      body.menus-no-modulo #patioSubnav,
+      body.menus-no-modulo #financeSubnav,
+      body.menus-no-modulo #configSubnav,
+      body.menus-no-modulo #partnerSubnav,
+      body.menus-no-modulo #patioMenuToggle,
+      body.menus-no-modulo #financeMenuToggle,
+      body.menus-no-modulo .patio-module-tools {
+        display: none !important;
+      }
+      .header-menu-details {
+        border-radius: 8px;
+        margin: 2px 0;
+      }
+      .header-menu-details > summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text);
+        user-select: none;
+      }
+      .header-menu-details > summary::-webkit-details-marker {
+        display: none;
+      }
+      .header-menu-details > summary::after {
+        content: "▸";
+        float: right;
+        font-size: 11px;
+        opacity: 0.55;
+        margin-left: 8px;
+      }
+      .header-menu-details[open] > summary::after {
+        content: "▾";
+      }
+      .header-menu-details > summary:hover {
+        background: var(--primary-weak, rgba(56, 189, 248, 0.12));
+      }
+      .header-menu-nested {
+        padding: 2px 0 8px 8px;
+        border-left: 2px solid rgba(148, 163, 184, 0.35);
+        margin: 0 0 4px 6px;
+      }
+      .header-menu-nested button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 8px 10px;
+        margin: 2px 0;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .header-menu-nested button:hover {
+        background: var(--primary-weak, rgba(56, 189, 248, 0.1));
+      }
+      .header-menu-top.header-menu-top--current {
+        color: var(--primary);
+        font-weight: 700;
+        background: var(--primary-weak, rgba(56, 189, 248, 0.18));
+        border: 1px solid rgba(56, 189, 248, 0.35);
+      }
+      .header-menu-details.header-menu-details--current > summary {
+        color: var(--primary);
+        font-weight: 700;
+        background: var(--primary-weak, rgba(56, 189, 248, 0.15));
+      }
+      [data-theme="light"] .header-menu-top.header-menu-top--current {
+        background: rgba(56, 189, 248, 0.12);
+      }
+      [data-theme="light"] .header-menu-details.header-menu-details--current > summary {
+        background: rgba(56, 189, 248, 0.1);
+      }
+      [data-theme="light"] .header-menu-dropdown {
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      }
+      .header-menu-dropdown button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 10px 12px;
+        margin: 0;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .header-menu-dropdown button:hover {
+        background: var(--primary-weak, rgba(56, 189, 248, 0.12));
+      }
+      .header-menu-dropdown button.active {
+        color: var(--primary);
+        font-weight: 600;
+        background: var(--primary-weak, rgba(56, 189, 248, 0.15));
+      }
+      .header-menu-dropdown button.header-menu-item--danger {
+        color: #f87171;
+      }
+      .header-menu-dropdown button.header-menu-item--danger:hover {
+        background: rgba(248, 113, 113, 0.12);
+      }
+      .header-menu-sep {
+        height: 1px;
+        margin: 6px 4px;
+        background: var(--border);
+      }
       #themeToggle,
       #userInfo {
         display: none;
@@ -1104,7 +1352,6 @@
         box-shadow: none;
       }
       button:focus-visible,
-      .nav button:focus-visible,
       .subnav button:focus-visible,
       input:focus-visible,
       select:focus-visible,
@@ -1175,24 +1422,16 @@
         font-weight: 700;
         font-variant-numeric: tabular-nums;
       }
-      .nav {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      .nav button {
-        background: transparent;
-        color: var(--text);
-        border: 1px solid var(--border);
-        box-shadow: none;
-        border-radius: 999px;
-        padding: 8px 14px;
-      }
-      .nav button.active {
-        border-color: var(--primary);
-        color: var(--primary);
-        font-weight: 600;
-        background: var(--primary-weak);
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
       }
       .hidden {
         display: none;
@@ -1643,13 +1882,6 @@
           flex-direction: column;
           align-items: flex-start;
         }
-        .nav {
-          gap: 6px;
-        }
-        .nav button {
-          width: 100%;
-          justify-content: center;
-        }
         .subnav {
           gap: 6px;
         }
@@ -1889,40 +2121,6 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.05),
           var(--shadow-soft);
       }
-      .dashboard-plate-card {
-        grid-column: 1 / -1;
-        border-radius: 18px;
-        padding: 22px 22px 20px;
-        border-color: rgba(148, 163, 184, 0.16);
-        background: linear-gradient(
-          165deg,
-          rgba(255, 255, 255, 0.055) 0%,
-          rgba(15, 19, 26, 0.42) 100%
-        );
-      }
-      [data-theme="light"] .dashboard-plate-card {
-        background: linear-gradient(165deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.88));
-      }
-      .dashboard-plate-card .card-head .card-title {
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        font-weight: 700;
-      }
-      .dashboard-plate-hint {
-        margin: 0 0 14px;
-        font-size: 13px;
-        color: var(--muted);
-        line-height: 1.45;
-      }
-      .dashboard-plate-card .filter-bar input {
-        min-height: 42px;
-        border-radius: 12px;
-        padding: 10px 14px;
-        font-size: 15px;
-        font-weight: 600;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
       .dashboard-stat-card {
         border-radius: 18px;
         padding: 20px 20px 18px;
@@ -2025,6 +2223,109 @@
           <span id="themeLabel">Tema escuro</span>
         </button>
         <div class="user" id="userInfo">Não autenticado</div>
+        <div id="appHeaderMenuWrap" class="header-app-menu-wrap hidden">
+          <div id="appHeaderMenuBackdrop" class="header-menu-backdrop hidden" aria-hidden="true"></div>
+          <div class="header-menu-tray">
+            <button
+              type="button"
+              id="appHeaderMenuBtn"
+              class="header-menu-trigger"
+              aria-haspopup="true"
+              aria-expanded="false"
+              aria-controls="appHeaderMenu"
+              title="Menu"
+            >
+              <span class="header-menu-bar" aria-hidden="true"></span>
+              <span class="header-menu-bar" aria-hidden="true"></span>
+              <span class="header-menu-bar" aria-hidden="true"></span>
+              <span class="sr-only">Menu</span>
+            </button>
+            <div id="appHeaderMenu" class="header-menu-dropdown hidden" aria-label="Menu principal">
+              <button type="button" class="header-menu-top" data-view="dashboard">Painel</button>
+
+              <details class="header-menu-details" id="headerDetailsLista">
+                <summary>Lista</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-lista-subview="vnp">VNP</button>
+                  <button type="button" data-lista-subview="vrp">VRP</button>
+                  <button type="button" data-lista-subview="aguardando_lancamento" data-lista-gestor-hide="1">Aguardando lançamento</button>
+                  <button type="button" data-lista-subview="receber" data-lista-gestor-hide="1">Contas a receber</button>
+                  <button type="button" data-lista-subview="receber_alerta" data-lista-gestor-hide="1">Recebimentos em alerta</button>
+                  <button type="button" data-lista-subview="pagar" data-lista-gestor-hide="1">Contas a pagar</button>
+                  <button type="button" data-lista-subview="caixa" data-lista-gestor-hide="1">Caixa</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsPatio">
+                <summary>Gestão de pátio</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-patio="new-vehicle">Registrar veículo</button>
+                  <button type="button" data-header-patio="print">Imprimir</button>
+                  <button type="button" data-header-patio-sub="no_patio">VNP</button>
+                  <button type="button" data-header-patio-sub="removidos">VRP</button>
+                  <button type="button" data-header-patio-sub="nfse_pendente">NFSe pendente</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsParceiros">
+                <summary>Rede de parceiros</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-partner-sub="parceiros">Empresas de remoção</button>
+                  <button type="button" data-header-partner-sub="assessorias">Assessoria</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsFinance">
+                <summary>Gestão financeira</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-finance-panel="true">Resumo no painel</button>
+                  <button type="button" data-header-finance-action="financeMenuNewPayable">Nova despesa</button>
+                  <button type="button" data-header-finance-action="financeMenuPrintOpenRec">Imprimir a receber em aberto</button>
+                  <button type="button" data-header-finance-action="financeMenuReload">Atualizar dados</button>
+                  <button type="button" data-header-finance-action="financeMenuReceberFilters">Filtro de contas a receber</button>
+                  <button type="button" data-header-finance-sub="aguardando_lancamento">Aguardando lançamento</button>
+                  <button type="button" data-header-finance-sub="receber">Contas a receber</button>
+                  <button type="button" data-header-finance-sub="receber_alerta">Recebimentos em alerta</button>
+                  <button type="button" data-header-finance-sub="pagar">Contas a pagar</button>
+                  <button type="button" data-header-finance-sub="caixa">Caixa</button>
+                  <button type="button" data-header-finance-sub="fechamento_mensal">Fechamento mensal</button>
+                  <button type="button" data-header-finance-sub="relatorios">Relatórios</button>
+                  <button type="button" data-header-finance-sub="historico_pagar">Histórico a pagar</button>
+                  <button type="button" data-header-finance-sub="historico_receber">Histórico a receber</button>
+                </div>
+              </details>
+
+              <details class="header-menu-details" id="headerDetailsConfig">
+                <summary>Configurações</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-config-sub="dados">Pátio e textos</button>
+                  <button type="button" data-header-config-sub="usuarios">Usuários</button>
+                </div>
+              </details>
+
+              <div class="header-menu-sep" role="separator"></div>
+              <button type="button" id="appHeaderMenuLogout" class="header-menu-item--danger">Sair</button>
+            </div>
+          </div>
+          <form id="plateSearchForm" class="header-plate-search" action="#" novalidate>
+            <label for="plateFilter" class="header-plate-label">Placa</label>
+            <input
+              id="plateFilter"
+              name="plate"
+              type="text"
+              inputmode="text"
+              placeholder="ABC1D23"
+              maxlength="20"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+            <button type="submit" id="plateSearchOk">OK</button>
+            <button type="button" class="secondary" id="clearPlateFilter">Limpar</button>
+          </form>
+          <p class="notice plate-search-hint header-plate-search-hint hidden" aria-live="polite"></p>
+        </div>
       </div>
     </header>
 
@@ -2072,19 +2373,11 @@
       <section id="appPanel" class="hidden">
         <div id="gestorPistaWelcomeBanner" class="gestor-pista-welcome hidden" role="status">
           <p class="notice gestor-pista-welcome-text">
-            <strong>Gestor de pista.</strong> Entrou com o acesso que o gestor geral criou. Fica na <strong>Gestão de pátio</strong> (cadastro e consultas permitidas; sem valores completos, financeiro nem definições do dono). Use «← Voltar ao Painel» para o resumo.
+            <strong>Gestor de pista.</strong> Entrou com o acesso que o gestor geral criou. Fica na <strong>Gestão de pátio</strong> (cadastro e consultas permitidas; sem valores completos, financeiro nem definições do dono). No <strong>menu</strong> (canto superior direito), use <strong>Painel</strong> para o resumo.
           </p>
           <button type="button" class="secondary" id="gestorPistaWelcomeDismiss">Entendi</button>
         </div>
-        <div class="panel">
-          <div class="nav">
-            <button class="active" data-view="dashboard">Painel</button>
-            <button data-view="patio">Gestão de pátio</button>
-            <button data-view="financeiro">Gestão financeira</button>
-            <button data-view="configuracoes">Configurações</button>
-            <button id="logoutBtn" class="secondary">Sair</button>
-          </div>
-        </div>
+        <button type="button" id="logoutBtn" class="hidden" aria-hidden="true" tabindex="-1">Sair</button>
 
         <div id="viewDashboard" class="panel dashboard-shell">
           <div class="toolbar dashboard-toolbar">
@@ -2117,30 +2410,6 @@
                 <span class="dashboard-finance-card__meta" id="dashboardFinanceCaixaMeta">Movimentações: 0</span>
                 <span class="dashboard-finance-card__go">Abrir financeiro →</span>
               </div>
-            </div>
-            <div class="card dashboard-plate-card">
-              <div class="card-head">
-                <span class="card-title">Buscar por placa</span>
-              </div>
-              <p class="dashboard-plate-hint">Digite a placa e confirme — abre a aba <strong>Filtros</strong> no pátio com a listagem para imprimir ou guardar em PDF.</p>
-              <form id="plateSearchForm" class="filter-bar" style="margin: 0" action="#" novalidate>
-                <label for="plateFilter">Placa</label>
-                <input
-                  id="plateFilter"
-                  name="plate"
-                  type="text"
-                  inputmode="text"
-                  placeholder="Ex.: ABC1D23"
-                  maxlength="20"
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="characters"
-                  spellcheck="false"
-                />
-                <button type="submit" id="plateSearchOk">OK</button>
-                <button type="button" class="secondary" id="clearPlateFilter">Limpar</button>
-              </form>
-              <p class="notice plate-search-hint hidden" style="margin: 10px 0 0"></p>
             </div>
             <div class="card clickable dashboard-stat-card dashboard-stat--vnp" id="cardVeiculosLink">
               <div class="card-head">
@@ -2212,6 +2481,163 @@
               <div class="card-value" id="cardSaidasHoje">0</div>
               <div class="dashboard-stat-meta" id="cardSaidasHojeMeta">No mês: 0</div>
             </div>
+            <div class="card clickable dashboard-stat-card dashboard-stat--exits" id="cardVrpLink">
+              <div class="card-head">
+                <span class="card-title">VRP (removidos)</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M12 4v16M12 20l-4-4m4 4l4-4M5 4h14"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardVrp">0</div>
+            </div>
+            <div class="card clickable dashboard-stat-card dashboard-stat--release" id="cardNfsePendenteLink">
+              <div class="card-head">
+                <span class="card-title">NFSe pendente</span>
+                <span class="icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M7 3h8l4 4v14H7V3zM11 3v4h4M9 12h6M9 16h4"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </div>
+              <div class="card-value" id="cardNfsePendente">0</div>
+            </div>
+            <div id="financeTopDashboard" class="section-card finance-top-dashboard dashboard-embed-finance" style="grid-column: 1 / -1; margin-top: 8px">
+              <p class="dashboard-embed-kicker">Resumo — Gestão financeira</p>
+              <div class="finance-dashboard-grid">
+                <div class="finance-kpi-card">
+                  <div class="finance-kpi-title">Projeção de caixa</div>
+                  <div class="finance-kpi-value" id="fdtCaixaProjetado">R$ 0,00</div>
+                  <div class="finance-kpi-meta">Caixa + receber - pagar</div>
+                </div>
+                <div class="finance-kpi-card">
+                  <div class="finance-kpi-title">Entradas no mês</div>
+                  <div class="finance-kpi-value" id="fdtEntradasMes">R$ 0,00</div>
+                  <div class="finance-kpi-meta" id="fdtSaidasMesMeta">Saídas no mês: R$ 0,00</div>
+                </div>
+                <div class="finance-kpi-card">
+                  <div class="finance-kpi-title">Resultado do mês</div>
+                  <div class="finance-kpi-value" id="fdtResultadoMes">R$ 0,00</div>
+                  <div class="finance-kpi-meta">Entradas - saídas</div>
+                </div>
+                <div class="finance-kpi-card">
+                  <div class="finance-kpi-title">Ticket médio (a receber)</div>
+                  <div class="finance-kpi-value" id="fdtTicketMedio">R$ 0,00</div>
+                  <div class="finance-kpi-meta">Média por conta em aberto</div>
+                </div>
+                <div class="finance-kpi-card">
+                  <div class="finance-kpi-title">Índice de atraso</div>
+                  <div class="finance-kpi-value" id="fdtIndiceAtraso">0%</div>
+                  <div class="finance-kpi-meta" id="fdtAtrasoMeta">0 contas em atraso</div>
+                </div>
+                <div class="finance-kpi-card">
+                  <div class="finance-kpi-title">Autonomia de caixa</div>
+                  <div class="finance-kpi-value" id="fdtRunway">0 dias</div>
+                  <div class="finance-kpi-meta">Com base na despesa média diária do mês</div>
+                </div>
+              </div>
+              <div class="finance-charts-grid">
+                <div class="finance-chart-card">
+                  <div class="finance-chart-title">Tendência 6 meses (Entradas x Saídas)</div>
+                  <svg id="fdtTrendSvg" class="finance-chart-svg" viewBox="0 0 360 130" preserveAspectRatio="none"></svg>
+                  <div class="finance-chart-legend">Azul: entradas • Vermelho: saídas</div>
+                </div>
+                <div class="finance-chart-card">
+                  <div class="finance-chart-title">Projeção de caixa (4 semanas)</div>
+                  <svg id="fdtProjectionSvg" class="finance-chart-svg" viewBox="0 0 360 130" preserveAspectRatio="none"></svg>
+                  <div class="finance-chart-legend">Linha mostra a evolução esperada do saldo</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="viewLista" class="panel hidden" style="max-width: 1200px; margin: 0 auto">
+          <div class="toolbar">
+            <div>
+              <p class="module-kicker module-kicker--finance" style="margin: 0 0 4px">Consulta</p>
+              <h2 style="margin: 0">Lista</h2>
+              <p class="subtitle" style="margin: 6px 0 0; max-width: 42rem">
+                Filtros comuns (localizador, assessoria e texto tipo banco) aplicam-se à área escolhida. Para editar ou lançar valores, use as abas
+                <strong>Gestão de pátio</strong> e <strong>Gestão financeira</strong>.
+              </p>
+            </div>
+            <div class="actions">
+              <button class="secondary close-view" type="button" data-close-stack="true" aria-label="Fechar">X</button>
+            </div>
+          </div>
+          <div class="filter-bar" style="margin: 0 0 14px; flex-wrap: wrap; gap: 10px; align-items: flex-end">
+            <div>
+              <label for="listaFilterLocator">Localizador</label>
+              <select id="listaFilterLocator" style="min-width: 11rem">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div>
+              <label for="listaFilterAssessoria">Assessoria</label>
+              <select id="listaFilterAssessoria" style="min-width: 11rem">
+                <option value="">Todas</option>
+              </select>
+            </div>
+            <div style="flex: 1; min-width: 12rem">
+              <label for="listaFilterBanco">Banco / texto</label>
+              <input
+                id="listaFilterBanco"
+                type="search"
+                placeholder="Procura em observações, responsável, descrição…"
+                autocomplete="off"
+                style="width: 100%; max-width: 22rem"
+              />
+            </div>
+            <button type="button" class="secondary" id="listaFiltersClear">Limpar filtros</button>
+            <button type="button" id="listaFiltersApply">Atualizar lista</button>
+            <button type="button" class="secondary" id="listaFiltersPrint">Imprimir / PDF</button>
+            <button type="button" class="secondary" id="listaFiltersDownloadImage">Baixar imagem (PNG)</button>
+          </div>
+          <div class="subnav" id="listaSubnav" style="margin-bottom: 12px; flex-wrap: wrap">
+            <button type="button" data-lista-subview="vnp">VNP</button>
+            <button type="button" data-lista-subview="vrp">VRP</button>
+            <button type="button" data-lista-subview="aguardando_lancamento" data-lista-gestor-hide="1">Aguardando lançamento</button>
+            <button type="button" data-lista-subview="receber" data-lista-gestor-hide="1">Contas a receber</button>
+            <button type="button" data-lista-subview="receber_alerta" data-lista-gestor-hide="1">Recebimentos em alerta</button>
+            <button type="button" data-lista-subview="pagar" data-lista-gestor-hide="1">Contas a pagar</button>
+            <button type="button" data-lista-subview="caixa" data-lista-gestor-hide="1">Caixa</button>
+          </div>
+          <div id="listaCaptureRoot" class="lista-capture-root" style="background: #fff; color: #111; padding: 16px; border-radius: 12px; border: 1px solid #ddd">
+            <div id="listaCaptureHeading" style="margin-bottom: 12px; line-height: 1.45"></div>
+            <div class="section-card" style="margin: 0; border: 0; box-shadow: none; padding: 0">
+              <div class="table-wrap">
+                <table class="table stacked">
+                  <thead id="listaTableHead"></thead>
+                  <tbody id="listaTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div
+              id="listaCaptureTotal"
+              style="
+                margin-top: 14px;
+                padding: 12px 14px;
+                background: #f4f7fb;
+                border-radius: 8px;
+                font-size: 1.08rem;
+                font-weight: 700;
+                border: 1px solid #dde;
+              "
+            ></div>
           </div>
         </div>
 
@@ -2221,7 +2647,7 @@
             </div>
             <div class="patio-module-ribbon-right">
               <div class="patio-module-tools">
-                <button type="button" class="secondary" id="openParceirosFromPatio">Parceiros</button>
+                <button type="button" class="secondary" id="openParceirosFromPatio">Rede de parceiros</button>
                 <button type="button" class="secondary" id="openConfigFromPatio">Configurações</button>
               </div>
               <div class="patio-module-meta">
@@ -2241,23 +2667,37 @@
           </div>
           <div id="patioMenuBackdrop" class="patio-menu-backdrop hidden"></div>
           <div id="patioFlyoutBackdrop" class="patio-flyout-backdrop hidden"></div>
-          <div id="patioTopDashboard" class="section-card hidden" style="margin: 0 0 12px">
-            <div class="grid">
-              <div class="card"><div class="card-title">VNP</div><div class="card-value" id="pdtVnp">0</div></div>
-              <div class="card"><div class="card-title">Liberação em andamento</div><div class="card-value" id="pdtLib">0</div></div>
-              <div class="card"><div class="card-title">VRP (removidos)</div><div class="card-value" id="pdtVrp">0</div></div>
-              <div class="card"><div class="card-title">NFSe pendente</div><div class="card-value" id="pdtNfse">0</div></div>
-            </div>
-          </div>
           <div class="subnav patio-side-menu" id="patioSubnav">
             <button type="button" id="patioMenuNewVehicle">Registrar veículo</button>
             <button type="button" id="patioMenuPrintList">Imprimir</button>
             <button data-subview="no_patio">VNP</button>
             <button data-subview="removidos">VRP</button>
             <button data-subview="nfse_pendente">NFSe pendente</button>
-            <button type="button" data-subview="patio_filtros">Filtros</button>
           </div>
           <p class="notice plate-search-hint hidden" style="margin: 6px 0 10px"></p>
+          <form
+            id="plateSearchFormPatio"
+            class="filter-bar patio-plate-bar"
+            style="margin: 0 0 12px"
+            action="#"
+            novalidate
+          >
+            <label for="plateFilterPatio">Placa</label>
+            <input
+              id="plateFilterPatio"
+              name="plate"
+              type="text"
+              inputmode="text"
+              placeholder="Ex.: ABC1D23"
+              maxlength="20"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="characters"
+              spellcheck="false"
+            />
+            <button type="submit" id="plateSearchOkPatio">OK</button>
+            <button type="button" class="secondary" id="clearPlateFilterPatio">Limpar</button>
+          </form>
           <div id="patioContent" class="hidden" style="margin-top: 18px;">
             <button type="button" class="secondary patio-flyout-close" id="patioFlyoutClose">Fechar</button>
             <div id="patioFlyoutSummaryCards" class="grid" style="margin-bottom: 12px">
@@ -2267,6 +2707,17 @@
             </div>
             <div class="section-card patio-subview hidden" data-subview="no_patio">
               <div class="pill">VNP</div>
+              <div id="vlsToolbarFilters" class="filter-bar hidden" style="margin-bottom: 10px">
+                <label for="vlsFilterLocator">Localizador</label>
+                <select id="vlsFilterLocator">
+                  <option value="">Todos</option>
+                </select>
+                <label for="vlsFilterAssessoria">Assessoria</label>
+                <select id="vlsFilterAssessoria">
+                  <option value="">Todas</option>
+                </select>
+                <button type="button" class="secondary" id="vlsFiltersClear">Limpar filtros</button>
+              </div>
               <div class="table-wrap">
                 <table class="table stacked">
                 <thead>
@@ -2323,74 +2774,6 @@
                 </table>
               </div>
             </div>
-            <div class="section-card patio-subview hidden" data-subview="patio_filtros">
-              <div class="pill">Filtros e listagem</div>
-              <p class="notice" style="margin: 0 0 12px">
-                Escolha o tipo de lista e os filtros opcionais. Gere a pré-visualização e use <strong>Imprimir / PDF</strong> (na janela de impressão do sistema escolha “Guardar como PDF”, se quiser).
-              </p>
-              <div class="filter-bar patio-filtros-controls" style="flex-wrap: wrap; margin-bottom: 10px; gap: 10px">
-                <label for="patioFiltrosListType">Listagem</label>
-                <select id="patioFiltrosListType" style="min-width: 220px">
-                  <option value="vnp">VNP — no pátio + liberação em andamento</option>
-                  <option value="somente_patio">Só veículos no pátio</option>
-                  <option value="liberacao">Só liberação em andamento (fluxo)</option>
-                  <option value="removidos" data-gestor-hide="1">VRP — removidos (por período)</option>
-                  <option value="nfse_pendente" data-gestor-hide="1">NFSe pendente (por período)</option>
-                </select>
-              </div>
-              <div id="patioFiltrosPeriodWrap" class="filter-bar hidden" style="flex-wrap: wrap; margin-bottom: 10px; gap: 10px">
-                <label for="patioFiltrosFrom">Data inicial</label>
-                <input id="patioFiltrosFrom" type="date" />
-                <label for="patioFiltrosTo">Data final</label>
-                <input id="patioFiltrosTo" type="date" />
-                <button type="button" class="secondary" id="patioFiltrosPresetMonth">Este mês</button>
-                <button type="button" class="secondary" id="patioFiltrosPreset30">Últimos 30 dias</button>
-              </div>
-              <form
-                id="plateSearchFormPatio"
-                class="filter-bar patio-plate-bar"
-                style="margin: 0 0 10px"
-                action="#"
-                novalidate
-              >
-                <label for="plateFilterPatio">Placa (opcional)</label>
-                <input
-                  id="plateFilterPatio"
-                  name="plate"
-                  type="text"
-                  inputmode="text"
-                  placeholder="Ex.: ABC1D23"
-                  maxlength="20"
-                  autocomplete="off"
-                  autocorrect="off"
-                  autocapitalize="characters"
-                  spellcheck="false"
-                />
-                <button type="submit" id="plateSearchOkPatio">OK</button>
-                <button type="button" class="secondary" id="clearPlateFilterPatio">Limpar placa</button>
-              </form>
-              <div id="vlsToolbarFilters" class="filter-bar" style="flex-wrap: wrap; margin-bottom: 10px; gap: 10px">
-                <label for="vlsFilterLocator">Localizador</label>
-                <select id="vlsFilterLocator">
-                  <option value="">Todos</option>
-                </select>
-                <label for="vlsFilterAssessoria">Assessoria</label>
-                <select id="vlsFilterAssessoria">
-                  <option value="">Todas</option>
-                </select>
-                <button type="button" class="secondary" id="vlsFiltersClear">Limpar localizador e assessoria</button>
-              </div>
-              <div class="form-actions" style="margin-bottom: 14px; flex-wrap: wrap; gap: 8px">
-                <button type="button" id="patioFiltrosApply">Gerar lista</button>
-                <button type="button" class="secondary" id="patioFiltrosPrint">Imprimir / PDF</button>
-              </div>
-              <div class="table-wrap">
-                <table class="table stacked">
-                  <thead id="tablePatioFiltrosHead"></thead>
-                  <tbody id="tablePatioFiltrosResult"></tbody>
-                </table>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -2408,7 +2791,7 @@
           <div class="toolbar">
             <div>
               <p class="module-kicker module-kicker--partners">Cadastro</p>
-              <h2>Parceiros</h2>
+              <h2>Rede de parceiros</h2>
               <p class="module-lede">
                 Empresas de remoção e assessorias, rankings e tabelas no mesmo padrão visual dos módulos de pátio e financeiro.
               </p>
@@ -2485,69 +2868,8 @@
           <div id="financeMenuBackdrop" class="finance-menu-backdrop hidden"></div>
           <div id="financeFlyoutBackdrop" class="finance-flyout-backdrop hidden"></div>
           <div id="receivableAlert" class="alert hidden"></div>
-          <div id="financeTopDashboard" class="section-card finance-top-dashboard hidden">
-            <div class="finance-dashboard-grid">
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">A receber em aberto</div>
-                <div class="finance-kpi-value" id="fdtTotalReceber">R$ 0,00</div>
-                <div class="finance-kpi-meta" id="fdtQtdReceber">0 contas</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">A pagar em aberto</div>
-                <div class="finance-kpi-value" id="fdtTotalPagar">R$ 0,00</div>
-                <div class="finance-kpi-meta" id="fdtQtdPagar">0 contas</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Caixa atual</div>
-                <div class="finance-kpi-value" id="fdtCaixaAtual">R$ 0,00</div>
-                <div class="finance-kpi-meta" id="fdtCaixaStatus">Neutro</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Projeção de caixa</div>
-                <div class="finance-kpi-value" id="fdtCaixaProjetado">R$ 0,00</div>
-                <div class="finance-kpi-meta">Caixa + receber - pagar</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Entradas no mês</div>
-                <div class="finance-kpi-value" id="fdtEntradasMes">R$ 0,00</div>
-                <div class="finance-kpi-meta" id="fdtSaidasMesMeta">Saídas no mês: R$ 0,00</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Resultado do mês</div>
-                <div class="finance-kpi-value" id="fdtResultadoMes">R$ 0,00</div>
-                <div class="finance-kpi-meta">Entradas - saídas</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Ticket médio (a receber)</div>
-                <div class="finance-kpi-value" id="fdtTicketMedio">R$ 0,00</div>
-                <div class="finance-kpi-meta">Média por conta em aberto</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Índice de atraso</div>
-                <div class="finance-kpi-value" id="fdtIndiceAtraso">0%</div>
-                <div class="finance-kpi-meta" id="fdtAtrasoMeta">0 contas em atraso</div>
-              </div>
-              <div class="finance-kpi-card">
-                <div class="finance-kpi-title">Autonomia de caixa</div>
-                <div class="finance-kpi-value" id="fdtRunway">0 dias</div>
-                <div class="finance-kpi-meta">Com base na despesa média diária do mês</div>
-              </div>
-            </div>
-            <div class="finance-charts-grid">
-              <div class="finance-chart-card">
-                <div class="finance-chart-title">Tendência 6 meses (Entradas x Saídas)</div>
-                <svg id="fdtTrendSvg" class="finance-chart-svg" viewBox="0 0 360 130" preserveAspectRatio="none"></svg>
-                <div class="finance-chart-legend">Azul: entradas • Vermelho: saídas</div>
-              </div>
-              <div class="finance-chart-card">
-                <div class="finance-chart-title">Projeção de caixa (4 semanas)</div>
-                <svg id="fdtProjectionSvg" class="finance-chart-svg" viewBox="0 0 360 130" preserveAspectRatio="none"></svg>
-                <div class="finance-chart-legend">Linha mostra a evolução esperada do saldo</div>
-              </div>
-            </div>
-          </div>
           <div class="subnav finance-side-menu" id="financeSubnav">
-            <button data-subview="dashboard">Dashboard</button>
+            <button type="button" data-finance-go-panel="true">Resumo no painel</button>
             <button type="button" id="financeMenuNewPayable">Nova despesa</button>
             <button type="button" id="financeMenuPrintOpenRec">Imprimir a receber em aberto</button>
             <button type="button" id="financeMenuReload">Atualizar dados</button>
@@ -2594,6 +2916,10 @@
               <option value="">Todos</option>
             </select>
             <button type="button" class="secondary" id="clearFinanceReceberFilters">Limpar filtros</button>
+            <span class="notice" style="flex-basis: 100%; margin-top: 6px; line-height: 1.45">
+              Listagem com totais, impressão e imagem: use o menu principal <strong>Lista</strong> → <strong>Contas a receber</strong> ou
+              <strong>Recebimentos em alerta</strong>.
+            </span>
           </div>
           <p id="financeAguardandoIntro" class="notice hidden" style="margin: 4px 0 14px; max-width: 56rem; line-height: 1.45"></p>
           <div id="financeFilters" class="filter-bar hidden">
@@ -2674,30 +3000,6 @@
                   <div class="card-title" id="financeCardTitle3">Saldo em caixa</div>
                   <div class="card-value" id="financeCaixa">R$ 0,00</div>
                   <span class="tag success" id="financeCaixaStatus">Positivo</span>
-                </div>
-              </div>
-              <div id="financeReceberResumoWrap" class="section-card hidden" style="margin-top: 18px">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px">
-                  <h3 style="margin: 0; font-size: 1.05rem">Lista em aberto — entrada, saída e valor por veículo</h3>
-                  <button type="button" class="secondary" id="printFinanceReceberResumoBtn">Imprimir esta lista</button>
-                </div>
-                <p id="financeReceberResumoMeta" class="notice" style="margin: 0 0 12px"></p>
-                <div class="table-wrap">
-                  <table class="table">
-                    <thead>
-                      <tr>
-                        <th>Placa</th>
-                        <th>Veículo</th>
-                        <th>Localizador</th>
-                        <th>Assessoria</th>
-                        <th>Entrada (pátio)</th>
-                        <th>Saída</th>
-                        <th>Valor em aberto</th>
-                      </tr>
-                    </thead>
-                    <tbody id="financeReceberResumoBody"></tbody>
-                    <tfoot id="financeReceberResumoFoot"></tfoot>
-                  </table>
                 </div>
               </div>
               <div class="section-card" style="margin-top: 18px;">
@@ -2824,6 +3126,28 @@
                   <label>Nome do pátio</label>
                   <input id="settingsName" type="text" placeholder="Amplipatio" />
                 </div>
+                <div class="full">
+                  <label>Endereço da empresa (rodapé do recibo)</label>
+                  <textarea
+                    id="settingsEndereco"
+                    rows="3"
+                    placeholder="Ex.: Rua Marquês de Baependi, 119 — Campo Grande, Recife — PE"
+                    style="width: 100%; resize: vertical; min-height: 72px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0, 0, 0, 0.2); color: var(--text); font: inherit"
+                  ></textarea>
+                </div>
+                <div class="full">
+                  <label>Nome do emitente (recibo — quem declara o «Eu, …»)</label>
+                  <input
+                    id="settingsReciboEmitente"
+                    type="text"
+                    placeholder="Ex.: Fernando Vasconcellos de Albuquerque Lima"
+                    style="width: 100%"
+                  />
+                </div>
+                <div>
+                  <label>Telefone (rodapé do recibo)</label>
+                  <input id="settingsReciboTelefone" type="text" placeholder="Ex.: (81) 99991-8484" />
+                </div>
                 <div>
                   <label>Conta bancária</label>
                   <input id="settingsBank" type="text" placeholder="Banco / Agência / Conta" />
@@ -2837,7 +3161,9 @@
                   <input id="settingsInvoice" type="text" placeholder="Mensagem para nota fiscal" />
                 </div>
               </div>
-              <p class="notice">Essas informações serão usadas automaticamente nas cobranças e notas.</p>
+              <p class="notice">
+                O <strong>recibo em PDF</strong> (A4) usa o logotipo em <code>public/assets/recibo-header-logo.png</code> (ou <code>logo.png</code> como reserva), emitente e CNPJ padrão da empresa, e permite alterar rodapé em endereço/telefone.
+              </p>
             </div>
           </div>
 
@@ -3337,6 +3663,11 @@
             </div>
             <button class="modal-close" id="closeReciboModal">Fechar</button>
           </div>
+          <p class="notice" style="margin: 0 0 12px; font-size: 13px; line-height: 1.45">
+            Preencha <strong>só</strong> o nome e o CPF/CNPJ de quem consta no recibo como direcionado. O PDF usa
+            <strong>automaticamente</strong> marca, modelo, placa, período das estadias e o valor desta conta.
+          </p>
+          <div id="reciboModalResumoAuto" class="section-card hidden" style="margin-bottom: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.55"></div>
           <div class="form-grid">
             <div>
               <label for="reciboDestinatarioNome">Nome do direcionado</label>
@@ -3561,6 +3892,9 @@
       const settingsCnpj = document.getElementById("settingsCnpj");
       const settingsName = document.getElementById("settingsName");
       const settingsBank = document.getElementById("settingsBank");
+      const settingsEndereco = document.getElementById("settingsEndereco");
+      const settingsReciboEmitente = document.getElementById("settingsReciboEmitente");
+      const settingsReciboTelefone = document.getElementById("settingsReciboTelefone");
       const settingsCharge = document.getElementById("settingsCharge");
       const settingsInvoice = document.getElementById("settingsInvoice");
       const saveSettings = document.getElementById("saveSettings");
@@ -3627,6 +3961,10 @@
       let financePlateInputTimer = null;
       let vlsListFilterLocatorId = "";
       let vlsListFilterAssessoriaId = "";
+      let listaFilterLocatorId = "";
+      let listaFilterAssessoriaId = "";
+      let listaFilterBanco = "";
+      let currentListaView = "vnp";
       let editingVehicleId = null;
       let editingVehicleData = null;
       let nfseVehicleId = null;
@@ -3752,6 +4090,13 @@
         return currency.format(value || 0);
       }
 
+      /** Formata CNPJ com 14 dígitos para exibição; caso contrário devolve o texto original limpo. */
+      function formatCnpjForDisplay(raw) {
+        const d = String(raw || "").replace(/\D/g, "");
+        if (d.length !== 14) return String(raw || "").trim() || "";
+        return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12, 14)}`;
+      }
+
       function setPlateSearchHints(text, visible) {
         document.querySelectorAll(".plate-search-hint").forEach((el) => {
           el.textContent = text || "";
@@ -3768,6 +4113,17 @@
         const hh = String(date.getHours()).padStart(2, "0");
         const min = String(date.getMinutes()).padStart(2, "0");
         return `${dd}-${mm}-${yy} ${hh}:${min}`;
+      }
+
+      /** Data em dd/mm/aaaa (ex.: recibo). */
+      function formatDateBr(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "-";
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yyyy = String(date.getFullYear());
+        return `${dd}/${mm}/${yyyy}`;
       }
 
       function formatDate(value) {
@@ -3892,15 +4248,6 @@
         });
       }
 
-      /** Prioridade no topo da VNP: liberação solicitada ou sem valor diário. */
-      function isVnpUnifiedListDestaque(v) {
-        if (!v) return false;
-        const semValorDiaria = !v.valor_diaria || Number(v.valor_diaria) <= 0;
-        if (semValorDiaria) return true;
-        if (v.status === "LIBERACAO_SOLICITADA") return true;
-        return false;
-      }
-
       function sortVehiclesByRegistroDesc(list) {
         return [...list].sort((a, b) => {
           const ta = new Date(a.data_entrada || a.created_at || 0).getTime();
@@ -3957,6 +4304,15 @@
         ];
       }
 
+      function filterVlsToolbarItems(items) {
+        if (isGestorPista) return items;
+        return items.filter((v) => {
+          if (vlsListFilterLocatorId && v.localizador_id !== vlsListFilterLocatorId) return false;
+          if (vlsListFilterAssessoriaId && v.assessoria_id !== vlsListFilterAssessoriaId) return false;
+          return true;
+        });
+      }
+
       function syncVlsFilterSelects() {
         const locSel = document.getElementById("vlsFilterLocator");
         const assSel = document.getElementById("vlsFilterAssessoria");
@@ -3983,6 +4339,531 @@
           assSel.value = "";
           vlsListFilterAssessoriaId = "";
         }
+      }
+
+      function readListaFiltersFromDom() {
+        listaFilterLocatorId = document.getElementById("listaFilterLocator")?.value || "";
+        listaFilterAssessoriaId = document.getElementById("listaFilterAssessoria")?.value || "";
+        listaFilterBanco = (document.getElementById("listaFilterBanco")?.value || "").trim();
+      }
+
+      function syncListaFilterSelects() {
+        const locSel = document.getElementById("listaFilterLocator");
+        const assSel = document.getElementById("listaFilterAssessoria");
+        if (!locSel || !assSel) return;
+        const parceiros = state.partners.filter((p) => (p.tipo || "PARCEIRO") === "PARCEIRO");
+        const assessorias = state.partners.filter((p) => p.tipo === "ASSESSORIA");
+        const opt = (id, label) => {
+          const vid = String(id).replace(/"/g, "&quot;");
+          return `<option value="${vid}">${escapeHtml(label)}</option>`;
+        };
+        locSel.innerHTML =
+          `<option value="">Todos os localizadores</option>` +
+          parceiros.map((p) => opt(p.id, p.nome || "-")).join("");
+        assSel.innerHTML =
+          `<option value="">Todas as assessorias</option>` +
+          assessorias.map((p) => opt(p.id, p.nome || "-")).join("");
+        if (parceiros.some((p) => p.id === listaFilterLocatorId)) locSel.value = listaFilterLocatorId;
+        else {
+          locSel.value = "";
+          listaFilterLocatorId = "";
+        }
+        if (assessorias.some((p) => p.id === listaFilterAssessoriaId)) assSel.value = listaFilterAssessoriaId;
+        else {
+          assSel.value = "";
+          listaFilterAssessoriaId = "";
+        }
+      }
+
+      function maybeRefreshListaPanel() {
+        const el = document.getElementById("viewLista");
+        if (el && !el.classList.contains("hidden")) renderListaPanel();
+      }
+
+      function listaTextoBancoMatch(...parts) {
+        const q = (listaFilterBanco || "").trim().toLowerCase();
+        if (!q) return true;
+        const blob = parts
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return blob.includes(q);
+      }
+
+      function listaVehicleMatches(v) {
+        if (!v) return false;
+        if (listaFilterLocatorId && v.localizador_id !== listaFilterLocatorId) return false;
+        if (listaFilterAssessoriaId && v.assessoria_id !== listaFilterAssessoriaId) return false;
+        return listaTextoBancoMatch(v.observacoes, v.placa, state.settings?.conta_bancaria);
+      }
+
+      function listaReceivableMatches(r, vehicle) {
+        if (listaFilterLocatorId && (vehicle?.localizador_id || "") !== listaFilterLocatorId) return false;
+        if (listaFilterAssessoriaId && (vehicle?.assessoria_id || "") !== listaFilterAssessoriaId) return false;
+        return listaTextoBancoMatch(
+          r.responsavel_pagamento,
+          r.receivable_category,
+          vehicle?.observacoes,
+          vehicle?.placa,
+          state.settings?.conta_bancaria
+        );
+      }
+
+      function listaPayableMatches(p) {
+        const locName = listaFilterLocatorId
+          ? state.partners.find((x) => x.id === listaFilterLocatorId)?.nome || ""
+          : "";
+        const assName = listaFilterAssessoriaId
+          ? state.partners.find((x) => x.id === listaFilterAssessoriaId)?.nome || ""
+          : "";
+        const desc = (p.descricao || "").toLowerCase();
+        if (listaFilterLocatorId && locName && !desc.includes(String(locName).toLowerCase())) return false;
+        if (listaFilterAssessoriaId && assName && !desc.includes(String(assName).toLowerCase())) return false;
+        return listaTextoBancoMatch(p.descricao, p.payable_category, state.settings?.conta_bancaria);
+      }
+
+      function listaCashMatches(mov) {
+        const rec =
+          mov.tipo_conta === "RECEBER" && mov.conta_id != null && mov.conta_id !== ""
+            ? state.receivables.find((r) => String(r.id) === String(mov.conta_id))
+            : null;
+        const pay =
+          mov.tipo_conta === "PAGAR" && mov.conta_id != null && mov.conta_id !== ""
+            ? state.payables.find((p) => String(p.id) === String(mov.conta_id))
+            : null;
+        const v = rec ? state.vehicles.find((x) => x.id === rec.vehicle_id) : null;
+        if (rec && !listaReceivableMatches(rec, v)) return false;
+        if (pay && !listaPayableMatches(pay)) return false;
+        if (!rec && !pay) {
+          if (listaFilterLocatorId || listaFilterAssessoriaId) return false;
+          return listaTextoBancoMatch(mov.descricao, state.settings?.conta_bancaria);
+        }
+        return listaTextoBancoMatch(mov.descricao);
+      }
+
+      function syncListaSubnavActive() {
+        document.querySelectorAll("#listaSubnav button[data-lista-subview]").forEach((btn) => {
+          btn.classList.toggle("active", btn.getAttribute("data-lista-subview") === currentListaView);
+        });
+      }
+
+      function buildListaVnpVehicleRows() {
+        const vehicles = (state.vehicles || []).filter(listaVehicleMatches);
+        const byStatus = {
+          NO_PATIO: [],
+          LIBERACAO_SOLICITADA: [],
+          LIBERACAO_CONFIRMADA: [],
+          REMocao_CONFIRMADA: [],
+          REMOVIDO: [],
+        };
+        vehicles.forEach((v) => {
+          if (byStatus[v.status]) byStatus[v.status].push(v);
+        });
+        const vlsMerged = mergeVlsItems(byStatus);
+        const vnpUnified = sortVehiclesByRegistroDesc([...vlsMerged, ...byStatus.NO_PATIO]);
+        return vnpUnified;
+      }
+
+      function computeListaGrandTotalForCurrentView() {
+        readListaFiltersFromDom();
+        const vehicleById = new Map((state.vehicles || []).map((v) => [v.id, v]));
+        const semVal = isGestorPista;
+
+        if (currentListaView === "vnp") {
+          const items = buildListaVnpVehicleRows();
+          const label = "Total estimado";
+          if (semVal) return { amount: 0, label, hideAmount: true };
+          return {
+            amount: items.reduce((s, v) => s + Number(calcTotal(v) || 0), 0),
+            label,
+            hideAmount: false,
+          };
+        }
+        if (currentListaView === "vrp") {
+          const items = sortVehiclesByRegistroDesc(
+            (state.vehicles || []).filter((v) => v.status === "REMOVIDO" && listaVehicleMatches(v))
+          );
+          const label = "Total (VRP)";
+          if (semVal) return { amount: 0, label, hideAmount: true };
+          return {
+            amount: items.reduce((s, v) => s + Number(calcTotal(v) || 0), 0),
+            label,
+            hideAmount: false,
+          };
+        }
+        if (currentListaView === "aguardando_lancamento") {
+          const rows = (state.receivables || [])
+            .filter((r) => receivableNaFilaAguardandoTriagem(r))
+            .filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)));
+          const label = "Total";
+          const amount = rows.reduce((s, r) => s + Number(r.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        if (currentListaView === "receber" || currentListaView === "receber_alerta") {
+          const openList = (state.receivables || []).filter((r) => receivableIsContaReceberFinanceiro(r));
+          const overdueReceivables = openList.filter((r) => {
+            if (!r.created_at) return false;
+            const created = new Date(r.created_at).getTime();
+            const days = Math.floor((Date.now() - created) / 86400000);
+            return days > 10;
+          });
+          let list = openList.filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)));
+          if (currentListaView === "receber_alerta") {
+            list = list.filter((r) => overdueReceivables.some((o) => o.id === r.id));
+          }
+          const label = currentListaView === "receber_alerta" ? "Total (contas em alerta)" : "Total a receber";
+          const amount = list.reduce((s, r) => s + Number(r.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        if (currentListaView === "pagar") {
+          const list = (state.payables || []).filter((p) => p.status === "EM_ABERTO" && listaPayableMatches(p));
+          const label = "Total contas a pagar";
+          const amount = list.reduce((s, p) => s + Number(p.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        if (currentListaView === "caixa") {
+          const list = (state.cash || []).filter(listaCashMatches);
+          const label = "Soma dos valores (movimentos filtrados)";
+          const amount = list.reduce((s, mov) => s + Number(mov.valor || 0), 0);
+          return { amount, label, hideAmount: false };
+        }
+        return { amount: 0, label: "Total", hideAmount: false };
+      }
+
+      function updateListaCaptureSummary() {
+        const hEl = document.getElementById("listaCaptureHeading");
+        const tEl = document.getElementById("listaCaptureTotal");
+        if (!hEl || !tEl) return;
+        const nomePatio = state.settings?.nome_patio || "Pátio";
+        const viewLabel =
+          document.querySelector(`#listaSubnav button[data-lista-subview="${currentListaView}"]`)?.textContent?.trim() ||
+          currentListaView;
+        const filtros = [
+          listaFilterLocatorId ? `Loc.: ${state.partners.find((p) => p.id === listaFilterLocatorId)?.nome || ""}` : "",
+          listaFilterAssessoriaId ? `Ass.: ${state.partners.find((p) => p.id === listaFilterAssessoriaId)?.nome || ""}` : "",
+          listaFilterBanco ? `Texto: ${listaFilterBanco}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        hEl.innerHTML = `<strong>${escapeHtml(nomePatio)}</strong> — Lista · ${escapeHtml(viewLabel)}<br /><span style="font-size:0.85rem;color:#444">${escapeHtml(
+          filtros || "Sem filtros de parceiro/texto"
+        )}</span><br /><span style="font-size:0.78rem;color:#666">${escapeHtml(formatDateTime(new Date().toISOString()))}</span>`;
+        const g = computeListaGrandTotalForCurrentView();
+        if (g.hideAmount) {
+          tEl.textContent = "Valor total: não disponível neste perfil.";
+        } else {
+          tEl.textContent = `${g.label}: ${formatCurrency(g.amount)}`;
+        }
+      }
+
+      function renderListaPanel() {
+        readListaFiltersFromDom();
+        const head = document.getElementById("listaTableHead");
+        const body = document.getElementById("listaTableBody");
+        if (!head || !body) return;
+        syncListaSubnavActive();
+        const vehicleById = new Map((state.vehicles || []).map((v) => [v.id, v]));
+        const semVal = isGestorPista;
+        const locLabel = (id) => state.partners.find((p) => p.id === id)?.nome || "-";
+
+        try {
+        if (currentListaView === "vnp") {
+          head.innerHTML = `<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Situação</th>${
+            semVal ? "" : "<th>Valor estimado</th>"
+          }</tr>`;
+          const items = buildListaVnpVehicleRows();
+          if (!items.length) {
+            body.innerHTML = `<tr><td colspan="7" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = items
+            .map((v) => {
+              const sit =
+                v.status === "NO_PATIO"
+                  ? isRemocaoSolicitada(v)
+                    ? "No pátio · remoção solicitada"
+                    : "No pátio"
+                  : VLS_STATUS_LABELS[v.status] || v.status || "-";
+              const val = semVal ? "" : `<td data-label="Valor">${escapeHtml(formatCurrency(calcTotal(v)))}</td>`;
+              return `<tr>
+                <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
+                <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
+                <td data-label="Localizador">${escapeHtml(locLabel(v.localizador_id))}</td>
+                <td data-label="Assessoria">${escapeHtml(locLabel(v.assessoria_id))}</td>
+                <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
+                <td data-label="Situação">${escapeHtml(sit)}</td>
+                ${val}
+              </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        if (currentListaView === "vrp") {
+          head.innerHTML = `<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Saída</th>${
+            semVal ? "" : "<th>Valor</th>"
+          }</tr>`;
+          const items = sortVehiclesByRegistroDesc(
+            (state.vehicles || []).filter((v) => v.status === "REMOVIDO" && listaVehicleMatches(v))
+          );
+          if (!items.length) {
+            body.innerHTML = `<tr><td colspan="7" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = items
+            .map((v) => {
+              const val = semVal ? "" : `<td data-label="Valor">${escapeHtml(formatCurrency(calcTotal(v)))}</td>`;
+              return `<tr>
+                <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
+                <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
+                <td data-label="Localizador">${escapeHtml(locLabel(v.localizador_id))}</td>
+                <td data-label="Assessoria">${escapeHtml(locLabel(v.assessoria_id))}</td>
+                <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
+                <td data-label="Saída">${escapeHtml(formatDateTime(v.data_saida))}</td>
+                ${val}
+              </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        if (currentListaView === "aguardando_lancamento") {
+          head.innerHTML = `<tr><th>Resumo</th><th>Valor</th><th>Estado</th></tr>`;
+          const rows = [];
+          state.receivables
+            .filter((r) => receivableNaFilaAguardandoTriagem(r))
+            .filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)))
+            .forEach((r) => {
+              const vehicle = vehicleById.get(r.vehicle_id);
+              const vehicleInfo = vehicle
+                ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+                : "Veículo não encontrado";
+              const ini = r.period_start ? formatDate(r.period_start) : "-";
+              const fim = r.period_end
+                ? formatDate(r.period_end)
+                : vehicle?.data_saida
+                  ? formatDate(vehicle.data_saida)
+                  : "-";
+              rows.push(`<tr>
+                <td data-label="Resumo">${escapeHtml(r.responsavel_pagamento || "—")}<br /><span class="notice">${escapeHtml(
+                  vehicleInfo
+                )}</span><br />${escapeHtml(ini)} → ${escapeHtml(fim)}</td>
+                <td data-label="Valor">${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
+                <td data-label="Estado"><span class="tag warning">Aguardando triagem</span></td>
+              </tr>`);
+            });
+          body.innerHTML = rows.length
+            ? rows.join("")
+            : `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+          return;
+        }
+
+        if (currentListaView === "receber" || currentListaView === "receber_alerta") {
+          head.innerHTML = `<tr><th>Resumo</th><th>Valor</th><th>Estado</th></tr>`;
+          const openList = (state.receivables || []).filter((r) => receivableIsContaReceberFinanceiro(r));
+          const overdueReceivables = openList.filter((r) => {
+            if (!r.created_at) return false;
+            const created = new Date(r.created_at).getTime();
+            const days = Math.floor((Date.now() - created) / 86400000);
+            return days > 10;
+          });
+          let list = openList.filter((r) => listaReceivableMatches(r, vehicleById.get(r.vehicle_id)));
+          if (currentListaView === "receber_alerta") {
+            list = list.filter((r) => overdueReceivables.some((o) => o.id === r.id));
+          }
+          const totalReceber = list.reduce((s, r) => s + Number(r.valor || 0), 0);
+          const footReceber = `<tr class="lista-tabela-total" style="border-top: 2px solid var(--border); background: rgba(148, 163, 184, 0.08)">
+              <td data-label="Resumo" style="text-align: right; font-weight: 700">Total (soma dos valores da lista)</td>
+              <td data-label="Valor" style="font-weight: 700">${escapeHtml(formatCurrency(totalReceber))}</td>
+              <td data-label="Estado"></td>
+            </tr>`;
+          if (!list.length) {
+            body.innerHTML = `<tr><td colspan="3" class="notice">Nenhum registo com os filtros atuais.</td></tr>${footReceber}`;
+            return;
+          }
+          const rowsHtml = list
+            .map((r) => {
+              const vehicle = vehicleById.get(r.vehicle_id);
+              const vehicleInfo = vehicle
+                ? `${vehicle.placa || "-"} • ${[vehicle.marca, vehicle.modelo].filter(Boolean).join(" ")}`
+                : "—";
+              const st = r.status === "EM_ABERTO" ? "Em aberto" : r.status || "—";
+              return `<tr>
+              <td data-label="Resumo">${escapeHtml(r.responsavel_pagamento || "—")}<br /><span class="notice">${escapeHtml(
+                vehicleInfo
+              )}</span></td>
+              <td data-label="Valor">${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
+              <td data-label="Estado">${escapeHtml(st)}</td>
+            </tr>`;
+            })
+            .join("");
+          body.innerHTML = rowsHtml + footReceber;
+          return;
+        }
+
+        if (currentListaView === "pagar") {
+          head.innerHTML = `<tr><th>Descrição</th><th>Vencimento</th><th>Valor</th><th>Estado</th></tr>`;
+          const list = (state.payables || []).filter((p) => p.status === "EM_ABERTO" && listaPayableMatches(p));
+          if (!list.length) {
+            body.innerHTML = `<tr><td colspan="4" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          const totalPagar = list.reduce((s, p) => s + Number(p.valor || 0), 0);
+          const rowsPagar = list
+            .map((p) => {
+              return `<tr>
+              <td data-label="Descrição">${escapeHtml(p.descricao || "—")}</td>
+              <td data-label="Vencimento">${escapeHtml(p.data_vencimento ? formatDate(p.data_vencimento) : "—")}</td>
+              <td data-label="Valor">${escapeHtml(formatCurrency(Number(p.valor || 0)))}</td>
+              <td data-label="Estado">${escapeHtml(p.status || "—")}</td>
+            </tr>`;
+            })
+            .join("");
+          const footPagar = `<tr class="lista-tabela-total" style="border-top: 2px solid var(--border); background: rgba(148, 163, 184, 0.08)">
+              <td data-label="Descrição" colspan="2" style="text-align: right; font-weight: 700">Total</td>
+              <td data-label="Valor" style="font-weight: 700">${escapeHtml(formatCurrency(totalPagar))}</td>
+              <td data-label="Estado"></td>
+            </tr>`;
+          body.innerHTML = rowsPagar + footPagar;
+          return;
+        }
+
+        if (currentListaView === "caixa") {
+          head.innerHTML = `<tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr>`;
+          const list = (state.cash || []).filter(listaCashMatches);
+          if (!list.length) {
+            body.innerHTML = `<tr><td colspan="4" class="notice">Nenhum registo com os filtros atuais.</td></tr>`;
+            return;
+          }
+          body.innerHTML = list
+            .map((mov) => {
+              return `<tr>
+              <td data-label="Data">${escapeHtml(formatDateTime(mov.data_movimento))}</td>
+              <td data-label="Tipo">${escapeHtml(mov.tipo_conta || "—")}</td>
+              <td data-label="Descrição">${escapeHtml(mov.descricao || "—")}</td>
+              <td data-label="Valor">${escapeHtml(formatCurrency(Number(mov.valor || 0)))}</td>
+            </tr>`;
+            })
+            .join("");
+          return;
+        }
+
+        head.innerHTML = "";
+        body.innerHTML = `<tr><td class="notice">Vista de lista não reconhecida.</td></tr>`;
+        } finally {
+          updateListaCaptureSummary();
+        }
+      }
+
+      let html2canvasLoadPromise = null;
+      function ensureHtml2Canvas() {
+        if (window.html2canvas) return Promise.resolve(window.html2canvas);
+        if (html2canvasLoadPromise) return html2canvasLoadPromise;
+        html2canvasLoadPromise = new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+          s.async = true;
+          s.onload = () => {
+            if (window.html2canvas) resolve(window.html2canvas);
+            else reject(new Error("html2canvas não disponível"));
+          };
+          s.onerror = () => reject(new Error("Falha ao carregar html2canvas"));
+          document.head.appendChild(s);
+        });
+        return html2canvasLoadPromise;
+      }
+
+      async function downloadListaCaptureAsPng() {
+        const root = document.getElementById("listaCaptureRoot");
+        if (!root) {
+          alert("Área da lista não encontrada.");
+          return;
+        }
+        readListaFiltersFromDom();
+        renderListaPanel();
+        const btn = document.getElementById("listaFiltersDownloadImage");
+        const prev = btn?.textContent;
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "A gerar imagem…";
+        }
+        try {
+          const html2canvas = await ensureHtml2Canvas();
+          const canvas = await html2canvas(root, {
+            backgroundColor: "#ffffff",
+            scale: Math.min(2, (window.devicePixelRatio || 1) * 1.5),
+            useCORS: true,
+            logging: false,
+          });
+          const safeSub = String(currentListaView || "lista").replace(/[^\w-]+/g, "_");
+          const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+          await new Promise((resolve) => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  alert("Não foi possível gerar o ficheiro.");
+                  resolve();
+                  return;
+                }
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `lista-${safeSub}-${stamp}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+                resolve();
+              },
+              "image/png",
+              0.95
+            );
+          });
+        } catch (e) {
+          console.error(e);
+          alert("Não foi possível gerar a imagem. Verifique a ligação à Internet ou tente noutro navegador.");
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = prev || "Baixar imagem (PNG)";
+          }
+        }
+      }
+
+      function runListaPrintDocument() {
+        readListaFiltersFromDom();
+        renderListaPanel();
+        const nomePatio = state.settings?.nome_patio || "Pátio";
+        const headHtml = document.getElementById("listaTableHead")?.innerHTML || "";
+        const bodyHtml = document.getElementById("listaTableBody")?.innerHTML || "";
+        const filtros = [
+          listaFilterLocatorId ? `Localizador: ${state.partners.find((p) => p.id === listaFilterLocatorId)?.nome || listaFilterLocatorId}` : "",
+          listaFilterAssessoriaId ? `Assessoria: ${state.partners.find((p) => p.id === listaFilterAssessoriaId)?.nome || listaFilterAssessoriaId}` : "",
+          listaFilterBanco ? `Texto: ${listaFilterBanco}` : "",
+        ]
+          .filter(Boolean)
+          .join(" · ");
+        const viewLabel = document.querySelector(`#listaSubnav button[data-lista-subview="${currentListaView}"]`)?.textContent?.trim() || currentListaView;
+        const meta = [viewLabel, filtros || "Sem filtros adicionais", `Emitido: ${formatDateTime(new Date().toISOString())}`].join(" · ");
+        const g = computeListaGrandTotalForCurrentView();
+        const totalBlock = g.hideAmount
+          ? `<p style="margin-top:12px;font-weight:600">${escapeHtml("Valor total: não disponível neste perfil.")}</p>`
+          : `<p style="margin-top:12px;font-weight:700;font-size:1.05rem">${escapeHtml(`${g.label}: ${formatCurrency(g.amount)}`)}</p>`;
+        const printCss = `
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
+  h1 { font-size: 1.2rem; margin: 0 0 6px; }
+  .meta { font-size: 0.82rem; color: #444; margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; }
+  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { margin: 12mm; }`;
+        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>${escapeHtml(
+          nomePatio
+        )} — Lista</title><style>${printCss}</style></head><body>
+  <h1>${escapeHtml(nomePatio)} — Lista · ${escapeHtml(viewLabel)}</h1>
+  <div class="meta">${escapeHtml(meta)}</div>
+  <table><thead>${headHtml}</thead><tbody>${bodyHtml}</tbody></table>
+  ${totalBlock}
+</body></html>`;
+        printHtmlInHiddenIframe(html, { iframeTitle: "Impressão lista", closeModalId: null });
       }
 
       function printHtmlInHiddenIframe(html, opts = {}) {
@@ -4021,387 +4902,6 @@
         }, 300);
         if (closeModalId) document.getElementById(closeModalId)?.classList.add("hidden");
         return true;
-      }
-
-      function buildVnpUnifiedListFromVehicleList(vehicles) {
-        const byStatus = {
-          NO_PATIO: [],
-          LIBERACAO_SOLICITADA: [],
-          LIBERACAO_CONFIRMADA: [],
-          REMocao_CONFIRMADA: [],
-          REMOVIDO: [],
-        };
-        (vehicles || []).forEach((v) => {
-          if (byStatus[v.status]) byStatus[v.status].push(v);
-        });
-        const vlsMerged = mergeVlsItems(byStatus);
-        const vnpCombined = [...vlsMerged, ...byStatus.NO_PATIO];
-        const vnpDestaque = vnpCombined.filter(isVnpUnifiedListDestaque);
-        const vnpRestantes = vnpCombined.filter((v) => !isVnpUnifiedListDestaque(v));
-        return [...sortVehiclesByRegistroDesc(vnpDestaque), ...sortVehiclesByRegistroDesc(vnpRestantes)];
-      }
-
-      function applyPatioFiltrosLocAss(list) {
-        return (list || []).filter((v) => {
-          if (vlsListFilterLocatorId && v.localizador_id !== vlsListFilterLocatorId) return false;
-          if (vlsListFilterAssessoriaId && v.assessoria_id !== vlsListFilterAssessoriaId) return false;
-          return true;
-        });
-      }
-
-      function syncPatioFiltrosListTypeOptions() {
-        const sel = document.getElementById("patioFiltrosListType");
-        if (!sel) return;
-        sel.querySelectorAll("option[data-gestor-hide]").forEach((opt) => {
-          opt.disabled = isGestorPista;
-          opt.hidden = isGestorPista;
-        });
-        if (isGestorPista && (sel.value === "removidos" || sel.value === "nfse_pendente")) {
-          sel.value = "vnp";
-        }
-      }
-
-      function updatePatioFiltrosPeriodVisibility() {
-        const listType = document.getElementById("patioFiltrosListType")?.value || "vnp";
-        const wrap = document.getElementById("patioFiltrosPeriodWrap");
-        const show = listType === "removidos" || listType === "nfse_pendente";
-        wrap?.classList.toggle("hidden", !show);
-      }
-
-      function applyPatioFiltrosDatePreset(kind) {
-        const fromEl = document.getElementById("patioFiltrosFrom");
-        const toEl = document.getElementById("patioFiltrosTo");
-        if (!fromEl || !toEl) return;
-        const now = new Date();
-        const toStr = toYmdLocal(now);
-        toEl.value = toStr;
-        if (kind === "month") {
-          const first = new Date(now.getFullYear(), now.getMonth(), 1);
-          fromEl.value = toYmdLocal(first);
-          return;
-        }
-        const days = kind === 90 ? 90 : 30;
-        const fromD = new Date(now.getTime() - (days - 1) * 86400000);
-        fromEl.value = toYmdLocal(fromD);
-      }
-
-      function patioFiltrosSituationLabel(v) {
-        if (!v) return "-";
-        if (v.status === "NO_PATIO") {
-          return isRemocaoSolicitada(v) ? "No pátio · remoção solicitada" : "No pátio";
-        }
-        return VLS_STATUS_LABELS[v.status] || v.status || "-";
-      }
-
-      function getPatioFiltrosVehicleSlice() {
-        const listType = document.getElementById("patioFiltrosListType")?.value || "vnp";
-        const fromStr = document.getElementById("patioFiltrosFrom")?.value || "";
-        const toStr = document.getElementById("patioFiltrosTo")?.value || "";
-        let vehicles = [...(state.vehicles || [])];
-
-        const plateRaw = (document.getElementById("plateFilterPatio")?.value || "").trim().toLowerCase();
-        const qNorm = normalizePlateSearch(plateRaw);
-        if (qNorm) vehicles = vehicles.filter((v) => normalizePlateSearch(v.placa) === qNorm);
-
-        vehicles = applyPatioFiltrosLocAss(vehicles);
-
-        const needsPeriod = listType === "removidos" || listType === "nfse_pendente";
-        if (needsPeriod) {
-          if (!fromStr || !toStr) {
-            return { error: "Informe a data inicial e a data final para esta listagem." };
-          }
-          if (fromStr > toStr) {
-            return { error: "A data inicial não pode ser maior que a data final." };
-          }
-        }
-
-        const subtParts = [];
-        if (qNorm) subtParts.push(`Placa: ${plateRaw}`);
-        if (vlsListFilterLocatorId || vlsListFilterAssessoriaId) {
-          const locN =
-            state.partners.find((p) => p.id === vlsListFilterLocatorId)?.nome || (vlsListFilterLocatorId ? "—" : "");
-          const assN =
-            state.partners.find((p) => p.id === vlsListFilterAssessoriaId)?.nome || (vlsListFilterAssessoriaId ? "—" : "");
-          if (vlsListFilterLocatorId) subtParts.push(`Localizador: ${locN}`);
-          if (vlsListFilterAssessoriaId) subtParts.push(`Assessoria: ${assN}`);
-        }
-        if (needsPeriod) subtParts.push(`${formatYmdToBr(fromStr)} a ${formatYmdToBr(toStr)}`);
-
-        if (listType === "vnp") {
-          return {
-            error: null,
-            kind: listType,
-            title: "VNP — no pátio e liberação em andamento",
-            subtitle: subtParts.length ? subtParts.join(" · ") : "Lista completa (filtros opcionais)",
-            items: buildVnpUnifiedListFromVehicleList(vehicles),
-          };
-        }
-        if (listType === "somente_patio") {
-          const items = sortVehiclesByRegistroDesc(vehicles.filter((v) => v.status === "NO_PATIO"));
-          return {
-            error: null,
-            kind: listType,
-            title: "Veículos no pátio",
-            subtitle: subtParts.length ? subtParts.join(" · ") : "Apenas status “no pátio”",
-            items,
-          };
-        }
-        if (listType === "liberacao") {
-          const byStatus = {
-            NO_PATIO: [],
-            LIBERACAO_SOLICITADA: [],
-            LIBERACAO_CONFIRMADA: [],
-            REMocao_CONFIRMADA: [],
-            REMOVIDO: [],
-          };
-          vehicles.forEach((v) => {
-            if (byStatus[v.status]) byStatus[v.status].push(v);
-          });
-          const items = sortVehiclesByRegistroDesc(mergeVlsItems(byStatus));
-          return {
-            error: null,
-            kind: listType,
-            title: "Liberação em andamento",
-            subtitle: subtParts.length ? subtParts.join(" · ") : "Fluxo antes da remoção efetivada",
-            items,
-          };
-        }
-        if (listType === "removidos") {
-          const items = sortVehiclesByRegistroDesc(
-            vehicles.filter((v) => {
-              if (v.status !== "REMOVIDO") return false;
-              const ref = v.data_saida || v.data_entrada;
-              return inDateRangeInclusive(ref, fromStr, toStr);
-            })
-          );
-          return {
-            error: null,
-            kind: listType,
-            title: "VRP — veículos removidos",
-            subtitle: subtParts.join(" · ") || "Por data de saída (ou entrada se não houver saída)",
-            items,
-          };
-        }
-        if (listType === "nfse_pendente") {
-          const items = sortVehiclesByRegistroDesc(
-            vehicles.filter((v) => {
-              if (v.nfse_status !== "PENDENTE") return false;
-              const ref = v.nfse_requested_at || v.data_entrada;
-              return inDateRangeInclusive(ref, fromStr, toStr);
-            })
-          );
-          return {
-            error: null,
-            kind: listType,
-            title: "NFSe pendente",
-            subtitle: subtParts.join(" · ") || "Período pela solicitação ou entrada",
-            items,
-          };
-        }
-        return { error: "Tipo de listagem inválido.", kind: listType, title: "", subtitle: "", items: [] };
-      }
-
-      function renderPatioFiltrosValorCell(v) {
-        if (isGestorPista) return "-";
-        const total = calcTotal(v);
-        return `${formatCurrency(total)} (${calcDays(v)} diárias)`;
-      }
-
-      function renderPatioFiltrosPreview() {
-        syncPatioFiltrosListTypeOptions();
-        updatePatioFiltrosPeriodVisibility();
-        document.getElementById("vlsToolbarFilters")?.classList.toggle("hidden", !!isGestorPista);
-
-        const thead = document.getElementById("tablePatioFiltrosHead");
-        const tbody = document.getElementById("tablePatioFiltrosResult");
-        if (!thead || !tbody) return;
-
-        const slice = getPatioFiltrosVehicleSlice();
-        if (slice.error) {
-          thead.innerHTML = "";
-          tbody.innerHTML = `<tr><td colspan="10" class="notice">${escapeHtml(slice.error)}</td></tr>`;
-          return;
-        }
-
-        const items = slice.items || [];
-        const kind = slice.kind;
-        const thValor = `<th class="patio-filtros-col-valor">Valor</th>`;
-
-        if (kind === "removidos") {
-          thead.innerHTML = `<tr>
-            <th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th>
-            <th>Entrada</th><th>Saída</th>${thValor}</tr>`;
-          if (!items.length) {
-            tbody.innerHTML = `<tr><td colspan="7" class="notice">Nenhum veículo nesta listagem com os filtros atuais.</td></tr>`;
-            return;
-          }
-          tbody.innerHTML = items
-            .map((v) => {
-              const loc = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
-              const ass = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
-              return `<tr>
-                <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
-                <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
-                <td data-label="Localizador">${escapeHtml(loc)}</td>
-                <td data-label="Assessoria">${escapeHtml(ass)}</td>
-                <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
-                <td data-label="Saída">${escapeHtml(formatDateTime(v.data_saida))}</td>
-                <td data-label="Valor" class="patio-filtros-col-valor">${escapeHtml(renderPatioFiltrosValorCell(v))}</td>
-              </tr>`;
-            })
-            .join("");
-          return;
-        }
-
-        if (kind === "nfse_pendente") {
-          thead.innerHTML = `<tr>
-            <th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th>
-            <th>Entrada</th><th>Solicitação NFSe</th>${thValor}</tr>`;
-          if (!items.length) {
-            tbody.innerHTML = `<tr><td colspan="7" class="notice">Nenhum veículo nesta listagem com os filtros atuais.</td></tr>`;
-            return;
-          }
-          tbody.innerHTML = items
-            .map((v) => {
-              const loc = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
-              const ass = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
-              const req = v.nfse_requested_at ? formatDateTime(v.nfse_requested_at) : "—";
-              return `<tr>
-                <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
-                <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
-                <td data-label="Localizador">${escapeHtml(loc)}</td>
-                <td data-label="Assessoria">${escapeHtml(ass)}</td>
-                <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
-                <td data-label="Solicitação NFSe">${escapeHtml(req)}</td>
-                <td data-label="Valor" class="patio-filtros-col-valor">${escapeHtml(renderPatioFiltrosValorCell(v))}</td>
-              </tr>`;
-            })
-            .join("");
-          return;
-        }
-
-        thead.innerHTML = `<tr>
-          <th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th>
-          <th>Entrada</th><th>Situação</th>${thValor}</tr>`;
-        if (!items.length) {
-          tbody.innerHTML = `<tr><td colspan="7" class="notice">Nenhum veículo nesta listagem com os filtros atuais.</td></tr>`;
-          return;
-        }
-        tbody.innerHTML = items
-          .map((v) => {
-            const loc = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
-            const ass = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
-            return `<tr>
-              <td data-label="Placa">${escapeHtml(v.placa || "-")}</td>
-              <td data-label="Veículo">${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
-              <td data-label="Localizador">${escapeHtml(loc)}</td>
-              <td data-label="Assessoria">${escapeHtml(ass)}</td>
-              <td data-label="Entrada">${escapeHtml(formatDateTime(v.data_entrada))}</td>
-              <td data-label="Situação">${escapeHtml(patioFiltrosSituationLabel(v))}</td>
-              <td data-label="Valor" class="patio-filtros-col-valor">${escapeHtml(renderPatioFiltrosValorCell(v))}</td>
-            </tr>`;
-          })
-          .join("");
-      }
-
-      function runPatioFiltrosPrintDocument() {
-        const slice = getPatioFiltrosVehicleSlice();
-        if (slice.error) {
-          alert(slice.error);
-          return;
-        }
-        const items = slice.items || [];
-        const nomePatio = state.settings?.nome_patio || "Pátio";
-        const nowStr = formatDateTime(new Date().toISOString());
-        const metaLine = [slice.title, slice.subtitle, `Emitido em: ${nowStr}`].filter(Boolean).join(" · ");
-
-        const printCss = `
-  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
-  h1 { font-size: 1.25rem; margin: 0 0 4px; }
-  .meta { font-size: 0.8rem; color: #444; margin-bottom: 14px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-bottom: 8px; }
-  th, td { border: 1px solid #bbb; padding: 7px; text-align: left; vertical-align: top; }
-  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  @page { margin: 12mm; }
-  @media print { body { margin: 0; } }
-  .empty { font-size: 0.9rem; color: #666; font-style: italic; }`;
-
-        let thead = "";
-        let rows = "";
-        const kind = slice.kind;
-
-        if (kind === "removidos") {
-          thead =
-            "<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Saída</th><th>Valor</th></tr>";
-          rows = items
-            .map((v) => {
-              const loc = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
-              const ass = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
-              return `<tr>
-              <td>${escapeHtml(v.placa || "-")}</td>
-              <td>${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
-              <td>${escapeHtml(loc)}</td>
-              <td>${escapeHtml(ass)}</td>
-              <td>${escapeHtml(formatDateTime(v.data_entrada))}</td>
-              <td>${escapeHtml(formatDateTime(v.data_saida))}</td>
-              <td>${escapeHtml(renderPatioFiltrosValorCell(v))}</td>
-            </tr>`;
-            })
-            .join("");
-        } else if (kind === "nfse_pendente") {
-          thead =
-            "<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Solicitação NFSe</th><th>Valor</th></tr>";
-          rows = items
-            .map((v) => {
-              const loc = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
-              const ass = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
-              const req = v.nfse_requested_at ? formatDateTime(v.nfse_requested_at) : "—";
-              return `<tr>
-              <td>${escapeHtml(v.placa || "-")}</td>
-              <td>${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
-              <td>${escapeHtml(loc)}</td>
-              <td>${escapeHtml(ass)}</td>
-              <td>${escapeHtml(formatDateTime(v.data_entrada))}</td>
-              <td>${escapeHtml(req)}</td>
-              <td>${escapeHtml(renderPatioFiltrosValorCell(v))}</td>
-            </tr>`;
-            })
-            .join("");
-        } else {
-          thead =
-            "<tr><th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th><th>Entrada</th><th>Situação</th><th>Valor</th></tr>";
-          rows = items
-            .map((v) => {
-              const loc = state.partners.find((p) => p.id === v.localizador_id)?.nome || "-";
-              const ass = state.partners.find((p) => p.id === v.assessoria_id)?.nome || "-";
-              return `<tr>
-              <td>${escapeHtml(v.placa || "-")}</td>
-              <td>${escapeHtml([v.marca, v.modelo].filter(Boolean).join(" ") || "-")}</td>
-              <td>${escapeHtml(loc)}</td>
-              <td>${escapeHtml(ass)}</td>
-              <td>${escapeHtml(formatDateTime(v.data_entrada))}</td>
-              <td>${escapeHtml(patioFiltrosSituationLabel(v))}</td>
-              <td>${escapeHtml(renderPatioFiltrosValorCell(v))}</td>
-            </tr>`;
-            })
-            .join("");
-        }
-
-        const bodyBlock =
-          items.length === 0
-            ? `<p class="empty">Nenhum registro com os filtros atuais.</p>`
-            : `<table><thead>${thead}</thead><tbody>${rows}</tbody></table>`;
-
-        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>${escapeHtml(
-          slice.title || "Listagem"
-        )}</title>
-<style>${printCss}</style></head><body>
-  <h1>${escapeHtml(nomePatio)} — ${escapeHtml(slice.title)}</h1>
-  <div class="meta">${escapeHtml(metaLine)}</div>
-  ${bodyBlock}
-</body></html>`;
-
-        printHtmlInHiddenIframe(html, { iframeTitle: "Impressão filtros do pátio", closeModalId: null });
       }
 
       function bucketVehiclesByPartnerField(vehicles, field) {
@@ -4830,81 +5330,6 @@
           });
         }
         return { list, vehicleById };
-      }
-
-      function runFinanceReceberResumoPrint() {
-        const alertaOnly = currentFinanceView === "receber_alerta";
-        const { list, vehicleById } = collectFinanceReceberFilteredList({ alertaOnly });
-        if (!list.length) {
-          alert("Nenhuma conta em aberto com os filtros atuais.");
-          return;
-        }
-        const partnerById = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
-        const nomePatio = state.settings?.nome_patio || "Pátio";
-        const total = list.reduce((s, r) => s + Number(r.valor || 0), 0);
-        const rowHtml = list
-          .map((r) => {
-            const v = vehicleById.get(r.vehicle_id);
-            const placa = v?.placa || "—";
-            const vm = [v?.marca, v?.modelo].filter(Boolean).join(" ") || "—";
-            const loc = v?.localizador_id ? partnerById.get(v.localizador_id) || "—" : "—";
-            const ass = v?.assessoria_id ? partnerById.get(v.assessoria_id) || "—" : "—";
-            return `<tr>
-            <td>${escapeHtml(placa)}</td>
-            <td>${escapeHtml(vm)}</td>
-            <td>${escapeHtml(loc)}</td>
-            <td>${escapeHtml(ass)}</td>
-            <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
-            <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
-            <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
-          </tr>`;
-          })
-          .join("");
-        const metaParts = [
-          `${list.length} conta(s) em aberto`,
-          `Total: ${formatCurrency(total)}`,
-          `Emitido: ${formatDateTime(new Date().toISOString())}`,
-        ];
-        if (alertaOnly) metaParts.unshift("Só recebimentos em alerta (>10 dias)");
-        if (financePlateQuery.trim()) metaParts.unshift(`Placa: ${financePlateQuery.trim()}`);
-        const locSel = document.getElementById("financeReceberFilterLoc");
-        const assSel = document.getElementById("financeReceberFilterAss");
-        const respSel = document.getElementById("financeReceberFilterResp");
-        if (locSel?.value) {
-          metaParts.unshift(`Localizador: ${partnerById.get(locSel.value) || "-"}`);
-        }
-        if (assSel?.value) {
-          metaParts.unshift(`Assessoria: ${partnerById.get(assSel.value) || "-"}`);
-        }
-        if (respSel?.value) {
-          try {
-            metaParts.unshift(`Responsável: ${decodeURIComponent(respSel.value)}`);
-          } catch (e) {
-            /* ignore */
-          }
-        }
-        const printCss = `
-  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 20px; color: #111; }
-  h1 { font-size: 1.2rem; margin: 0 0 8px; }
-  .meta { font-size: 0.82rem; color: #444; margin-bottom: 14px; line-height: 1.45; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 8px; }
-  th, td { border: 1px solid #bbb; padding: 6px; text-align: left; vertical-align: top; }
-  th { background: #f0f0f0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  tfoot td { font-weight: 700; background: #f7f7f7; }
-  @page { margin: 12mm; }
-  @media print { body { margin: 0; } }`;
-        const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8" /><title>Contas a receber — lista</title>
-<style>${printCss}</style></head><body>
-  <h1>${escapeHtml(nomePatio)} — Contas a receber em aberto</h1>
-  <div class="meta">${escapeHtml(metaParts.join(" · "))}</div>
-  <table><thead><tr>
-    <th>Placa</th><th>Veículo</th><th>Localizador</th><th>Assessoria</th>
-    <th>Entrada (pátio)</th><th>Saída</th><th>Valor em aberto</th>
-  </tr></thead><tbody>${rowHtml}</tbody>
-  <tfoot><tr><td colspan="6" style="text-align:right">Total em aberto</td><td>${escapeHtml(formatCurrency(total))}</td></tr></tfoot>
-  </table>
-</body></html>`;
-        printHtmlInHiddenIframe(html, { iframeTitle: "Lista contas a receber em aberto" });
       }
 
       function syncFinanceOpenRecPrintFilterOptions() {
@@ -5678,6 +6103,8 @@
       async function showApp(user) {
         authPanel.classList.add("hidden");
         appPanel.classList.remove("hidden");
+        document.getElementById("appHeaderMenuWrap")?.classList.remove("hidden");
+        document.body.classList.add("menus-no-modulo");
         userInfo.textContent = user ? `Logado como ${displayManagerIdentity(user.email || "")}` : "Logado";
         state.user = user;
         await loadPatioDelegatedRole();
@@ -5688,6 +6115,10 @@
       function showAuth() {
         authPanel.classList.remove("hidden");
         appPanel.classList.add("hidden");
+        document.getElementById("appHeaderMenuWrap")?.classList.add("hidden");
+        document.body.classList.remove("menus-no-modulo");
+        lastAppHeaderModuleView = null;
+        closeAppHeaderMenu();
         userInfo.textContent = "Não autenticado";
         state.user = null;
         state.patioOwnerUserId = null;
@@ -5730,6 +6161,14 @@
       function applyRoleRestrictions() {
         document.getElementById("track-manager-hide-values-style")?.remove();
         document.getElementById("vehicleForm")?.classList.remove("operador-simplified");
+        document.querySelectorAll("#appHeaderMenu .header-menu-details").forEach((el) => el.classList.remove("hidden"));
+        document.querySelectorAll("#headerDetailsLista [data-lista-gestor-hide], #listaSubnav [data-lista-gestor-hide]").forEach((el) => {
+          el.classList.remove("hidden");
+        });
+        document.querySelectorAll("#headerDetailsPatio [data-header-patio-sub]").forEach((el) => el.classList.remove("hidden"));
+        document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((btn) => {
+          btn.style.display = "";
+        });
         document.getElementById("openParceirosFromPatio")?.classList.remove("hidden");
         document.getElementById("printPatioVehicleList")?.classList.remove("hidden");
         document.getElementById("printPatioByPartner")?.classList.remove("hidden");
@@ -5742,7 +6181,11 @@
         if (vehicleDailyReset) vehicleDailyReset.required = true;
 
         document.getElementById("gestorPistaWelcomeBanner")?.classList.add("hidden");
-        if (!isGestorPista) return;
+        if (!isGestorPista) {
+          document.getElementById("dashboardModuleFinanceWrap")?.classList.remove("hidden");
+          document.getElementById("financeTopDashboard")?.classList.remove("hidden");
+          return;
+        }
 
         try {
           navStack.splice(0, navStack.length, "patio", "patio:no_patio");
@@ -5750,11 +6193,25 @@
           console.warn("navStack", e);
         }
 
-        document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
+        const hideGestorMainNavItem = (btn) => {
           const view = btn.getAttribute("data-view");
+          if (!view) return;
           btn.style.display = view === "dashboard" ? "" : "none";
+        };
+        document.querySelectorAll("#appHeaderMenu button[data-view]").forEach(hideGestorMainNavItem);
+        document.getElementById("headerDetailsFinance")?.classList.add("hidden");
+        document.getElementById("headerDetailsConfig")?.classList.add("hidden");
+        document.getElementById("headerDetailsParceiros")?.classList.add("hidden");
+        document.querySelectorAll("#headerDetailsLista [data-lista-gestor-hide], #listaSubnav [data-lista-gestor-hide]").forEach((el) => {
+          el.classList.add("hidden");
         });
+        document
+          .querySelectorAll(
+            '#headerDetailsPatio [data-header-patio-sub="removidos"], #headerDetailsPatio [data-header-patio-sub="nfse_pendente"]'
+          )
+          .forEach((el) => el.classList.add("hidden"));
         document.getElementById("dashboardModuleFinanceWrap")?.classList.add("hidden");
+        document.getElementById("financeTopDashboard")?.classList.add("hidden");
         document.getElementById("openConfigFromPatio")?.classList.add("hidden");
 
         showMainView("patio");
@@ -5780,10 +6237,6 @@
           }
           #viewPatio [data-subview="removidos"] table thead th:nth-child(7),
           #viewPatio [data-subview="removidos"] table tbody td:nth-child(7) {
-            display: none !important;
-          }
-          #viewPatio [data-subview="patio_filtros"] table thead th.patio-filtros-col-valor,
-          #viewPatio [data-subview="patio_filtros"] table tbody td.patio-filtros-col-valor {
             display: none !important;
           }
         `;
@@ -5853,7 +6306,7 @@
         state.partners = data || [];
         renderPartners();
         renderPartnerOptions();
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
+        maybeRefreshListaPanel();
       }
 
       async function loadVehicles() {
@@ -5868,7 +6321,7 @@
         }
         state.vehicles = data || [];
         renderVehicles();
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
+        maybeRefreshListaPanel();
       }
 
       async function loadReceivables() {
@@ -5882,6 +6335,7 @@
           return;
         }
         state.receivables = data || [];
+        maybeRefreshListaPanel();
       }
 
       async function loadPayables() {
@@ -5895,6 +6349,7 @@
           return;
         }
         state.payables = data || [];
+        maybeRefreshListaPanel();
       }
 
       async function loadCash() {
@@ -5908,6 +6363,7 @@
           return;
         }
         state.cash = data || [];
+        maybeRefreshListaPanel();
       }
 
       async function loadSettings() {
@@ -5926,6 +6382,9 @@
         if (state.settings) {
           settingsCnpj.value = state.settings.cnpj || "";
           settingsName.value = state.settings.nome_patio || "";
+          if (settingsEndereco) settingsEndereco.value = state.settings.endereco || "";
+          if (settingsReciboEmitente) settingsReciboEmitente.value = state.settings.recibo_emitente_nome || "";
+          if (settingsReciboTelefone) settingsReciboTelefone.value = state.settings.recibo_telefone || "";
           settingsBank.value = state.settings.conta_bancaria || "";
           settingsCharge.value = state.settings.texto_cobranca || "";
           settingsInvoice.value = state.settings.texto_nota_fiscal || "";
@@ -5938,6 +6397,7 @@
             if (!opErr) state.settings.operational_month = curYm;
           }
         }
+        maybeRefreshListaPanel();
       }
 
       function currentYearMonthLocal() {
@@ -6193,6 +6653,12 @@
         if (dashPagMeta) dashPagMeta.textContent = `${openPagar.length} em aberto`;
         if (dashCxValue) dashCxValue.textContent = formatCurrency(caixaAtual);
         if (dashCxMeta) dashCxMeta.textContent = `Movimentações: ${(state.cash || []).length}`;
+        const removidosCount = (state.vehicles || []).filter((v) => v.status === "REMOVIDO").length;
+        const nfsePendCount = (state.vehicles || []).filter((v) => v.nfse_status === "PENDENTE").length;
+        const elVrp = document.getElementById("cardVrp");
+        const elNfse = document.getElementById("cardNfsePendente");
+        if (elVrp) elVrp.textContent = String(removidosCount);
+        if (elNfse) elNfse.textContent = String(nfsePendCount);
       }
 
       /** Para busca: só letras/números; ignora hífen/espaço (consulta acontece apenas no OK). */
@@ -6201,6 +6667,46 @@
           .toString()
           .toLowerCase()
           .replace(/[^a-z0-9]/g, "");
+      }
+
+      function vehiclePlateSearchActivityTs(v) {
+        const parts = [v.updated_at, v.data_saida, v.data_entrada, v.nfse_requested_at, v.created_at].filter(Boolean);
+        let best = 0;
+        for (const p of parts) {
+          const t = new Date(p).getTime();
+          if (!Number.isNaN(t)) best = Math.max(best, t);
+        }
+        return best;
+      }
+
+      function pickMostRecentPlateVehicle(matches) {
+        return [...matches].sort((a, b) => {
+          const d = vehiclePlateSearchActivityTs(b) - vehiclePlateSearchActivityTs(a);
+          if (d !== 0) return d;
+          return String(b.id || "").localeCompare(String(a.id || ""), "pt-BR");
+        })[0];
+      }
+
+      function resolvePlateSearchSubview(v) {
+        if (!v) return "no_patio";
+        if (v.status === "REMOVIDO") return "removidos";
+        if (v.nfse_status === "PENDENTE") return "nfse_pendente";
+        return "no_patio";
+      }
+
+      function syncPatioPlateInputFromHeader() {
+        if (plateFilter && plateFilterPatio) plateFilterPatio.value = plateFilter.value;
+      }
+
+      function scrollPlateSearchVehicleIntoView(vehicleId) {
+        if (vehicleId == null || vehicleId === "") return;
+        const safe = String(vehicleId).replace(/"/g, "");
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const row = document.querySelector(`tr[data-vehicle-row="${safe}"]`);
+            row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+          });
+        });
       }
 
       /** Busca no financeiro: placa completa ou trecho (Mercosul ou antiga). */
@@ -6265,23 +6771,31 @@
         const norm = normalizePlateSearch(raw);
         if (norm.length === 0) {
           plateQuery = "";
-          if (plateFilterPatio) plateFilterPatio.value = "";
           setPlateSearchHints("", false);
+          syncPatioPlateInputFromHeader();
           renderVehicles();
-          if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
           return;
         }
         setPlateSearchHints("", false);
         plateQuery = raw;
+        syncPatioPlateInputFromHeader();
+        const matches = (state.vehicles || []).filter((v) => normalizePlateSearch(v.placa) === norm);
         goToPatioForPlateSearch();
-        if (plateFilterPatio) plateFilterPatio.value = plateFilter.value;
-        openPatioSubview("patio_filtros");
-        renderVehicles();
-        renderPatioFiltrosPreview();
+        if (matches.length) {
+          const target = pickMostRecentPlateVehicle(matches);
+          openPatioSubview(resolvePlateSearchSubview(target));
+          renderVehicles();
+          scrollPlateSearchVehicleIntoView(target.id);
+        } else {
+          renderVehicles();
+        }
       }
 
       function renderVehicles() {
-        const filteredVehicles = state.vehicles || [];
+        const qNorm = normalizePlateSearch(plateQuery);
+        const filteredVehicles = qNorm
+          ? state.vehicles.filter((v) => normalizePlateSearch(v.placa) === qNorm)
+          : state.vehicles;
         const byStatus = {
           NO_PATIO: [],
           LIBERACAO_SOLICITADA: [],
@@ -6297,21 +6811,16 @@
         const nfsePendentes = filteredVehicles.filter((v) => v.nfse_status === "PENDENTE");
 
         const vlsMerged = mergeVlsItems(byStatus);
-        const vlsForTable = vlsMerged;
+        const vlsForTable = filterVlsToolbarItems(vlsMerged);
+        const vlsToolbar = document.getElementById("vlsToolbarFilters");
+        if (vlsToolbar) {
+          vlsToolbar.classList.toggle("hidden", !!isGestorPista);
+          if (!isGestorPista) {
+            syncVlsFilterSelects();
+          }
+        }
 
-        const vnpCombined = [...vlsForTable, ...byStatus.NO_PATIO];
-        const vnpDestaque = vnpCombined.filter(isVnpUnifiedListDestaque);
-        const vnpRestantes = vnpCombined.filter((v) => !isVnpUnifiedListDestaque(v));
-        const vnpUnified = [...sortVehiclesByRegistroDesc(vnpDestaque), ...sortVehiclesByRegistroDesc(vnpRestantes)];
-        const pdtVnp = document.getElementById("pdtVnp");
-        const pdtLib = document.getElementById("pdtLib");
-        const pdtVrp = document.getElementById("pdtVrp");
-        const pdtNfse = document.getElementById("pdtNfse");
-        if (pdtVnp) pdtVnp.textContent = String(vnpUnified.length);
-        if (pdtLib) pdtLib.textContent = String(vlsForTable.length);
-        if (pdtVrp) pdtVrp.textContent = String(byStatus.REMOVIDO.length);
-        if (pdtNfse) pdtNfse.textContent = String(nfsePendentes.length);
-
+        const vnpUnified = sortVehiclesByRegistroDesc([...vlsForTable, ...byStatus.NO_PATIO]);
         const patioCardTitle1 = document.getElementById("patioCardTitle1");
         const patioCardTitle2 = document.getElementById("patioCardTitle2");
         const patioCardTitle3 = document.getElementById("patioCardTitle3");
@@ -6354,9 +6863,7 @@
           if (patioCardValue1) patioCardValue1.textContent = String(vnpUnified.length);
           if (patioCardValue2) patioCardValue2.textContent = String(vlsForTable.length);
           if (patioCardValue3)
-            patioCardValue3.textContent = String(
-              (state.vehicles || []).filter((v) => v.status === "NO_PATIO" && isRemocaoSolicitada(v)).length
-            );
+            patioCardValue3.textContent = String(filteredVehicles.filter((v) => v.status === "NO_PATIO" && isRemocaoSolicitada(v)).length);
           if (patioCardMeta1) patioCardMeta1.textContent = "no pátio + fluxo";
           if (patioCardMeta2) patioCardMeta2.textContent = "em andamento";
           if (patioCardMeta3) patioCardMeta3.textContent = "antes da efetivação";
@@ -6367,8 +6874,52 @@
         renderVehicleTable(tableNfsePendentes, nfsePendentes, "nfse_pendente");
         updateDashboard();
 
-        setPlateSearchHints("", false);
-        setPatioView(currentPatioView, { silent: true });
+        if (qNorm) {
+          applyGlobalPlateSearchLayout(byStatus, nfsePendentes, vlsForTable.length);
+        } else {
+          setPlateSearchHints("", false);
+          setPatioView(currentPatioView, { silent: true });
+        }
+      }
+
+      function applyGlobalPlateSearchLayout(byStatus, nfsePendentesList, vlsFilteredCount) {
+        const vlsCount =
+          typeof vlsFilteredCount === "number"
+            ? vlsFilteredCount
+            : mergeVlsItems(byStatus).length;
+        const unifiedVnpCount = byStatus.NO_PATIO.length + vlsCount;
+        const counts = {
+          no_patio: unifiedVnpCount,
+          removidos: byStatus.REMOVIDO.length,
+          nfse_pendente: nfsePendentesList.length,
+        };
+        const total = counts.no_patio + counts.removidos + counts.nfse_pendente;
+
+        setPlateSearchHints(total === 0 ? "Nenhum veículo com esta placa." : "", total === 0);
+
+        patioSubnav.querySelectorAll("button[data-subview]").forEach((btn) => {
+          const key = btn.getAttribute("data-subview");
+          const n = counts[key] || 0;
+          btn.classList.toggle("active", n > 0);
+        });
+
+        if (total === 0) {
+          patioSubviews.forEach((panel) => {
+            panel.classList.remove("hidden");
+          });
+          return;
+        }
+
+        patioSubviews.forEach((panel) => {
+          const key = panel.getAttribute("data-subview");
+          const show = (counts[key] || 0) > 0;
+          panel.classList.toggle("hidden", !show);
+          if (show) {
+            panel.classList.remove("air-open");
+            void panel.offsetWidth;
+            panel.classList.add("air-open");
+          }
+        });
       }
 
       function renderVnpUnifiedTable(tbody, items) {
@@ -6439,7 +6990,7 @@
             }
 
             return `
-              <tr class="${rowClass}">
+              <tr class="${rowClass}" data-vehicle-row="${v.id}">
                 <td data-label="Placa">${v.placa || "-"}${situacaoHtml}</td>
                 <td data-label="Veículo">${[v.marca, v.modelo].filter(Boolean).join(" ") || "-"}</td>
                 <td data-label="Localizador">${localizador}</td>
@@ -6463,10 +7014,7 @@
         patioSubnav.querySelectorAll("button[data-subview]").forEach((btn) => {
           btn.classList.toggle("active", !isNone && btn.getAttribute("data-subview") === view);
         });
-        document.getElementById("patioTopDashboard")?.classList.toggle("hidden", !isDashboard);
-        if (plateSearchFormPatio) {
-          plateSearchFormPatio.classList.toggle("hidden", isDashboard || view !== "patio_filtros");
-        }
+        if (plateSearchFormPatio) plateSearchFormPatio.classList.toggle("hidden", isDashboard);
         document.getElementById("viewPatio")?.classList.toggle("patio-flyout-open", isFlyoutView);
         patioFlyoutBackdrop?.classList.toggle("hidden", !isFlyoutView);
         const patioContent = document.getElementById("patioContent");
@@ -6481,20 +7029,6 @@
           shownPanel.classList.remove("air-open");
           void shownPanel.offsetWidth;
           shownPanel.classList.add("air-open");
-        }
-        if (!silent && view === "patio_filtros") {
-          const fromEl = document.getElementById("patioFiltrosFrom");
-          const toEl = document.getElementById("patioFiltrosTo");
-          if (fromEl && toEl && !fromEl.value && !toEl.value) {
-            const now = new Date();
-            const first = new Date(now.getFullYear(), now.getMonth(), 1);
-            fromEl.value = toYmdLocal(first);
-            toEl.value = toYmdLocal(now);
-          }
-          syncVlsFilterSelects();
-          syncPatioFiltrosListTypeOptions();
-          updatePatioFiltrosPeriodVisibility();
-          renderPatioFiltrosPreview();
         }
       }
 
@@ -6571,7 +7105,7 @@
             }
 
             return `
-              <tr>
+              <tr data-vehicle-row="${v.id}">
                 <td data-label="Placa">${v.placa || "-"}</td>
                 <td data-label="Veículo">${[v.marca, v.modelo].filter(Boolean).join(" ") || "-"}</td>
                 <td data-label="Localizador">${localizador}</td>
@@ -6619,7 +7153,7 @@
             }
 
             return `
-              <tr>
+              <tr data-vehicle-row="${v.id}">
                 <td data-label="Placa">${v.placa || "-"}</td>
                 <td data-label="Veículo">${[v.marca, v.modelo].filter(Boolean).join(" ") || "-"}</td>
                 <td data-label="Localizador">${localizador}</td>
@@ -6644,27 +7178,81 @@
         return `Serviço de guarda e custódia de veículo automotor realizado em pátio particular. Veículo: ${veiculo} de placa ${placa} Período de permanência:\n${entrada} a ${saida} (${dias} diárias) Valor total a pagar: ${total}. Dados para Pagamento: Fernando Vasconcellos de Albuquerque Lima CNPJ: 57.936.119/0001-98 Banco Inter (Código 077) Agência: 0001 Conta Corrente PJ: 44506284-3 PIX (CNPJ): 57.936.119/0001-98.`;
       }
 
+      const RECIBO_EMITENTE_PADRAO = "Fernando Vasconcellos de Albuquerque Lima";
+      const RECIBO_CNPJ_PADRAO = "57.936.119/0001-98";
+      const RECIBO_RODAPE_PADRAO = "Rua Marques de Baipendi, 119 — Campo Grande, Recife-PE — (81) 9 9991-8484";
+      const RECIBO_PATIO_PADRAO = "AMPLIAUTO";
+
+      function reciboEmitenteNome(settings) {
+        const v = (settings?.recibo_emitente_nome || "").trim();
+        return v || RECIBO_EMITENTE_PADRAO;
+      }
+
+      function reciboCnpjExibicao(settings) {
+        const raw = (settings?.cnpj || "").trim();
+        const fmt = formatCnpjForDisplay(raw);
+        if (fmt) return fmt;
+        if (raw.replace(/\D/g, "").length === 14) return formatCnpjForDisplay(raw) || RECIBO_CNPJ_PADRAO;
+        return RECIBO_CNPJ_PADRAO;
+      }
+
+      function reciboFooterLine(settings) {
+        const e = (settings?.endereco || "").trim().replace(/\n/g, " ");
+        const t = (settings?.recibo_telefone || "").trim();
+        if (e && t) return `${e} — ${t}`;
+        if (e) return e;
+        if (t) return t;
+        return RECIBO_RODAPE_PADRAO;
+      }
+
       function buildRecebimentoReciboText({ receivable, vehicle, destinatario, valor }) {
-        const agora = new Date().toISOString();
+        const cfg = state.settings || {};
         const placa = vehicle?.placa || "-";
-        const veiculo = [vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ") || "-";
-        const responsavel = receivable?.responsavel_pagamento || "-";
-        const periodoInicio = receivable?.period_start ? formatDateTime(receivable.period_start) : "-";
-        const periodoFim = receivable?.period_end ? formatDateTime(receivable.period_end) : "-";
-        return [
-          "RECIBO DE RECEBIMENTO",
-          "",
-          `Data: ${formatDateTime(agora)}`,
-          `Destinatário: ${destinatario}`,
-          `Responsável financeiro: ${responsavel}`,
-          `Veículo: ${placa} • ${veiculo}`,
-          `Período de cobrança: ${periodoInicio} até ${periodoFim}`,
-          `Valor recebido: ${formatCurrency(valor)}`,
-          "",
-          "Declaro que recebi o valor acima referente à guarda/pátio do veículo descrito.",
-          "",
-          "Assinatura: __________________________________________",
-        ].join("\n");
+        const marca = vehicle?.marca || "";
+        const modelo = vehicle?.modelo || "";
+        const veiculoDesc = [marca, modelo].filter(Boolean).join(" ").trim() || "—";
+        const emitente = reciboEmitenteNome(cfg);
+        const cnpjFmt = reciboCnpjExibicao(cfg);
+        const nomePatio = (cfg.nome_patio || "").trim() || RECIBO_PATIO_PADRAO;
+        const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "-";
+        const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "-";
+        const dEntrada =
+          vehicle?.data_entrada != null && vehicle.data_entrada !== ""
+            ? formatDateBr(vehicle.data_entrada)
+            : dIni;
+        const dSaida =
+          vehicle?.data_saida != null && vehicle.data_saida !== ""
+            ? formatDateBr(vehicle.data_saida)
+            : dFim;
+        const corpo =
+          `Eu, ${emitente}, inscrito no CNPJ ${cnpjFmt}, recebi a quantia de ${formatCurrency(
+            valor
+          )} do Sr(a). ${destinatario || "—"}, referente às estadias do veículo ${veiculoDesc}, placa ${placa}, em pátio particular ${nomePatio}, de ${dEntrada} a ${dSaida}.\n\nPor este documento, dou plena e total\nquitação referente ao pagamento das estadias referidas acima.`;
+        const parts = [corpo, "", reciboFooterLine(cfg)];
+        return parts.join("\n");
+      }
+
+      async function loadReciboLogoDataUrl() {
+        const paths = ["/assets/recibo-header-logo.png", "/assets/logo.png"];
+        for (const path of paths) {
+          try {
+            const r = await fetch(path, { cache: "force-cache" });
+            if (!r.ok) continue;
+            const blob = await r.blob();
+            const mime = (blob.type || "").toLowerCase();
+            const type = mime.includes("png") ? "PNG" : "JPEG";
+            const dataUrl = await new Promise((resolve, reject) => {
+              const fr = new FileReader();
+              fr.onloadend = () => resolve(String(fr.result || ""));
+              fr.onerror = reject;
+              fr.readAsDataURL(blob);
+            });
+            return { dataUrl, type };
+          } catch {
+            /* tenta próximo ficheiro */
+          }
+        }
+        return null;
       }
 
       async function downloadReciboPdf({ receivable, vehicle, destinatarioNome, destinatarioDoc, valor }) {
@@ -6672,44 +7260,172 @@
         const jsPdfCtor = window.jspdf?.jsPDF;
         if (!jsPdfCtor) throw new Error("jsPDF indisponível");
         const doc = new jsPdfCtor({ unit: "pt", format: "a4" });
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
         const marginX = 48;
-        let y = 56;
-        const addLine = (label, value = "") => {
+        const marginR = 48;
+        const contentW = pageW - marginX - marginR;
+        const footerBand = 46;
+        const yFooterTop = pageH - footerBand;
+
+        const s = state.settings || {};
+        const emitente = reciboEmitenteNome(s);
+        const cnpjFmt = reciboCnpjExibicao(s);
+        const nomePatio = (s.nome_patio || "").trim() || RECIBO_PATIO_PADRAO;
+        const pessoa = (destinatarioNome || "").trim() || "—";
+        const pessoaDoc = (destinatarioDoc || "").trim() || "—";
+        const placa = vehicle?.placa || "—";
+        const marca = (vehicle?.marca || "").trim();
+        const modelo = (vehicle?.modelo || "").trim();
+        const veiculoDesc = [marca, modelo].filter(Boolean).join(" ").trim() || "—";
+        const dIni = receivable?.period_start ? formatDateBr(receivable.period_start) : "—";
+        const dFim = receivable?.period_end ? formatDateBr(receivable.period_end) : "—";
+        const dEntrada =
+          vehicle?.data_entrada != null && vehicle.data_entrada !== ""
+            ? formatDateBr(vehicle.data_entrada)
+            : dIni;
+        const dSaida =
+          vehicle?.data_saida != null && vehicle.data_saida !== ""
+            ? formatDateBr(vehicle.data_saida)
+            : dFim;
+        const valorTxt = formatCurrency(valor);
+        const footerLine = reciboFooterLine(s);
+
+        const bandH = 76;
+        doc.setFillColor(10, 11, 15);
+        doc.rect(0, 0, pageW, bandH, "F");
+
+        const logo = await loadReciboLogoDataUrl();
+        if (logo) {
+          try {
+            const props = doc.getImageProperties(logo.dataUrl);
+            const maxW = 260;
+            const maxH = 40;
+            let imgW = maxW;
+            let imgH = (props.height * imgW) / props.width;
+            if (imgH > maxH) {
+              imgH = maxH;
+              imgW = (props.width * imgH) / props.height;
+            }
+            const xL = (pageW - imgW) / 2;
+            const yL = (bandH - imgH) / 2;
+            doc.addImage(logo.dataUrl, logo.type, xL, yL, imgW, imgH);
+          } catch {
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(17);
+            doc.text(nomePatio.toUpperCase(), pageW / 2, bandH / 2 + 5, { align: "center" });
+          }
+        } else {
+          doc.setTextColor(255, 255, 255);
           doc.setFont("helvetica", "bold");
-          doc.text(label, marginX, y);
-          y += 18;
-          doc.setFont("helvetica", "normal");
-          const lines = doc.splitTextToSize(value || "-", 500);
-          doc.text(lines, marginX, y);
-          y += lines.length * 15 + 10;
+          doc.setFontSize(17);
+          doc.text(nomePatio.toUpperCase(), pageW / 2, bandH / 2 + 5, { align: "center" });
+        }
+
+        doc.setDrawColor(220, 38, 38);
+        doc.setLineWidth(1.1);
+        doc.line(0, bandH, pageW, bandH);
+
+        let y = bandH + 46;
+        doc.setTextColor(15, 23, 42);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(13.5);
+        doc.text("RECIBO DE QUITAÇÃO DE ESTADIAS", pageW / 2, y, { align: "center" });
+        y += 14;
+        y += 26;
+
+        const emitBoxH = 54;
+        doc.setFillColor(248, 250, 252);
+        doc.rect(marginX, y, contentW, emitBoxH, "F");
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.4);
+        doc.rect(marginX, y, contentW, emitBoxH, "S");
+        const yEmit = y + 14;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(100, 116, 139);
+        doc.text("EMITENTE", marginX + 12, yEmit);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(11);
+        doc.setTextColor(15, 23, 42);
+        doc.text(`${emitente},`, marginX + 12, yEmit + 14);
+        doc.text(`inscrito no CNPJ ${cnpjFmt}.`, marginX + 12, yEmit + 28);
+        y += emitBoxH + 18;
+
+        const drawBar = (label) => {
+          doc.setFillColor(51, 65, 85);
+          doc.rect(marginX, y, contentW, 17, "F");
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.text(label, marginX + 10, y + 11.5);
+          y += 21;
+          doc.setTextColor(15, 23, 42);
         };
 
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(16);
-        doc.text("RECIBO DE RECEBIMENTO", marginX, y);
+        const rowL = (label, value) => {
+          const hasVal = String(value || "").trim().length > 0;
+          if (!hasVal && label) {
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10.5);
+            doc.setTextColor(15, 23, 42);
+            const one = doc.splitTextToSize(label, contentW - 24);
+            doc.text(one, marginX + 12, y + 11);
+            y += Math.max(22, one.length * 12 + 10);
+            return;
+          }
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(100, 116, 139);
+          doc.text(label, marginX + 12, y + 11);
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10.5);
+          doc.setTextColor(15, 23, 42);
+          const lines = doc.splitTextToSize(value || "—", contentW - 118);
+          doc.text(lines, marginX + 104, y + 11);
+          y += Math.max(22, lines.length * 12 + 10);
+        };
+
+        drawBar("QUEM EFETUOU O PAGAMENTO");
+        rowL("Nome:", pessoa);
+        rowL("CPF / CNPJ:", pessoaDoc);
+        y += 4;
+
+        drawBar("VEÍCULO E PERÍODO");
+        rowL("Veículo:", veiculoDesc);
+        rowL("Placa:", placa);
+        rowL("Estadias:", `${dEntrada} até ${dSaida}`);
+        rowL("Valor recebido:", valorTxt);
+        y += 20;
+        doc.setFont("times", "italic");
+        doc.setFontSize(10.5);
+        doc.setTextColor(30, 41, 59);
+        doc.text("Por este documento, dou plena e total", marginX + 12, y + 12);
+        y += 15;
+        doc.text("quitação referente ao pagamento das estadias referidas acima.", marginX + 12, y + 12);
         y += 28;
-        doc.setFontSize(11);
 
-        const placa = vehicle?.placa || "-";
-        const veiculo = [vehicle?.marca, vehicle?.modelo].filter(Boolean).join(" ") || "-";
-        addLine("Data", formatDateTime(new Date().toISOString()));
-        addLine("Nome do direcionado", destinatarioNome);
-        addLine("CPF/CNPJ do direcionado", destinatarioDoc);
-        addLine("Responsável financeiro", receivable?.responsavel_pagamento || "-");
-        addLine("Veículo", `${placa} • ${veiculo}`);
-        addLine(
-          "Período de cobrança",
-          `${receivable?.period_start ? formatDateTime(receivable.period_start) : "-"} até ${
-            receivable?.period_end ? formatDateTime(receivable.period_end) : "-"
-          }`
-        );
-        addLine("Valor recebido", formatCurrency(valor));
+        y += 8;
 
-        y += 16;
+        doc.setFont("helvetica", "italic");
+        doc.setFontSize(9.5);
+        doc.setTextColor(71, 85, 105);
+        doc.text(`Local e data: Recife-PE, ${formatDateBr(new Date().toISOString())}.`, marginX + 10, y);
+        y += 22;
+
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineWidth(0.6);
+        doc.line(marginX, yFooterTop - 2, marginX + contentW, yFooterTop - 2);
         doc.setFont("helvetica", "normal");
-        doc.text("Declaro que recebi o valor acima referente à guarda/pátio do veículo descrito.", marginX, y);
-        y += 48;
-        doc.text("Assinatura: __________________________________________", marginX, y);
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        const footLines = doc.splitTextToSize(footerLine, contentW - 8);
+        let fy = yFooterTop + 10;
+        footLines.forEach((ln) => {
+          doc.text(ln, pageW / 2, fy, { align: "center" });
+          fy += 11.5;
+        });
 
         const safePlate = (placa || "veiculo").replace(/[^a-z0-9_-]+/gi, "_");
         doc.save(`recibo_recebimento_${safePlate}.pdf`);
@@ -7232,11 +7948,8 @@
           if (stdArea) stdArea.classList.add("hidden");
           if (cloArea) cloArea.classList.add("hidden");
           if (dashArea) dashArea.classList.add("hidden");
-          if (dashTopArea) dashTopArea.classList.add("hidden");
         };
-        if (currentFinanceView === "dashboard") {
-          hideAllFinanceAreas();
-          if (dashTopArea) dashTopArea.classList.remove("hidden");
+        if (dashTopArea) {
           const monthKey = currentYearMonthLocal();
           const movMes = state.cash.filter((m) => {
             const ymd = toLocalYmd(m.data_movimento || m.created_at);
@@ -7364,12 +8077,18 @@
                 .join("")}
             `;
           }
-          document.getElementById("fdtTotalReceber").textContent = formatCurrency(totalReceber);
-          document.getElementById("fdtQtdReceber").textContent = `${openReceivablesFinanceiro.length} contas`;
-          document.getElementById("fdtTotalPagar").textContent = formatCurrency(totalPagar);
-          document.getElementById("fdtQtdPagar").textContent = `${openPayables.length} contas`;
-          document.getElementById("fdtCaixaAtual").textContent = formatCurrency(caixa);
-          document.getElementById("fdtCaixaStatus").textContent = caixa >= 0 ? "Posição positiva" : "Posição negativa";
+          const _fdtRec = document.getElementById("fdtTotalReceber");
+          if (_fdtRec) _fdtRec.textContent = formatCurrency(totalReceber);
+          const _fdtQtdRec = document.getElementById("fdtQtdReceber");
+          if (_fdtQtdRec) _fdtQtdRec.textContent = `${openReceivablesFinanceiro.length} contas`;
+          const _fdtPag = document.getElementById("fdtTotalPagar");
+          if (_fdtPag) _fdtPag.textContent = formatCurrency(totalPagar);
+          const _fdtQtdPag = document.getElementById("fdtQtdPagar");
+          if (_fdtQtdPag) _fdtQtdPag.textContent = `${openPayables.length} contas`;
+          const _fdtCx = document.getElementById("fdtCaixaAtual");
+          if (_fdtCx) _fdtCx.textContent = formatCurrency(caixa);
+          const _fdtCxSt = document.getElementById("fdtCaixaStatus");
+          if (_fdtCxSt) _fdtCxSt.textContent = caixa >= 0 ? "Posição positiva" : "Posição negativa";
           document.getElementById("fdtCaixaProjetado").textContent = formatCurrency(projetado);
           document.getElementById("fdtEntradasMes").textContent = formatCurrency(entradasMes);
           document.getElementById("fdtSaidasMesMeta").textContent = `Saídas no mês: ${formatCurrency(saidasMes)}`;
@@ -7396,6 +8115,9 @@
           if (filaEl) {
             filaEl.innerHTML = filaFinanceira.map(([label, qtd]) => `<li>${escapeHtml(label)} — <strong>${qtd}</strong></li>`).join("");
           }
+        }
+        if (currentFinanceView === "dashboard") {
+          hideAllFinanceAreas();
           return;
         }
         if (currentFinanceView === "fechamento_mensal") {
@@ -7786,43 +8508,6 @@
           syncFinanceReceberBarOptions();
           const alertaOnly = currentFinanceView === "receber_alerta";
           const { list: recvFiltered } = collectFinanceReceberFilteredList({ alertaOnly });
-          const partnerByIdResumo = new Map((state.partners || []).map((p) => [p.id, p.nome || "-"]));
-          const totalResumo = recvFiltered.reduce((s, r) => s + Number(r.valor || 0), 0);
-          const metaEl = document.getElementById("financeReceberResumoMeta");
-          const bodyEl = document.getElementById("financeReceberResumoBody");
-          const footEl = document.getElementById("financeReceberResumoFoot");
-          if (metaEl) {
-            const parts = [`${recvFiltered.length} conta(s) em aberto`, `Total: ${formatCurrency(totalResumo)}`];
-            if (financePlateQuery.trim()) parts.unshift(`Placa: ${financePlateQuery.trim()}`);
-            if (alertaOnly) parts.push("filtro: só alerta (>10 dias)");
-            metaEl.textContent = parts.join(" · ");
-          }
-          if (bodyEl) {
-            bodyEl.innerHTML =
-              recvFiltered.length === 0
-                ? `<tr><td colspan="7"><em>Nenhum registo com os filtros atuais.</em></td></tr>`
-                : recvFiltered
-                    .map((r) => {
-                      const v = vehicleById.get(r.vehicle_id);
-                      const placa = v?.placa || "—";
-                      const vm = [v?.marca, v?.modelo].filter(Boolean).join(" ") || "—";
-                      const loc = v?.localizador_id ? partnerByIdResumo.get(v.localizador_id) || "—" : "—";
-                      const ass = v?.assessoria_id ? partnerByIdResumo.get(v.assessoria_id) || "—" : "—";
-                      return `<tr>
-                <td>${escapeHtml(placa)}</td>
-                <td>${escapeHtml(vm)}</td>
-                <td>${escapeHtml(loc)}</td>
-                <td>${escapeHtml(ass)}</td>
-                <td>${escapeHtml(formatReceberEntradaVeiculo(v, r))}</td>
-                <td>${escapeHtml(formatReceberSaidaVeiculo(v, r))}</td>
-                <td>${escapeHtml(formatCurrency(Number(r.valor || 0)))}</td>
-              </tr>`;
-                    })
-                    .join("");
-          }
-          if (footEl) {
-            footEl.innerHTML = `<tr><td colspan="6" style="text-align:right;font-weight:700">Total em aberto</td><td style="font-weight:700">${escapeHtml(formatCurrency(totalResumo))}</td></tr>`;
-          }
 
           recvFiltered.forEach((r) => {
             const created = r.created_at ? new Date(r.created_at).getTime() : 0;
@@ -7972,6 +8657,7 @@
         } else {
           tableFinance.innerHTML = rows.join("");
         }
+        maybeRefreshListaPanel();
       }
 
       function setFinanceView(view) {
@@ -7985,16 +8671,14 @@
         if (isNone) {
           financeFilters.classList.add("hidden");
           receivableAlert.classList.add("hidden");
-          document.getElementById("financeTopDashboard")?.classList.add("hidden");
           if (financeContent) financeContent.classList.add("hidden");
           document.getElementById("viewFinanceiro")?.classList.remove("finance-flyout-open");
           financeFlyoutBackdrop?.classList.add("hidden");
           document.getElementById("financeAguardandoIntro")?.classList.add("hidden");
           document.getElementById("financeReceberFilters")?.classList.add("hidden");
-          document.getElementById("financeReceberResumoWrap")?.classList.add("hidden");
+          renderFinance();
           return;
         }
-        document.getElementById("financeTopDashboard")?.classList.toggle("hidden", !isDashboard);
         if (financePlateSearchForm) financePlateSearchForm.classList.toggle("hidden", isDashboard);
         document.getElementById("viewFinanceiro")?.classList.toggle("finance-flyout-open", isFlyoutView);
         financeFlyoutBackdrop?.classList.toggle("hidden", !isFlyoutView);
@@ -8008,7 +8692,6 @@
         document.getElementById("financeAguardandoIntro")?.classList.toggle("hidden", view !== "aguardando_lancamento");
         const receberExtras = view === "receber" || view === "receber_alerta";
         document.getElementById("financeReceberFilters")?.classList.toggle("hidden", !receberExtras);
-        document.getElementById("financeReceberResumoWrap")?.classList.toggle("hidden", !receberExtras);
         renderFinance();
       }
 
@@ -8025,8 +8708,20 @@
         else openPatioMenu();
       });
       patioMenuBackdrop?.addEventListener("click", closePatioMenu);
-      patioFlyoutBackdrop?.addEventListener("click", () => setPatioView("dashboard"));
-      patioFlyoutClose?.addEventListener("click", () => setPatioView("dashboard"));
+      function returnToPainelFromPatioFlyout() {
+        navStack.splice(0, navStack.length, "dashboard");
+        setPatioView("dashboard");
+        setFinanceView("none");
+        showMainView("dashboard");
+      }
+      function returnToPainelFromFinanceFlyout() {
+        navStack.splice(0, navStack.length, "dashboard");
+        setFinanceView("none");
+        setPatioView("dashboard");
+        showMainView("dashboard");
+      }
+      patioFlyoutBackdrop?.addEventListener("click", returnToPainelFromPatioFlyout);
+      patioFlyoutClose?.addEventListener("click", returnToPainelFromPatioFlyout);
 
       openVehicleForm?.addEventListener("click", () => {
         openVehicleModal("create");
@@ -8114,8 +8809,16 @@
       });
       closeTextModal.addEventListener("click", () => textModal.classList.add("hidden"));
       closeTextModal2.addEventListener("click", () => textModal.classList.add("hidden"));
+      function hideReciboModalResumo() {
+        const resumo = document.getElementById("reciboModalResumoAuto");
+        if (resumo) {
+          resumo.innerHTML = "";
+          resumo.classList.add("hidden");
+        }
+      }
       closeReciboModal?.addEventListener("click", () => {
         reciboModal.classList.add("hidden");
+        hideReciboModalResumo();
         if (reciboModalResolver) {
           reciboModalResolver(null);
           reciboModalResolver = null;
@@ -8123,6 +8826,7 @@
       });
       cancelReciboModal?.addEventListener("click", () => {
         reciboModal.classList.add("hidden");
+        hideReciboModalResumo();
         if (reciboModalResolver) {
           reciboModalResolver(null);
           reciboModalResolver = null;
@@ -8140,6 +8844,7 @@
           return;
         }
         reciboModal.classList.add("hidden");
+        hideReciboModalResumo();
         if (reciboModalResolver) {
           reciboModalResolver({ nome, doc });
           reciboModalResolver = null;
@@ -8219,9 +8924,12 @@
               liberacaoModalResolver = null;
               workflowModalConfig = null;
             }
-            if (modal === reciboModal && reciboModalResolver) {
-              reciboModalResolver(null);
-              reciboModalResolver = null;
+            if (modal === reciboModal) {
+              hideReciboModalResumo();
+              if (reciboModalResolver) {
+                reciboModalResolver(null);
+                reciboModalResolver = null;
+              }
             }
           }
         });
@@ -8255,11 +8963,29 @@
         row.setAttribute("aria-hidden", visible ? "false" : "true");
       }
 
-      function openReciboDestinatarioModal({ defaultNome = "", defaultDoc = "" }) {
+      function openReciboDestinatarioModal({ defaultNome = "", defaultDoc = "", receivable = null, vehicle = null }) {
         return new Promise((resolve) => {
           reciboModalResolver = resolve;
           if (reciboDestinatarioNome) reciboDestinatarioNome.value = defaultNome;
           if (reciboDestinatarioDoc) reciboDestinatarioDoc.value = defaultDoc;
+          const resumo = document.getElementById("reciboModalResumoAuto");
+          if (resumo) {
+            if (receivable && vehicle) {
+              const placa = vehicle.placa || "—";
+              const vm = [vehicle.marca, vehicle.modelo].filter(Boolean).join(" ") || "—";
+              const pi = receivable.period_start ? formatDateBr(receivable.period_start) : "—";
+              const pf = receivable.period_end ? formatDateBr(receivable.period_end) : "—";
+              const val = formatCurrency(Number(receivable.valor || 0));
+              resumo.innerHTML = `<strong>Dados que vão no PDF (automático)</strong><br />
+                Veículo: <strong>${escapeHtml(vm)}</strong> — placa <strong>${escapeHtml(placa)}</strong><br />
+                Estadias (período): <strong>${escapeHtml(pi)}</strong> a <strong>${escapeHtml(pf)}</strong><br />
+                Valor: <strong>${escapeHtml(val)}</strong>`;
+              resumo.classList.remove("hidden");
+            } else {
+              resumo.innerHTML = "";
+              resumo.classList.add("hidden");
+            }
+          }
           reciboModal.classList.remove("hidden");
         });
       }
@@ -8339,7 +9065,7 @@
       });
       patioMenuPlateFilter?.addEventListener("click", () => {
         closePatioMenu();
-        openPatioSubview("patio_filtros");
+        openPatioSubview("no_patio");
         setTimeout(() => document.getElementById("plateFilterPatio")?.focus(), 60);
       });
 
@@ -8359,12 +9085,10 @@
       document.getElementById("vlsFilterLocator")?.addEventListener("change", (e) => {
         vlsListFilterLocatorId = e.target.value || "";
         renderVehicles();
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
       });
       document.getElementById("vlsFilterAssessoria")?.addEventListener("change", (e) => {
         vlsListFilterAssessoriaId = e.target.value || "";
         renderVehicles();
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
       });
       document.getElementById("vlsFiltersClear")?.addEventListener("click", () => {
         vlsListFilterLocatorId = "";
@@ -8374,33 +9098,35 @@
         if (loc) loc.value = "";
         if (ass) ass.value = "";
         renderVehicles();
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
       });
 
-      document.getElementById("patioFiltrosListType")?.addEventListener("change", () => {
-        syncPatioFiltrosListTypeOptions();
-        updatePatioFiltrosPeriodVisibility();
-        renderPatioFiltrosPreview();
+      document.getElementById("listaSubnav")?.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-lista-subview]");
+        if (!btn) return;
+        openListaSubview(btn.getAttribute("data-lista-subview"));
       });
-      document.getElementById("patioFiltrosFrom")?.addEventListener("change", () => {
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
+      document.getElementById("listaFiltersApply")?.addEventListener("click", () => {
+        readListaFiltersFromDom();
+        renderListaPanel();
       });
-      document.getElementById("patioFiltrosTo")?.addEventListener("change", () => {
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
+      document.getElementById("listaFiltersPrint")?.addEventListener("click", () => {
+        runListaPrintDocument();
       });
-      document.getElementById("patioFiltrosPresetMonth")?.addEventListener("click", () => {
-        applyPatioFiltrosDatePreset("month");
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
+      document.getElementById("listaFiltersDownloadImage")?.addEventListener("click", () => {
+        void downloadListaCaptureAsPng();
       });
-      document.getElementById("patioFiltrosPreset30")?.addEventListener("click", () => {
-        applyPatioFiltrosDatePreset(30);
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
-      });
-      document.getElementById("patioFiltrosApply")?.addEventListener("click", () => {
-        renderPatioFiltrosPreview();
-      });
-      document.getElementById("patioFiltrosPrint")?.addEventListener("click", () => {
-        runPatioFiltrosPrintDocument();
+      document.getElementById("listaFiltersClear")?.addEventListener("click", () => {
+        listaFilterLocatorId = "";
+        listaFilterAssessoriaId = "";
+        listaFilterBanco = "";
+        const loc = document.getElementById("listaFilterLocator");
+        const ass = document.getElementById("listaFilterAssessoria");
+        const banco = document.getElementById("listaFilterBanco");
+        if (loc) loc.value = "";
+        if (ass) ass.value = "";
+        if (banco) banco.value = "";
+        syncListaFilterSelects();
+        renderListaPanel();
       });
 
       document.getElementById("closePatioPartnerPrintModal")?.addEventListener("click", () => {
@@ -8471,9 +9197,6 @@
         });
         renderFinance();
       });
-      document.getElementById("printFinanceReceberResumoBtn")?.addEventListener("click", () => {
-        runFinanceReceberResumoPrint();
-      });
 
       const triggerFinanceReload = () => {
         Promise.all([
@@ -8484,11 +9207,7 @@
           loadMonthlyClosures(),
           loadVehicles(),
         ]).then(() => {
-          if (!currentFinanceView || currentFinanceView === "none") {
-            setFinanceView("aguardando_lancamento");
-          } else {
-            renderFinance();
-          }
+          renderFinance();
           updateDashboard();
         });
       };
@@ -8559,6 +9278,12 @@
         const button = event.target.closest("button[data-subview]");
         if (!button) return;
         closePatioMenu();
+        if (normalizePlateSearch(plateQuery)) {
+          plateFilter.value = "";
+          plateQuery = "";
+          setPlateSearchHints("", false);
+          renderVehicles();
+        }
         openPatioSubview(button.getAttribute("data-subview"));
       });
 
@@ -8576,7 +9301,7 @@
       bindModuleCardActivate(document.getElementById("cardFinancePagarLink"), () => openFinanceSubview("pagar"));
       bindModuleCardActivate(document.getElementById("cardFinanceCaixaLink"), () => openFinanceSubview("caixa"));
 
-      document.getElementById("openParceirosFromPatio")?.addEventListener("click", () => openMainView("parceiros"));
+      document.getElementById("openParceirosFromPatio")?.addEventListener("click", () => openPartnerSubview("parceiros"));
       document.getElementById("openConfigFromPatio")?.addEventListener("click", () => openMainView("configuracoes"));
       document.getElementById("exitParceirosToPatio")?.addEventListener("click", () => closeStackTop());
       document.getElementById("exitConfigToPatio")?.addEventListener("click", () => closeStackTop());
@@ -8585,6 +9310,23 @@
       const cardSolicitadasLink = document.getElementById("cardSolicitadasLink");
       const cardEntradasHojeLink = document.getElementById("cardEntradasHojeLink");
       const cardSaidasHojeLink = document.getElementById("cardSaidasHojeLink");
+      const cardVrpLink = document.getElementById("cardVrpLink");
+      const cardNfsePendenteLink = document.getElementById("cardNfsePendenteLink");
+
+      let lastAppHeaderModuleView = null;
+
+      function syncHeaderMenuModuleHighlight(view) {
+        const menu = document.getElementById("appHeaderMenu");
+        if (!menu) return;
+        menu.querySelectorAll(".header-menu-details").forEach((d) => d.classList.remove("header-menu-details--current"));
+        const top = menu.querySelector(".header-menu-top");
+        if (top) top.classList.toggle("header-menu-top--current", view === "dashboard");
+        if (view === "patio") menu.querySelector("#headerDetailsPatio")?.classList.add("header-menu-details--current");
+        else if (view === "parceiros") menu.querySelector("#headerDetailsParceiros")?.classList.add("header-menu-details--current");
+        else if (view === "financeiro") menu.querySelector("#headerDetailsFinance")?.classList.add("header-menu-details--current");
+        else if (view === "lista") menu.querySelector("#headerDetailsLista")?.classList.add("header-menu-details--current");
+        else if (view === "configuracoes") menu.querySelector("#headerDetailsConfig")?.classList.add("header-menu-details--current");
+      }
 
       function showMainView(view) {
         if (view !== "financeiro") {
@@ -8599,7 +9341,7 @@
           patioFlyoutBackdrop?.classList.add("hidden");
           document.getElementById("viewPatio")?.classList.remove("patio-flyout-open");
         }
-        document.querySelectorAll(".nav button[data-view]").forEach((btn) => {
+        document.querySelectorAll("#appHeaderMenu button[data-view]").forEach((btn) => {
           btn.classList.toggle("active", btn.getAttribute("data-view") === view);
         });
         document.body.classList.remove("app-module-patio", "app-module-finance");
@@ -8609,6 +9351,8 @@
         } else if (view === "patio") {
           document.body.classList.add("app-module-patio");
           document.title = "Amplipatio · Gestão de pátio";
+        } else if (view === "lista") {
+          document.title = "Amplipatio · Lista";
         } else {
           document.title = "Amplipatio";
         }
@@ -8622,6 +9366,12 @@
         if (view === "configuracoes") {
           setConfigSubview("dados");
         }
+        const headerModViews = ["dashboard", "patio", "parceiros", "financeiro", "lista", "configuracoes"];
+        if (headerModViews.includes(view) && lastAppHeaderModuleView !== view) {
+          document.querySelectorAll("#appHeaderMenu > .header-menu-details").forEach((d) => d.removeAttribute("open"));
+          lastAppHeaderModuleView = view;
+        }
+        syncHeaderMenuModuleHighlight(view);
       }
 
       function setConfigSubview(sub) {
@@ -8692,7 +9442,7 @@
       });
 
       function openMainView(view) {
-        if (isGestorPista && view !== "patio") {
+        if (isGestorPista && view !== "patio" && view !== "lista") {
           showMainView("patio");
           return;
         }
@@ -8705,9 +9455,13 @@
         navStack.push(view);
         showMainView(view);
 
-        if (view === "patio") setPatioView("dashboard");
+        if (view === "patio") setPatioView("no_patio");
         if (view === "parceiros") setPartnerView("none");
-        if (view === "financeiro") setFinanceView("dashboard");
+        if (view === "financeiro") setFinanceView("receber");
+        if (view === "lista") {
+          syncListaFilterSelects();
+          renderListaPanel();
+        }
       }
 
       function goToPatioForPlateSearch() {
@@ -8730,7 +9484,6 @@
         if (navStack[navStack.length - 1] !== "patio") {
           navStack.push("patio");
           showMainView("patio");
-          setPatioView("dashboard");
         } else {
           showMainView("patio");
         }
@@ -8763,16 +9516,52 @@
         if (top === `financeiro:${sub}`) return;
         if (top && typeof top === "string" && top.startsWith("financeiro:")) navStack.pop();
 
+        if (sub === "dashboard") {
+          navigateMainViewFromNav("dashboard");
+          document.getElementById("financeTopDashboard")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          return;
+        }
+
         if (navStack[navStack.length - 1] !== "financeiro") {
           navStack.push("financeiro");
           showMainView("financeiro");
-          setFinanceView("dashboard");
         } else {
           showMainView("financeiro");
         }
 
         navStack.push(`financeiro:${sub}`);
         setFinanceView(sub);
+      }
+
+      function openListaSubview(sub) {
+        if (!sub) return;
+        if (
+          isGestorPista &&
+          ["aguardando_lancamento", "receber", "receber_alerta", "pagar", "caixa"].includes(sub)
+        ) {
+          alert("Com o perfil de gestor de pista só estão disponíveis as listas VNP e VRP.");
+          sub = "vnp";
+        }
+        const top = navStack[navStack.length - 1];
+        if (top === `lista:${sub}`) {
+          currentListaView = sub;
+          syncListaSubnavActive();
+          renderListaPanel();
+          return;
+        }
+        if (top && typeof top === "string" && top.startsWith("lista:")) navStack.pop();
+
+        if (navStack[navStack.length - 1] !== "lista") {
+          navStack.push("lista");
+          showMainView("lista");
+        } else {
+          showMainView("lista");
+        }
+
+        navStack.push(`lista:${sub}`);
+        currentListaView = sub;
+        syncListaSubnavActive();
+        renderListaPanel();
       }
 
       function closeStackTop() {
@@ -8783,7 +9572,7 @@
         if (top === "dashboard") return showMainView("dashboard");
         if (top === "patio") {
           showMainView("patio");
-          return setPatioView("dashboard");
+          return setPatioView("no_patio");
         }
         if (top === "parceiros") {
           showMainView("parceiros");
@@ -8791,9 +9580,23 @@
         }
         if (top === "financeiro") {
           showMainView("financeiro");
-          return setFinanceView("dashboard");
+          return setFinanceView("receber");
         }
         if (top === "configuracoes") return showMainView("configuracoes");
+
+        if (top === "lista") {
+          showMainView("lista");
+          currentListaView = "vnp";
+          syncListaSubnavActive();
+          return renderListaPanel();
+        }
+        if (top && typeof top === "string" && top.startsWith("lista:")) {
+          const sub = top.split(":")[1];
+          showMainView("lista");
+          currentListaView = sub;
+          syncListaSubnavActive();
+          return renderListaPanel();
+        }
 
         if (top && typeof top === "string" && top.startsWith("patio:")) {
           const sub = top.split(":")[1];
@@ -8826,6 +9629,7 @@
         exitPatioModuleBtn.addEventListener("click", () => {
           navStack.splice(0, navStack.length, "dashboard");
           setPatioView("dashboard");
+          setFinanceView("none");
           showMainView("dashboard");
         });
       }
@@ -8835,6 +9639,8 @@
       cardSolicitadasLink.addEventListener("click", () => openPatioSubview("no_patio"));
       cardEntradasHojeLink?.addEventListener("click", () => openPatioSubview("no_patio"));
       cardSaidasHojeLink?.addEventListener("click", () => openPatioSubview("removidos"));
+      cardVrpLink?.addEventListener("click", () => openPatioSubview("removidos"));
+      cardNfsePendenteLink?.addEventListener("click", () => openPatioSubview("nfse_pendente"));
 
       /** Busca só no envio do formulário (OK ou Enter) — digitar não dispara nada. */
       if (plateSearchForm) {
@@ -8850,18 +9656,16 @@
           event.preventDefault();
           if (!plateFilter || !plateFilterPatio) return;
           plateFilter.value = plateFilterPatio.value;
-          plateQuery = plateFilterPatio.value.trim().toLowerCase();
-          renderPatioFiltrosPreview();
+          applyPlateSearchFromDashboard();
         });
       }
 
       clearPlateFilter.addEventListener("click", () => {
         plateFilter.value = "";
         plateQuery = "";
-        if (plateFilterPatio) plateFilterPatio.value = "";
+        syncPatioPlateInputFromHeader();
         setPlateSearchHints("", false);
         renderVehicles();
-        if (currentPatioView === "patio_filtros") renderPatioFiltrosPreview();
       });
 
       if (clearPlateFilterPatio) {
@@ -8871,7 +9675,6 @@
           plateQuery = "";
           setPlateSearchHints("", false);
           renderVehicles();
-          renderPatioFiltrosPreview();
         });
       }
 
@@ -8912,10 +9715,17 @@
         else openFinanceMenu();
       });
       financeMenuBackdrop?.addEventListener("click", closeFinanceMenu);
-      financeFlyoutBackdrop?.addEventListener("click", () => setFinanceView("dashboard"));
-      financeFlyoutClose?.addEventListener("click", () => setFinanceView("dashboard"));
+      financeFlyoutBackdrop?.addEventListener("click", returnToPainelFromFinanceFlyout);
+      financeFlyoutClose?.addEventListener("click", returnToPainelFromFinanceFlyout);
 
       financeSubnav.addEventListener("click", (event) => {
+        const panelBtn = event.target.closest("button[data-finance-go-panel]");
+        if (panelBtn) {
+          closeFinanceMenu();
+          navigateMainViewFromNav("dashboard");
+          document.getElementById("financeTopDashboard")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          return;
+        }
         const button = event.target.closest("button[data-subview]");
         if (!button) return;
         closeFinanceMenu();
@@ -9202,10 +10012,16 @@
       });
 
       saveSettings.addEventListener("click", async () => {
+        const enderecoVal = settingsEndereco ? settingsEndereco.value.trim() : "";
+        const emitenteVal = settingsReciboEmitente ? settingsReciboEmitente.value.trim() : "";
+        const telefoneVal = settingsReciboTelefone ? settingsReciboTelefone.value.trim() : "";
         const payload = {
           user_id: effectiveUserId(),
           cnpj: settingsCnpj.value.trim(),
           nome_patio: settingsName.value.trim(),
+          endereco: enderecoVal,
+          recibo_emitente_nome: emitenteVal,
+          recibo_telefone: telefoneVal,
           conta_bancaria: settingsBank.value.trim(),
           texto_cobranca: settingsCharge.value.trim(),
           texto_nota_fiscal: settingsInvoice.value.trim(),
@@ -9213,7 +10029,22 @@
         const settingsOp = state.settings?.id
           ? supabase.from("settings").update(payload).eq("id", state.settings.id)
           : supabase.from("settings").insert(payload);
-        const { error } = await settingsOp;
+        let { error } = await settingsOp;
+        if (error && /endereco|recibo_emitente|recibo_telefone|column/i.test(error.message || "")) {
+          const { endereco: _e, recibo_emitente_nome: _r, recibo_telefone: _t, ...rest } = payload;
+          const fallbackOp = state.settings?.id
+            ? supabase.from("settings").update(rest).eq("id", state.settings.id)
+            : supabase.from("settings").insert(rest);
+          const retry = await fallbackOp;
+          error = retry.error;
+          if (!error) {
+            alert(
+              "Configurações salvas (sem gravar endereço / emitente / telefone do recibo). Execute no Supabase o script supabase/settings_endereco.sql e volte a guardar."
+            );
+            loadSettings();
+            return;
+          }
+        }
         if (error) {
           alert(error.message);
           return;
@@ -10410,6 +11241,9 @@
           const vehicle = state.vehicles.find((v) => v.id === receivable.vehicle_id);
           const destinatarioInfo = await openReciboDestinatarioModal({
             defaultNome: receivable.responsavel_pagamento || "",
+            defaultDoc: "",
+            receivable,
+            vehicle: vehicle || null,
           });
           if (!destinatarioInfo) return;
           const totalAtual = Number(receivable.valor || 0);
@@ -10796,38 +11630,194 @@
         }
       });
 
-      const navButtons = document.querySelectorAll(".nav button[data-view]");
+      /** Fecha só o painel suspenso; mantém `<details>` abertos até mudar de módulo em `showMainView`. */
+      function closeAppHeaderMenu() {
+        const b = document.getElementById("appHeaderMenuBtn");
+        const p = document.getElementById("appHeaderMenu");
+        const bd = document.getElementById("appHeaderMenuBackdrop");
+        b?.setAttribute("aria-expanded", "false");
+        p?.classList.add("hidden");
+        bd?.classList.add("hidden");
+      }
+
+      function openAppHeaderMenu() {
+        const b = document.getElementById("appHeaderMenuBtn");
+        const p = document.getElementById("appHeaderMenu");
+        const bd = document.getElementById("appHeaderMenuBackdrop");
+        b?.setAttribute("aria-expanded", "true");
+        p?.classList.remove("hidden");
+        bd?.classList.remove("hidden");
+      }
+
+      function toggleAppHeaderMenu(e) {
+        if (e) e.stopPropagation();
+        const p = document.getElementById("appHeaderMenu");
+        if (p?.classList.contains("hidden")) openAppHeaderMenu();
+        else closeAppHeaderMenu();
+      }
+
+      function navigateMainViewFromNav(view) {
+        if (!view) return;
+        if (view === "dashboard") {
+          navStack.splice(0, navStack.length, "dashboard");
+          showMainView("dashboard");
+          setPatioView("dashboard");
+          setPartnerView("none");
+          setFinanceView("none");
+          return;
+        }
+        openMainView(view);
+      }
+
       const views = {
         dashboard: document.getElementById("viewDashboard"),
         patio: document.getElementById("viewPatio"),
         parceiros: document.getElementById("viewParceiros"),
         financeiro: document.getElementById("viewFinanceiro"),
+        lista: document.getElementById("viewLista"),
         configuracoes: document.getElementById("viewConfiguracoes"),
       };
+
+      function syncHeaderMenuHighlightFromDom() {
+        const order = ["dashboard", "patio", "parceiros", "financeiro", "lista", "configuracoes"];
+        for (const name of order) {
+          const el = views[name];
+          if (el && !el.classList.contains("hidden")) {
+            lastAppHeaderModuleView = name;
+            syncHeaderMenuModuleHighlight(name);
+            return;
+          }
+        }
+      }
 
       document.querySelectorAll('[data-close-stack="true"]').forEach((btn) => {
         btn.addEventListener("click", closeStackTop);
       });
 
-      navButtons.forEach((button) => {
-        button.addEventListener("click", () => {
-          const view = button.getAttribute("data-view");
-          if (view === "dashboard") {
-            navStack.splice(0, navStack.length, "dashboard");
-            showMainView("dashboard");
-            setPatioView("dashboard");
-            setPartnerView("none");
-            setFinanceView("none");
-            return;
-          }
-          openMainView(view);
+      document.getElementById("appHeaderMenuBtn")?.addEventListener("click", toggleAppHeaderMenu);
+      document.getElementById("appHeaderMenuBackdrop")?.addEventListener("click", () => closeAppHeaderMenu());
+      document.querySelectorAll("#appHeaderMenu > .header-menu-details").forEach((det) => {
+        det.addEventListener("toggle", () => {
+          if (!det.open) return;
+          document.querySelectorAll("#appHeaderMenu > .header-menu-details").forEach((o) => {
+            if (o !== det) o.open = false;
+          });
         });
+      });
+      document.getElementById("appHeaderMenu")?.addEventListener("click", (e) => {
+        const dashBtn = e.target.closest("#appHeaderMenu > button[data-view]");
+        if (dashBtn) {
+          e.preventDefault();
+          closeAppHeaderMenu();
+          navigateMainViewFromNav(dashBtn.getAttribute("data-view"));
+          return;
+        }
+
+        const listaHdr = e.target.closest("#appHeaderMenu [data-lista-subview]");
+        if (listaHdr) {
+          e.preventDefault();
+          const sub = listaHdr.getAttribute("data-lista-subview");
+          openMainView("lista");
+          openListaSubview(sub);
+          closeAppHeaderMenu();
+          return;
+        }
+
+        const patioSub = e.target.closest("[data-header-patio-sub]");
+        if (patioSub) {
+          e.preventDefault();
+          if (normalizePlateSearch(plateQuery)) {
+            if (plateFilter) plateFilter.value = "";
+            plateQuery = "";
+            setPlateSearchHints("", false);
+            renderVehicles();
+          }
+          openPatioSubview(patioSub.getAttribute("data-header-patio-sub"));
+          closeAppHeaderMenu();
+          return;
+        }
+
+        const patioAct = e.target.closest("[data-header-patio]");
+        if (patioAct && !patioAct.hasAttribute("data-header-patio-sub")) {
+          e.preventDefault();
+          const k = patioAct.getAttribute("data-header-patio");
+          openMainView("patio");
+          if (k === "new-vehicle") openVehicleModal("create");
+          else if (k === "print") openPatioPrintModal();
+          closeAppHeaderMenu();
+          return;
+        }
+
+        const partnerSub = e.target.closest("[data-header-partner-sub]");
+        if (partnerSub) {
+          e.preventDefault();
+          openPartnerSubview(partnerSub.getAttribute("data-header-partner-sub"));
+          closeAppHeaderMenu();
+          return;
+        }
+
+        const finPanel = e.target.closest("[data-header-finance-panel]");
+        if (finPanel) {
+          e.preventDefault();
+          closeFinanceMenu();
+          navigateMainViewFromNav("dashboard");
+          closeAppHeaderMenu();
+          document.getElementById("financeTopDashboard")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          return;
+        }
+
+        const finSub = e.target.closest("[data-header-finance-sub]");
+        if (finSub) {
+          e.preventDefault();
+          closeFinanceMenu();
+          openFinanceSubview(finSub.getAttribute("data-header-finance-sub"));
+          closeAppHeaderMenu();
+          return;
+        }
+
+        const finAct = e.target.closest("[data-header-finance-action]");
+        if (finAct) {
+          e.preventDefault();
+          const id = finAct.getAttribute("data-header-finance-action");
+          closeFinanceMenu();
+          openMainView("financeiro");
+          document.getElementById(id)?.click();
+          closeAppHeaderMenu();
+          return;
+        }
+
+        const cfgSub = e.target.closest("[data-header-config-sub]");
+        if (cfgSub) {
+          e.preventDefault();
+          openMainView("configuracoes");
+          setConfigSubview(cfgSub.getAttribute("data-header-config-sub"));
+          closeAppHeaderMenu();
+          return;
+        }
+      });
+      document.getElementById("appHeaderMenuLogout")?.addEventListener("click", () => {
+        closeAppHeaderMenu();
+        logoutBtn?.click();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        const p = document.getElementById("appHeaderMenu");
+        if (!p || p.classList.contains("hidden")) return;
+        closeAppHeaderMenu();
+      });
+      document.addEventListener("click", (e) => {
+        const p = document.getElementById("appHeaderMenu");
+        const wrap = document.getElementById("appHeaderMenuWrap");
+        if (!p || !wrap || wrap.classList.contains("hidden") || p.classList.contains("hidden")) return;
+        if (wrap.contains(e.target)) return;
+        closeAppHeaderMenu();
       });
 
       bootstrap();
       setPatioView("dashboard");
       setFinanceView("none");
       setPartnerView("none");
+      syncHeaderMenuHighlightFromDom();
     </script>
   </body>
 </html>
