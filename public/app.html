@@ -3857,12 +3857,13 @@
         });
       }
 
-      /** Mesmo critério visual de `renderVnpUnifiedTable` (classes vnp-row-liberacao / vnp-row-sem-valor). */
+      /** Prioridade no topo da VNP: liberação solicitada ou sem valor diário. */
       function isVnpUnifiedListDestaque(v) {
         if (!v) return false;
         const semValorDiaria = !v.valor_diaria || Number(v.valor_diaria) <= 0;
-        const emPipeline = v.status !== "NO_PATIO";
-        return semValorDiaria || emPipeline || isRemocaoSolicitada(v);
+        if (semValorDiaria) return true;
+        if (v.status === "LIBERACAO_SOLICITADA") return true;
+        return false;
       }
 
       function sortVehiclesByRegistroDesc(list) {
