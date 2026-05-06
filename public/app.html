@@ -3806,15 +3806,12 @@
                 <summary>Financeiro</summary>
                 <div class="header-menu-nested">
                   <button type="button" data-header-finance-panel="true">Dashboard (visão geral)</button>
-                  <button type="button" data-header-finance-sub="metas">Metas financeiras</button>
                   <button type="button" data-header-finance-sub="receber">Receitas (entradas)</button>
                   <button type="button" data-header-finance-sub="pagar">Despesas (saídas)</button>
-                  <button type="button" data-header-finance-sub="caixa">Contas e carteiras</button>
-                  <button type="button" data-header-finance-sub="transferencias">Transferências</button>
                   <button type="button" data-header-finance-sub="receber_alerta">Contas a pagar e receber</button>
                   <button type="button" data-header-finance-sub="relatorios">Relatórios</button>
                   <button type="button" data-header-finance-sub="cadastro_base">Categorias</button>
-                  <button type="button" data-header-finance-action="financeMenuNewPayable">Nova despesa</button>
+                  <button type="button" class="hidden" data-header-finance-action="financeMenuNewPayable">Nova despesa</button>
                   <button type="button" data-header-finance-action="financeMenuReload">Atualizar dados</button>
                 </div>
               </details>
@@ -4603,20 +4600,15 @@
               <nav id="financeSubnav" class="subnav finance-nav-inline" aria-label="Navegação financeira">
                 <span class="finance-menu-group">Principal</span>
                 <button type="button" class="secondary" data-subview="dashboard">Visão geral</button>
-                <button type="button" class="secondary" data-subview="metas">Metas financeiras</button>
                 <button type="button" class="secondary" data-subview="receber">Receitas (entradas)</button>
                 <button type="button" class="secondary" data-subview="pagar">Despesas (saídas)</button>
-                <button type="button" class="secondary" data-subview="caixa">Contas e carteiras</button>
-                <button type="button" class="secondary" data-subview="transferencias">Transferências</button>
                 <button type="button" class="secondary" data-subview="receber_alerta">Contas a pagar e receber</button>
                 <button type="button" class="secondary" data-subview="relatorios">Relatórios</button>
                 <button type="button" class="secondary" data-subview="cadastro_base">Categorias</button>
-                <button type="button" class="secondary" id="financeMenuNewPayable">Nova despesa</button>
+                <button type="button" class="secondary hidden" id="financeMenuNewPayable">Nova despesa</button>
                 <button type="button" class="secondary" id="financeMenuReload">Atualizar dados</button>
               </nav>
               <div class="finance-modern-sidebar-actions">
-                <button type="button" class="secondary" id="openParceirosFromFinanceiro">Rede de parceiros</button>
-                <button type="button" class="secondary" id="openConfigFromFinanceiro">Configurações</button>
               </div>
             </aside>
             <section class="finance-modern-main">
@@ -4822,33 +4814,6 @@
                   <span class="fin-dash-mini-val" id="fdQuickMediaMes">R$ 0,00</span>
                 </div>
               </div>
-              <section id="financeMetasCard" class="section-card" style="margin-top: 12px">
-                <h3 style="margin: 0 0 8px; font-size: 1.02rem">Meta financeira</h3>
-                <p class="notice" style="margin: 0 0 10px; font-size: 12px">Defina um objetivo e acompanhe o progresso com base no saldo atual.</p>
-                <div class="filter-bar" style="margin: 0 0 10px; align-items: end; gap: 8px">
-                  <div>
-                    <label for="financeMetaNome">Objetivo</label>
-                    <input id="financeMetaNome" type="text" placeholder="Ex.: Reserva de emergência" />
-                  </div>
-                  <div>
-                    <label for="financeMetaValor">Valor alvo</label>
-                    <input id="financeMetaValor" type="number" step="0.01" min="0" placeholder="0,00" />
-                  </div>
-                  <button type="button" class="secondary" id="financeMetaSalvar">Salvar meta</button>
-                  <button type="button" class="secondary" id="financeMetaLimpar">Limpar</button>
-                </div>
-                <div style="height: 10px; border-radius: 999px; background: rgba(148,163,184,.25); overflow: hidden">
-                  <div id="financeMetaProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#10b981,#34d399)"></div>
-                </div>
-                <p id="financeMetaResumo" class="notice" style="margin: 8px 0 0; font-size: 12px">Sem meta definida.</p>
-              </section>
-              <section class="fin-dash-extrato-section">
-                <div class="fin-dash-extrato-head">
-                  <h3 class="fin-dash-extrato-title">Fluxo de caixa</h3>
-                  <p class="fin-dash-extrato-sub">Por dia — Diárias (geradas) e Despesas (pagas no caixa)</p>
-                </div>
-                <div id="fdExtratoRoot" class="fin-dash-extrato-root" aria-live="polite"></div>
-              </section>
             </div>
             <div id="financeStandardArea">
               <button type="button" class="secondary finance-flyout-close" id="financeFlyoutClose" aria-label="Fechar subaba">X</button>
@@ -4879,9 +4844,6 @@
                     <div class="finance-kpi-meta" id="fcResumoResultadoMeta">Entradas − saídas</div>
                   </div>
                 </div>
-                <button type="button" class="secondary" id="financeCaixaIrFluxo" style="margin-top: 12px">
-                  Ver fluxo de caixa (lista de movimentos)
-                </button>
               </div>
               <div id="financeFlyoutSummaryCards" class="grid">
                 <div class="card">
@@ -10946,7 +10908,7 @@
         if (currentFinanceView === "dashboard" && financeFocusMetaGoalCard) {
           financeFocusMetaGoalCard = false;
           setTimeout(() => {
-            document.getElementById("financeMetasCard")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            document.getElementById("financeDetailDashboard")?.scrollIntoView({ behavior: "smooth", block: "start" });
           }, 40);
         }
 
@@ -11552,10 +11514,10 @@
         }
 
         if (currentFinanceView === "relatorios") {
-          // Garante que, em Relatórios, os filtros dessa própria aba fiquem sempre visíveis.
-          financeFiltersHub?.classList.remove("hidden");
-          financeFilters?.classList.remove("hidden");
-          financeReportExtraFilters?.classList.remove("hidden");
+          // Relatório simplificado: RPV + RF + totais em aberto/aguardando.
+          financeFiltersHub?.classList.add("hidden");
+          financeFilters?.classList.add("hidden");
+          financeReportExtraFilters?.classList.add("hidden");
           financePlateSearchForm?.classList.add("hidden");
           financeLancamentosFilters?.classList.add("hidden");
           financeLancamentosToolbar?.classList.add("hidden");
@@ -11564,121 +11526,46 @@
           financeLancSidePanel?.classList.add("hidden");
           financeHead.innerHTML = `
             <tr>
-              <th>Relatório</th>
-              <th>Valor</th>
+              <th>Nome do RPV</th>
+              <th>RF</th>
+              <th>Pagamento em aberto</th>
+              <th>Aguardando lançamento</th>
             </tr>`;
-          if (!reportHasRun) {
-            setEmptyRow(
-              tableFinance,
-              "Selecione os filtros e clique em «Aplicar» para gerar o relatório.",
-              2
-            );
-            return;
-          }
-          const reportFrom = filterFrom?.value || null;
-          const reportTo = filterTo?.value || null;
-          const toDateOnly = (value) => {
-            if (!value) return null;
-            const d = new Date(value);
-            if (Number.isNaN(d.getTime())) return null;
-            return d.toISOString().slice(0, 10);
-          };
-          const toMonth = (value) => {
-            const ymd = toDateOnly(value);
-            return ymd ? ymd.slice(0, 7) : null;
-          };
-          const monthLabel = (ym) => {
-            if (!ym) return "-";
-            const [y, m] = ym.split("-");
-            return `${m}/${y}`;
-          };
-
-          const entries = [];
-          state.receivables.forEach((r) => {
+          const partnerById = new Map((state.partners || []).map((p) => [String(p.id), p.nome || "-"]));
+          const grouped = new Map();
+          (state.receivables || []).forEach((r) => {
             if (!matchesVehicleId(r.vehicle_id)) return;
-            entries.push({
-              data: toDateOnly(r.period_start || r.created_at),
-              tipo: "RECEITA",
-              categoria: r.receivable_category || "RECEITA",
-              cliente: (r.responsavel_pagamento || "").trim() || "Não informado",
-              fornecedor: "",
-              valor: Number(r.valor || 0),
-            });
+            const v = vehicleById.get(r.vehicle_id);
+            const rpv = v?.localizador_id ? partnerById.get(String(v.localizador_id)) || "-" : "-";
+            const rf = String(r.responsavel_pagamento || "Não informado").trim() || "Não informado";
+            const key = `${rpv}__${rf}`;
+            const cur = grouped.get(key) || { rpv, rf, aberto: 0, aguardando: 0 };
+            const valor = Number(r.valor || 0);
+            if (r.status === RECEIVABLE_AGUARDANDO_LANCAMENTO || receivableNaFilaAguardandoTriagem(r)) {
+              cur.aguardando += valor;
+            } else if (r.status === "EM_ABERTO" && receivableIsContaReceberFinanceiro(r)) {
+              cur.aberto += valor;
+            }
+            grouped.set(key, cur);
           });
-          state.payables.forEach((p) => {
-            if (!payableDescMatchesPlate(p)) return;
-            entries.push({
-              data: toDateOnly(p.data_vencimento || p.created_at),
-              tipo: "DESPESA",
-              categoria: p.payable_category || "OUTROS",
-              cliente: "",
-              fornecedor: (p.fornecedor || p.descricao || "").trim() || "Não informado",
-              valor: Number(p.valor || 0),
-            });
-          });
-
-          const syncSelectOptions = (selectEl, values, defaultLabel) => {
-            if (!selectEl) return;
-            const current = selectEl.value;
-            const opts = [...new Set(values.map((v) => String(v || "").trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-            selectEl.innerHTML = [`<option value="">${defaultLabel}</option>`, ...opts.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`)].join("");
-            if (current && opts.includes(current)) selectEl.value = current;
-          };
-          syncSelectOptions(reportCategoriaFiltro, entries.map((e) => e.categoria), "Todas");
-          syncSelectOptions(reportClienteFiltro, entries.filter((e) => e.tipo === "RECEITA").map((e) => e.cliente), "Todos");
-          syncSelectOptions(reportFornecedorFiltro, entries.filter((e) => e.tipo === "DESPESA").map((e) => e.fornecedor), "Todos");
-
-          const filtered = entries.filter((e) => {
-            if (!e.data) return false;
-            if (reportFrom && e.data < reportFrom) return false;
-            if (reportTo && e.data > reportTo) return false;
-            if (reportFilter.tipo && e.tipo !== reportFilter.tipo) return false;
-            if (reportFilter.categoria && e.categoria !== reportFilter.categoria) return false;
-            if (reportFilter.cliente && e.cliente !== reportFilter.cliente) return false;
-            if (reportFilter.fornecedor && e.fornecedor !== reportFilter.fornecedor) return false;
-            return true;
-          });
-
-          const receitas = filtered.filter((e) => e.tipo === "RECEITA").reduce((s, e) => s + e.valor, 0);
-          const despesas = filtered.filter((e) => e.tipo === "DESPESA").reduce((s, e) => s + e.valor, 0);
-          const lucro = receitas - despesas;
-          rows.push(`<tr><td><strong>Total receitas (filtro atual)</strong></td><td>${formatCurrency(receitas)}</td></tr>`);
-          rows.push(`<tr><td><strong>Total despesas (filtro atual)</strong></td><td>${formatCurrency(despesas)}</td></tr>`);
-          rows.push(`<tr><td><strong>Lucro (filtro atual)</strong></td><td>${formatCurrency(lucro)}</td></tr>`);
-
-          const lucroMes = new Map();
-          filtered.forEach((e) => {
-            const ym = toMonth(e.data);
-            if (!ym) return;
-            const current = lucroMes.get(ym) || { receitas: 0, despesas: 0 };
-            if (e.tipo === "RECEITA") current.receitas += e.valor;
-            else current.despesas += e.valor;
-            lucroMes.set(ym, current);
-          });
-          rows.push(`<tr><td colspan="2" style="padding-top:16px;"><strong>Lucro por mês</strong></td></tr>`);
-          [...lucroMes.entries()]
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .forEach(([ym, v]) => {
-              rows.push(`<tr><td>${monthLabel(ym)}</td><td>${formatCurrency(v.receitas - v.despesas)}</td></tr>`);
-            });
-          if (!lucroMes.size) rows.push(`<tr><td>Sem dados no período</td><td>-</td></tr>`);
-
-          const gastosPorSetor = new Map();
-          filtered
-            .filter((e) => e.tipo === "DESPESA")
-            .forEach((e) => gastosPorSetor.set(e.categoria, (gastosPorSetor.get(e.categoria) || 0) + e.valor));
-          rows.push(`<tr><td colspan="2" style="padding-top:16px;"><strong>Gastos por setor (categoria)</strong></td></tr>`);
-          [...gastosPorSetor.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .forEach(([setor, val]) => {
-              rows.push(`<tr><td>${escapeHtml(setor)}</td><td>${formatCurrency(val)}</td></tr>`);
-            });
-          if (!gastosPorSetor.size) rows.push(`<tr><td>Sem despesas no período</td><td>-</td></tr>`);
-
-          if (!rows.length) {
-            setEmptyRow(tableFinance, "Nenhum dado para relatórios.", 2);
+          const reportRows = [...grouped.values()]
+            .filter((x) => x.aberto > 0 || x.aguardando > 0)
+            .sort((a, b) => `${a.rpv} ${a.rf}`.localeCompare(`${b.rpv} ${b.rf}`));
+          if (!reportRows.length) {
+            setEmptyRow(tableFinance, "Sem dados para o relatório simplificado.", 4);
           } else {
-            tableFinance.innerHTML = rows.join("");
+            tableFinance.innerHTML = reportRows
+              .map(
+                (x) => `
+                  <tr>
+                    <td>${escapeHtml(x.rpv)}</td>
+                    <td>${escapeHtml(x.rf)}</td>
+                    <td>${formatCurrency(x.aberto)}</td>
+                    <td>${formatCurrency(x.aguardando)}</td>
+                  </tr>
+                `
+              )
+              .join("");
           }
           return;
         }
@@ -11975,7 +11862,6 @@
         const previousFinanceView = currentFinanceView;
         if (view === "filtros") view = "dashboard";
         if (view === "pre_lancamento") view = "aguardando_lancamento";
-        if (view === "transferencias") view = "fluxo_caixa";
         if (view === "metas") view = "dashboard";
         currentFinanceView = view;
         const viewMap = {
@@ -11986,7 +11872,7 @@
           receber: "Receitas",
           receber_alerta: "Contas a pagar e receber",
           pagar: "Despesas",
-          caixa: "Contas e carteiras",
+          caixa: "Fluxo de caixa",
           fluxo_caixa: "Fluxo de caixa",
           cadastro_base: "Categorias",
           historico_pagar: "Histórico a pagar",
@@ -12026,6 +11912,11 @@
           const isPreLancamentoButton = btnSubview === "pre_lancamento" && view === "aguardando_lancamento";
           btn.classList.toggle("active", !isNone && (btnSubview === view || isPreLancamentoButton));
         });
+        const financeNewPayableBtn = document.getElementById("financeMenuNewPayable");
+        financeNewPayableBtn?.classList.toggle("hidden", view !== "pagar");
+        document
+          .querySelectorAll('[data-header-finance-action="financeMenuNewPayable"]')
+          .forEach((btn) => btn.classList.toggle("hidden", view !== "pagar"));
         if (isNone) {
           financeFiltersHub?.classList.add("hidden");
           financeFilters.classList.add("hidden");
@@ -12715,8 +12606,6 @@
 
       document.getElementById("openParceirosFromPatio")?.addEventListener("click", () => openPartnerSubview("localizadores"));
       document.getElementById("openConfigFromPatio")?.addEventListener("click", () => openMainView("configuracoes"));
-      document.getElementById("openParceirosFromFinanceiro")?.addEventListener("click", () => openPartnerSubview("localizadores"));
-      document.getElementById("openConfigFromFinanceiro")?.addEventListener("click", () => openMainView("configuracoes"));
       document.getElementById("exitParceirosToPatio")?.addEventListener("click", () => closeStackTop());
       document.getElementById("exitConfigToPatio")?.addEventListener("click", () => closeStackTop());
 
@@ -12935,7 +12824,6 @@
         if (!sub) return;
         if (sub === "filtros") sub = "dashboard";
         if (sub === "pre_lancamento") sub = "aguardando_lancamento";
-        if (sub === "transferencias") sub = "fluxo_caixa";
         if (sub === "metas") {
           financeFocusMetaGoalCard = true;
           sub = "dashboard";
@@ -13185,7 +13073,6 @@
         if (financeCaixaMonth) financeCaixaMonth.value = caixaFilter.month;
         if (currentFinanceView === "caixa" || currentFinanceView === "fluxo_caixa") renderFinance();
       });
-      document.getElementById("financeCaixaIrFluxo")?.addEventListener("click", () => setFinanceView("fluxo_caixa"));
       const syncLancamentosFilters = () => {
         lancamentosFilter = {
           tipo: (financeLancTipo?.value || "").trim(),
