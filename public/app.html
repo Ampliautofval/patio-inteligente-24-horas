@@ -3721,6 +3721,23 @@
                 </div>
               </details>
 
+              <details class="header-menu-details" id="headerDetailsFinance">
+                <summary>Financeiro</summary>
+                <div class="header-menu-nested">
+                  <button type="button" data-header-finance-panel="true">Dashboard (visão geral)</button>
+                  <button type="button" data-header-finance-sub="metas">Metas financeiras</button>
+                  <button type="button" data-header-finance-sub="receber">Receitas (entradas)</button>
+                  <button type="button" data-header-finance-sub="pagar">Despesas (saídas)</button>
+                  <button type="button" data-header-finance-sub="caixa">Contas e carteiras</button>
+                  <button type="button" data-header-finance-sub="transferencias">Transferências</button>
+                  <button type="button" data-header-finance-sub="receber_alerta">Contas a pagar e receber</button>
+                  <button type="button" data-header-finance-sub="relatorios">Relatórios</button>
+                  <button type="button" data-header-finance-sub="cadastro_base">Categorias</button>
+                  <button type="button" data-header-finance-action="financeMenuNewPayable">Nova despesa</button>
+                  <button type="button" data-header-finance-action="financeMenuReload">Atualizar dados</button>
+                </div>
+              </details>
+
               <details class="header-menu-details" id="headerDetailsConfig">
                 <summary>Configurações</summary>
                 <div class="header-menu-nested">
@@ -3815,6 +3832,12 @@
                   <span class="dashboard-system-btn__title">Pátio</span>
                   <span class="dashboard-system-btn__desc">Acompanhe veículos, entradas, saídas e fluxo operacional.</span>
                   <span class="dashboard-system-btn__go">Abrir pátio →</span>
+                </button>
+                <button type="button" class="dashboard-system-btn dashboard-system-btn--finance" id="dashboardOpenFinance">
+                  <span class="dashboard-system-btn__kicker">Financeiro</span>
+                  <span class="dashboard-system-btn__title">Visão geral</span>
+                  <span class="dashboard-system-btn__desc">Saldo atual, receitas x despesas, evolução e alertas de vencimento.</span>
+                  <span class="dashboard-system-btn__go">Abrir dashboard financeiro →</span>
                 </button>
                 <button type="button" class="dashboard-system-btn dashboard-system-btn--patio" id="dashboardOpenParceiros">
                   <span class="dashboard-system-btn__kicker">Relacionamento</span>
@@ -4501,19 +4524,16 @@
               <nav id="financeSubnav" class="subnav finance-nav-inline" aria-label="Navegação financeira">
                 <span class="finance-menu-group">Principal</span>
                 <button type="button" class="secondary" data-subview="dashboard">Visão geral</button>
-                <button type="button" class="secondary" id="financeMenuReload">Atualizar dados</button>
-
-                <span class="finance-menu-group">Operação</span>
-                <button type="button" class="secondary" data-subview="receber">Receitas</button>
-                <button type="button" class="secondary" data-subview="pagar">Despesas</button>
-                <button type="button" class="secondary" data-subview="caixa">Caixa</button>
-                <button type="button" class="secondary" data-subview="fluxo_caixa">Fluxo de caixa</button>
+                <button type="button" class="secondary" data-subview="metas">Metas financeiras</button>
+                <button type="button" class="secondary" data-subview="receber">Receitas (entradas)</button>
+                <button type="button" class="secondary" data-subview="pagar">Despesas (saídas)</button>
+                <button type="button" class="secondary" data-subview="caixa">Contas e carteiras</button>
+                <button type="button" class="secondary" data-subview="transferencias">Transferências</button>
+                <button type="button" class="secondary" data-subview="receber_alerta">Contas a pagar e receber</button>
+                <button type="button" class="secondary" data-subview="relatorios">Relatórios</button>
+                <button type="button" class="secondary" data-subview="cadastro_base">Categorias</button>
                 <button type="button" class="secondary" id="financeMenuNewPayable">Nova despesa</button>
-
-                <span class="finance-menu-group">Mais opções</span>
-                <button type="button" class="secondary" data-subview="pre_lancamento">Pré-lançamento</button>
-                <button type="button" class="secondary" data-subview="lancamentos">Lançamentos</button>
-                <button type="button" class="secondary" data-subview="cadastro_base">Cadastro base</button>
+                <button type="button" class="secondary" id="financeMenuReload">Atualizar dados</button>
               </nav>
               <div class="finance-modern-sidebar-actions">
                 <button type="button" class="secondary" id="openParceirosFromFinanceiro">Rede de parceiros</button>
@@ -4612,7 +4632,7 @@
             <button class="secondary" id="quick7">Últimos 7 dias</button>
             <button class="secondary" id="quick30">Últimos 30 dias</button>
             <button class="secondary" id="quick90">Últimos 90 dias</button>
-            <button class="secondary" id="exportHistory">Exportar CSV</button>
+            <button class="secondary" id="exportHistory">Exportar Excel (CSV)</button>
           </div>
           <div id="financeLancamentosFilters" class="filter-bar finance-filter-panel hidden" style="margin: 0 0 10px; flex-wrap: wrap; align-items: center">
             <span class="notice" style="font-weight: 600">Lançamentos — filtros:</span>
@@ -4723,6 +4743,26 @@
                   <span class="fin-dash-mini-val" id="fdQuickMediaMes">R$ 0,00</span>
                 </div>
               </div>
+              <section id="financeMetasCard" class="section-card" style="margin-top: 12px">
+                <h3 style="margin: 0 0 8px; font-size: 1.02rem">Meta financeira</h3>
+                <p class="notice" style="margin: 0 0 10px; font-size: 12px">Defina um objetivo e acompanhe o progresso com base no saldo atual.</p>
+                <div class="filter-bar" style="margin: 0 0 10px; align-items: end; gap: 8px">
+                  <div>
+                    <label for="financeMetaNome">Objetivo</label>
+                    <input id="financeMetaNome" type="text" placeholder="Ex.: Reserva de emergência" />
+                  </div>
+                  <div>
+                    <label for="financeMetaValor">Valor alvo</label>
+                    <input id="financeMetaValor" type="number" step="0.01" min="0" placeholder="0,00" />
+                  </div>
+                  <button type="button" class="secondary" id="financeMetaSalvar">Salvar meta</button>
+                  <button type="button" class="secondary" id="financeMetaLimpar">Limpar</button>
+                </div>
+                <div style="height: 10px; border-radius: 999px; background: rgba(148,163,184,.25); overflow: hidden">
+                  <div id="financeMetaProgressBar" style="height: 100%; width: 0%; background: linear-gradient(90deg,#10b981,#34d399)"></div>
+                </div>
+                <p id="financeMetaResumo" class="notice" style="margin: 8px 0 0; font-size: 12px">Sem meta definida.</p>
+              </section>
               <section class="fin-dash-extrato-section">
                 <div class="fin-dash-extrato-head">
                   <h3 class="fin-dash-extrato-title">Fluxo de caixa</h3>
@@ -5865,6 +5905,7 @@
       let reportHasRun = false;
       let financeCompetencia = currentYearMonthLocal();
       let financeSidebarOpen = false;
+      let financeFocusMetaGoalCard = false;
       const navStack = ["dashboard"];
       let historyFilter = { from: null, to: null };
       let reportFilter = { tipo: "", categoria: "", cliente: "", fornecedor: "" };
@@ -5940,6 +5981,7 @@
       /** NF enviada quando a coluna `nfse_enviada` não existe na tabela `vehicles`. */
       const NFSE_ENVIADA_VEHICLE_IDS_KEY = "amplipatio_vehicle_nfse_enviada_ids";
       const CADASTRO_BASE_STORAGE_KEY = "amplipatio_financeiro_cadastro_base_v1";
+      const FINANCE_META_KEY = "amplipatio_financeiro_meta_v1";
       const CADASTRO_BASE_FIELDS = [
         { key: "categorias", label: "Categorias" },
         { key: "subcategorias", label: "Subcategorias" },
@@ -6089,6 +6131,56 @@
         } catch (e) {
           console.warn("localStorage cadastro base", e);
         }
+      }
+
+      function financeMetaRead() {
+        try {
+          const raw = localStorage.getItem(FINANCE_META_KEY);
+          const parsed = JSON.parse(raw || "{}");
+          return {
+            nome: String(parsed?.nome || "").trim(),
+            valor: Number(parsed?.valor || 0),
+          };
+        } catch (e) {
+          return { nome: "", valor: 0 };
+        }
+      }
+
+      function financeMetaWrite(meta) {
+        try {
+          localStorage.setItem(
+            FINANCE_META_KEY,
+            JSON.stringify({
+              nome: String(meta?.nome || "").trim(),
+              valor: Number(meta?.valor || 0),
+            })
+          );
+        } catch (e) {
+          console.warn("localStorage meta financeira", e);
+        }
+      }
+
+      function renderFinanceMetaCard(saldoAtual) {
+        const nomeInput = document.getElementById("financeMetaNome");
+        const valorInput = document.getElementById("financeMetaValor");
+        const barra = document.getElementById("financeMetaProgressBar");
+        const resumo = document.getElementById("financeMetaResumo");
+        if (!nomeInput || !valorInput || !barra || !resumo) return;
+        const meta = financeMetaRead();
+        if (document.activeElement !== nomeInput) nomeInput.value = meta.nome || "";
+        if (document.activeElement !== valorInput) valorInput.value = meta.valor > 0 ? String(meta.valor) : "";
+        if (!(meta.valor > 0)) {
+          barra.style.width = "0%";
+          resumo.textContent = "Sem meta definida.";
+          return;
+        }
+        const progressoPct = Math.max(0, Math.min(100, (Number(saldoAtual || 0) / meta.valor) * 100));
+        barra.style.width = `${progressoPct.toFixed(1)}%`;
+        const faltante = Math.max(0, meta.valor - Number(saldoAtual || 0));
+        const nome = meta.nome || "Objetivo financeiro";
+        resumo.textContent = `${nome}: ${formatCurrency(Number(saldoAtual || 0))} de ${formatCurrency(meta.valor)} (${progressoPct.toFixed(
+          1
+        )}%). Faltam ${formatCurrency(faltante)}.`;
       }
 
       function cadastroBaseNormalizeList(list) {
@@ -10770,6 +10862,13 @@
           if (mov.tipo_conta === "PAGAR") return sum - Number(mov.valor || 0);
           return sum + Number(mov.valor || 0);
         }, 0);
+        renderFinanceMetaCard(caixa);
+        if (currentFinanceView === "dashboard" && financeFocusMetaGoalCard) {
+          financeFocusMetaGoalCard = false;
+          setTimeout(() => {
+            document.getElementById("financeMetasCard")?.scrollIntoView({ behavior: "smooth", block: "center" });
+          }, 40);
+        }
 
         const overdueReceivables = openReceivablesFinanceiro.filter((r) => {
           if (!r.created_at) return false;
@@ -11790,18 +11889,22 @@
 
       function setFinanceView(view) {
         const previousFinanceView = currentFinanceView;
-        if (view === "filtros" || view === "relatorios") view = "dashboard";
+        if (view === "filtros") view = "dashboard";
         if (view === "pre_lancamento") view = "aguardando_lancamento";
+        if (view === "transferencias") view = "fluxo_caixa";
+        if (view === "metas") view = "dashboard";
         currentFinanceView = view;
         const viewMap = {
           dashboard: "Dashboard geral",
+          relatorios: "Relatórios",
           aguardando_lancamento: "Pré-lançamento",
           lancamentos: "Lançamentos financeiros",
           receber: "Receitas",
+          receber_alerta: "Contas a pagar e receber",
           pagar: "Despesas",
-          caixa: "Caixa",
+          caixa: "Contas e carteiras",
           fluxo_caixa: "Fluxo de caixa",
-          cadastro_base: "Cadastro base",
+          cadastro_base: "Categorias",
           historico_pagar: "Histórico a pagar",
           historico_receber: "Histórico a receber",
         };
@@ -12522,6 +12625,7 @@
       bindModuleCardActivate(document.getElementById("cardFinanceCaixaLink"), () => openFinanceSubview("caixa"));
 
       document.getElementById("dashboardOpenPatio")?.addEventListener("click", () => openMainView("patio"));
+      document.getElementById("dashboardOpenFinance")?.addEventListener("click", () => openMainView("financeiro"));
       document.getElementById("dashboardOpenParceiros")?.addEventListener("click", () => openMainView("parceiros"));
       document.getElementById("dashboardOpenConfiguracoes")?.addEventListener("click", () => openMainView("configuracoes"));
 
@@ -12667,9 +12771,6 @@
       });
 
       function openMainView(view) {
-        if (view === "financeiro") {
-          view = "dashboard";
-        }
         if (isGestorPista && view !== "patio" && view !== "lista") {
           showMainView("patio");
           setPatioView("inicio");
@@ -12748,8 +12849,13 @@
       function openFinanceSubview(sub) {
         const top = navStack[navStack.length - 1];
         if (!sub) return;
-        if (sub === "filtros" || sub === "relatorios") sub = "dashboard";
+        if (sub === "filtros") sub = "dashboard";
         if (sub === "pre_lancamento") sub = "aguardando_lancamento";
+        if (sub === "transferencias") sub = "fluxo_caixa";
+        if (sub === "metas") {
+          financeFocusMetaGoalCard = true;
+          sub = "dashboard";
+        }
         if (top === `financeiro:${sub}`) {
           return;
         }
@@ -12955,6 +13061,20 @@
         if (financeCompetenciaBadge) {
           financeCompetenciaBadge.textContent = `Competência: ${formatYearMonthLong(financeCompetencia)}`;
         }
+        renderFinance();
+      });
+      document.getElementById("financeMetaSalvar")?.addEventListener("click", () => {
+        const nome = String(document.getElementById("financeMetaNome")?.value || "").trim();
+        const valor = Number(document.getElementById("financeMetaValor")?.value || 0);
+        if (!(valor > 0)) {
+          alert("Informe um valor alvo maior que zero.");
+          return;
+        }
+        financeMetaWrite({ nome, valor });
+        renderFinance();
+      });
+      document.getElementById("financeMetaLimpar")?.addEventListener("click", () => {
+        financeMetaWrite({ nome: "", valor: 0 });
         renderFinance();
       });
       document.addEventListener("click", (event) => {
@@ -13977,7 +14097,7 @@
           renderVehicles();
           renderFinance();
           updateDashboard();
-          openMainView("dashboard");
+          openMainView("financeiro");
           openFinanceSubview("aguardando_lancamento");
           alert("Ciclo liberado para o Financeiro (Pré-lançamento).");
           return;
@@ -15592,7 +15712,7 @@
           e.preventDefault();
           const id = finAct.getAttribute("data-header-finance-action");
           closeFinanceMenu();
-          openMainView("dashboard");
+          openMainView("financeiro");
           document.getElementById(id)?.click();
           closeAppHeaderMenu();
           return;
